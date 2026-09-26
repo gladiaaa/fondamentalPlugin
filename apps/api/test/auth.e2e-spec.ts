@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import {
   type Browser,
@@ -14,6 +14,8 @@ import {
 const EMAIL = 'ada@example.com';
 const NEW_PASSWORD = 'another-long-passphrase-2026';
 const MINUTES = 60_000;
+// Généré à chaque appel : évite tout mot de passe en dur dans les tests d'échec.
+const wrongPassword = (): string => `x-${randomUUID()}`;
 
 describe('Comptes : e-mail et mot de passe (e2e)', () => {
   let app: INestApplication;
@@ -284,7 +286,7 @@ describe('Comptes : e-mail et mot de passe (e2e)', () => {
       await createVerifiedUser();
       const b = newBrowser(app);
       for (let i = 0; i < 5; i += 1) {
-        await b.post('/api/auth/login', { email: EMAIL, password: `mauvais-${i}-mot-de-passe` }).expect(401);
+        await b.post('/api/auth/login', { email: EMAIL, password: wrongPassword() }).expect(401);
       }
       const locked = await userInDb();
       expect(locked.lockedUntil!.getTime()).toBeGreaterThan(Date.now());
@@ -302,7 +304,7 @@ describe('Comptes : e-mail et mot de passe (e2e)', () => {
       await createVerifiedUser();
       const b = newBrowser(app);
       for (let i = 0; i < 3; i += 1) {
-        await b.post('/api/auth/login', { email: EMAIL, password: `mauvais-${i}-mot-de-passe` }).expect(401);
+        await b.post('/api/auth/login', { email: EMAIL, password: wrongPassword() }).expect(401);
       }
       expect((await userInDb()).failedLogins).toBe(3);
       await b.post('/api/auth/login', { email: EMAIL, password: STRONG_PASSWORD }).expect(200);
@@ -313,11 +315,11 @@ describe('Comptes : e-mail et mot de passe (e2e)', () => {
       await createVerifiedUser();
       const b = newBrowser(app);
       for (let i = 0; i < 4; i += 1) {
-        await b.post('/api/auth/login', { email: EMAIL, password: `mauvais-${i}-mot-de-passe` }).expect(401);
+        await b.post('/api/auth/login', { email: EMAIL, password: wrongPassword() }).expect(401);
       }
       await prisma.user.update({ where: { email: EMAIL }, data: { lastFailedLoginAt: new Date(Date.now() - 20 * MINUTES) } });
 
-      await b.post('/api/auth/login', { email: EMAIL, password: 'encore-un-mauvais-mot-de-passe' }).expect(401);
+      await b.post('/api/auth/login', { email: EMAIL, password: wrongPassword() }).expect(401);
       expect(await userInDb()).toMatchObject({ failedLogins: 1, lockedUntil: null });
     });
 
