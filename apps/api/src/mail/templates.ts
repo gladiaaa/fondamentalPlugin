@@ -46,6 +46,19 @@ export function passwordResetEmail(link: string): MailContent {
   };
 }
 
+export function accountDeletedEmail(): MailContent {
+  return {
+    subject: 'Votre compte a été supprimé',
+    text: [
+      'Votre compte Fondamental Plugin vient d\'être supprimé, avec les données personnelles qui lui étaient liées.',
+      '',
+      "Vos clés de licence déjà achetées restent valides dans vos plugins. Les données de facturation sont conservées sans lien avec votre identité, comme la loi l'impose.",
+      '',
+      "Si vous n'êtes pas à l'origine de cette suppression, répondez à ce message sans attendre.",
+    ].join('\n'),
+  };
+}
+
 export function passwordChangedEmail(): MailContent {
   return {
     subject: 'Votre mot de passe a été modifié',

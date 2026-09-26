@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MailModule } from '../mail/mail.module.js';
+import { AccountController } from './account.controller.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
@@ -9,7 +10,7 @@ import { SessionService } from './session.service.js';
 
 @Module({
   imports: [MailModule],
-  controllers: [AuthController],
+  controllers: [AuthController, AccountController],
   providers: [AuthService, PasswordService, PwnedPasswordsService, SessionService, SessionGuard],
   // Les autres modules protègent leurs routes avec `@UseGuards(SessionGuard)` (en important AuthModule).
   exports: [SessionService, SessionGuard],
