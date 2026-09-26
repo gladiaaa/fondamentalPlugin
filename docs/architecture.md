@@ -37,7 +37,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | Module | Rôle | État |
 |---|---|---|
 | `health` | `GET /api/health` : version en ligne et état de la base (sert au contrôle après chaque déploiement) | fait |
-| `auth` | Comptes : inscription, confirmation d'e-mail, connexion, mot de passe oublié, sessions, protections (CSRF, blocage, limites) ; export et suppression du compte (RGPD) | fait |
+| `auth` | Comptes : inscription, confirmation d'e-mail, connexion, mot de passe oublié, sessions, protections (CSRF, blocage, limites) ; export et suppression du compte (RGPD) ; nettoyage horaire des sessions et liens expirés | fait |
 | `catalog` | `GET /api/products` : les plugins, leurs prérequis et leur prix | fait |
 | `releases` | Versions et jars : liste par version de Minecraft, téléchargement public, publication par la CI (`/api/admin/releases`) | fait |
 | `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests) | fait, modèles soignés : #26 |
