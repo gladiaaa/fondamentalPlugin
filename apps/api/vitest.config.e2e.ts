@@ -9,5 +9,7 @@ export default defineConfig({
     include: ['test/**/*.e2e-spec.ts'],
     // Une seule base partagée : pas de fichiers en parallèle.
     fileParallelism: false,
+    // Seuls les avertissements et erreurs de l'API s'affichent (pas une ligne par requête).
+    env: { LOG_LEVEL: 'warn' },
   },
 });

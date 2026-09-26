@@ -17,7 +17,12 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 - Base : **PostgreSQL dédié** via Prisma 7 (`PrismaService`, global). Jamais le MySQL du VPS (Minecraft). Schéma dans `prisma/schema.prisma` ; créer une migration avec `npm run db:migrate -w @fondamental/api -- --name <nom>` et la versionner. Le client est généré dans `src/generated/` (ignoré par Git) avant build, lint, types et tests.
 - `@fondamental/shared` : **types uniquement** (`import type`), l'API ne peut pas exécuter son TypeScript.
 - Tests Vitest : unitaires `src/**/*.spec.ts` (doublures, aucun service externe), e2e `test/**/*.e2e-spec.ts` (API complète + vraie base, `compose.dev.yml` en local). Toute route a au moins un test e2e ; toute route protégée teste l'accès refusé.
-- Logs pino : jamais de mot de passe, jeton, clé de licence ni cookie en clair.
+- Logs pino : jamais de mot de passe, jeton, clé de licence ni cookie en clair. Tout nouveau secret qui transite dans une requête s'ajoute à `LOG_REDACT_PATHS` (`src/config/logging.ts`, testé).
+- **Authentification** (`src/auth`) : sessions opaques en base (cookie `__Host-session` hors local), jamais de JWT. Protéger une route : `@UseGuards(SessionGuard)` + `@Auth()`, en important `AuthModule`. Sur les requêtes qui modifient des données, l'API exige l'`Origin` du site (`OriginGuard`, global) **et** l'en-tête `X-CSRF-Token` de la session (`SessionGuard`). Un webhook serveur à serveur prend `@SkipOriginCheck()` et vérifie sa signature.
+- **Ne jamais renvoyer l'entité `User` telle quelle** (elle contient `passwordHash`) : passer par un type public de `@fondamental/shared`, comme `publicUser` dans `auth.controller.ts`.
+- **Ne pas révéler si un compte existe** : les routes qui prennent une adresse (inscription, mot de passe oublié…) répondent pareil dans les deux cas, avec la même durée (hachage toujours calculé, e-mail envoyé sans attendre).
+- E-mails : passer par `Mailer` (jamais Resend en direct) ; les tests utilisent `InMemoryMailer` (`test/support/app.ts`) et n'appellent aucun service externe. Les liens envoyés pointent vers des pages du **site** (`SITE_URL`), jamais vers l'API.
+- Tests e2e d'authentification : `newBrowser()` donne un client avec ses cookies, son `Origin` et sa propre IP (`X-Forwarded-For`), pour que les limites de requêtes ne se mélangent pas entre tests. Les tests de sécurité doivent échouer quand on casse le code : vérifier en supprimant volontairement la protection testée.
 
 ## Commandes
 
