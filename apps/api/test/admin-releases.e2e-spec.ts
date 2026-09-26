@@ -33,7 +33,7 @@ describe('Publication des versions par la CI (e2e)', () => {
     await rm(dir, { recursive: true, force: true });
     await mkdir(dir, { recursive: true });
     await prisma.release.deleteMany({ where: { version: { startsWith: 'e2e-' } } });
-    await prisma.minecraftVersion.deleteMany({ where: { version: { in: ['1.22', '1.77'] } } });
+    await prisma.minecraftVersion.deleteMany({ where: { version: { in: ['26.1', '1.77'] } } });
   });
 
   /** Requête d'un serveur (la CI) : pas d'en-tête Origin, et sa propre adresse IP pour la limite de requêtes. */
@@ -167,11 +167,11 @@ describe('Publication des versions par la CI (e2e)', () => {
 
     it('crée une version de Minecraft inconnue et la trie au bon endroit', async () => {
       await createRelease();
-      await upload('tag', 'e2e-1', makePluginJar(), { edition: 'FREE', minecraft: '1.22,1.21.4' }).expect(201);
+      await upload('tag', 'e2e-1', makePluginJar(), { edition: 'FREE', minecraft: '26.1,1.21.4' }).expect(201);
       const versions = (await newBrowser(app).get('/api/products/tag/minecraft-versions').expect(200)).body as string[];
-      expect(versions).toEqual(['1.22', '1.21.4']);
-      const created = await prisma.minecraftVersion.findUniqueOrThrow({ where: { version: '1.22' } });
-      expect(created.sortOrder).toBe(12200);
+      expect(versions).toEqual(['26.1', '1.21.4']);
+      const created = await prisma.minecraftVersion.findUniqueOrThrow({ where: { version: '26.1' } });
+      expect(created.sortOrder).toBe(260100);
     });
 
     it('404 si la version du plugin n’a pas été créée', async () => {
