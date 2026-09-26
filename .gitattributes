@@ -1,0 +1,4 @@
+# Fins de ligne Linux pour tout ce qui s'exécute sur le VPS ou dans Docker
+* text=auto eol=lf
+*.ico binary
+*.png binary
