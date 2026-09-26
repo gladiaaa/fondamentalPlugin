@@ -1,0 +1,92 @@
+name: Déploiement
+
+# dev  -> https://dev.fondamentalplugin.fr  (à chaque push sur dev)
+# prod -> https://fondamentalplugin.fr      (à chaque fusion dans prod)
+on:
+  push:
+    branches: [dev, prod]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # note de version en production
+  packages: write   # image sur ghcr.io
+
+jobs:
+  deploy:
+    name: Déployer ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    if: github.ref_name == 'dev' || github.ref_name == 'prod'
+    environment:
+      name: ${{ github.ref_name == 'prod' && 'production' || 'dev' }}
+      url: ${{ github.ref_name == 'prod' && 'https://fondamentalplugin.fr' || 'https://dev.fondamentalplugin.fr' }}
+    env:
+      IMAGE: ghcr.io/gladiaaa/fondamentalplugin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Étiquette de l'image
+        id: tag
+        run: echo "tag=${GITHUB_REF_NAME}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier l'image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: APP_VERSION=${{ steps.tag.outputs.tag }}
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+            ${{ env.IMAGE }}:${{ github.ref_name }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Déployer sur le VPS
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy ~/.ssh/known_hosts
+          printf '%s\n' "$TOKEN" | ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes "deploy@$HOST" \
+            "deploy ${GITHUB_REF_NAME} ${{ steps.tag.outputs.tag }}"
+          rm -f ~/.ssh/deploy
+
+      - name: Vérifier le site en ligne
+        env:
+          URL: ${{ github.ref_name == 'prod' && 'https://fondamentalplugin.fr' || 'https://dev.fondamentalplugin.fr' }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS "$URL/api/health" | grep -q "\"$TAG\""; then
+              echo "$URL sert bien $TAG"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::$URL ne sert pas $TAG"
+          exit 1
+
+      - name: Note de version
+        if: github.ref_name == 'prod'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="v$(date -u +%Y.%m.%d)-${GITHUB_RUN_NUMBER}"
+          gh release create "$VERSION" --target "$GITHUB_SHA" --title "$VERSION" --generate-notes

@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Modèle des variables d'environnement (sans valeurs réelles)
 !.env.example
+
+# Réglages personnels de Claude Code (CLAUDE.md et .claude/skills sont partagés)
+.claude/settings.local.json

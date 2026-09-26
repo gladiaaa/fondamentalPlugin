@@ -1,0 +1,7 @@
+# Relecteurs demandés automatiquement sur chaque pull request.
+*                 @gladiaaa @GLANEUX
+
+# Déploiement et règles du dépôt : validation de gladiaaa.
+/.github/         @gladiaaa
+/deploy/          @gladiaaa
+/Dockerfile       @gladiaaa

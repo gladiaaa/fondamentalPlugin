@@ -8,7 +8,7 @@ Closes #
 
 ## Comment tester
 
-- [ ] `npm run lint`
+- [ ] `npm run lint` et `npm run typecheck`
 - [ ] `npm run build`
 - [ ] Parcours testé en local (étapes ci-dessous)
 

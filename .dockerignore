@@ -1,0 +1,14 @@
+.git
+.github
+.next
+node_modules
+npm-debug.log*
+.env*
+!.env.example
+.claude
+CLAUDE.md
+deploy
+Dockerfile
+.dockerignore
+README.md
+CONTRIBUTING.md

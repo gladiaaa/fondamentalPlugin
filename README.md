@@ -35,11 +35,26 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 | `npm run dev` | Serveur de développement |
 | `npm run build` | Build de production (vérifie aussi les types) |
 | `npm run lint` | ESLint |
+| `npm run typecheck` | Vérification des types |
 
 ## Variables d'environnement
 
 Voir [`.env.example`](.env.example). Aucun secret ne doit être commité : `.env.local` est ignoré par Git.
 
+## Environnements
+
+| Environnement | Branche | Adresse |
+|---|---|---|
+| Développement | `dev` (par défaut) | https://dev.fondamentalplugin.fr |
+| Production | `prod` | https://fondamentalplugin.fr |
+
+Chaque push sur `dev` ou `prod` construit l'image Docker et la déploie automatiquement, avec retour à la version précédente si le site ne répond pas : voir [deploy/README.md](deploy/README.md).
+
+```bash
+docker build -t fondamentalplugin .
+docker run --rm -p 3000:3000 fondamentalplugin   # http://localhost:3000
+```
+
 ## Travailler sur le projet
 
-Tout passe par des branches, des pull requests et des issues : voir [CONTRIBUTING.md](CONTRIBUTING.md).
+Tout passe par des issues, des branches et des pull requests vers `dev` ; `prod` ne reçoit que des PR depuis `dev`. Voir [CONTRIBUTING.md](CONTRIBUTING.md).
