@@ -732,6 +732,193 @@
           "catalogue"
         ]
       }
+    },
+    "/api/products/{slug}/minecraft-versions": {
+      "get": {
+        "description": "Celles pour lesquelles le plugin a au moins un fichier, de la plus récente à la plus ancienne : elles alimentent le sélecteur de version. Public.",
+        "operationId": "ReleasesController_minecraftVersions",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "tag",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ex. `[\"1.21.11\", \"1.21.4\"]`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Versions de Minecraft disponibles",
+        "tags": [
+          "fichiers"
+        ]
+      }
+    },
+    "/api/products/{slug}/files": {
+      "get": {
+        "description": "Du plus récent au plus ancien, chacun avec sa version, son édition, son changelog, sa taille et son SHA-256. Un plugin à deux jars (Tag, Crate) en renvoie deux par version. Public.",
+        "operationId": "ReleasesController_files",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "tag",
+              "type": "string"
+            }
+          },
+          {
+            "name": "minecraft",
+            "required": false,
+            "in": "query",
+            "description": "Ne garde que les fichiers compatibles avec cette version de Minecraft.",
+            "schema": {
+              "example": "1.21.4",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReleaseFileApiResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Fichiers d’un plugin",
+        "tags": [
+          "fichiers"
+        ]
+      }
+    },
+    "/api/downloads/{fileId}": {
+      "get": {
+        "description": "Public. Répond par le fichier (`Content-Disposition: attachment`). En ligne, nginx peut servir le fichier (`X-Accel-Redirect`) : le site n’a rien à changer.",
+        "operationId": "DownloadsController_download",
+        "parameters": [
+          {
+            "name": "fileId",
+            "required": true,
+            "in": "path",
+            "description": "Le champ `id` d’un fichier de `GET /products/:slug/files`.",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Le fichier `.jar`.",
+            "content": {
+              "application/java-archive": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Télécharger un jar",
+        "tags": [
+          "fichiers"
+        ]
+      }
     }
   },
   "info": {
@@ -1111,6 +1298,106 @@
           "requirements",
           "price",
           "purchasable"
+        ]
+      },
+      "ReleaseInfoApiResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "example": "2.2.0",
+            "description": "Texte libre : ne pas la traiter comme un numéro."
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "RELEASE",
+              "BETA"
+            ]
+          },
+          "changelog": {
+            "type": "string",
+            "description": "Notes de version, en texte brut (peut être vide)."
+          },
+          "releasedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "version",
+          "channel",
+          "changelog",
+          "releasedAt"
+        ]
+      },
+      "ReleaseFileApiResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "edition": {
+            "type": "string",
+            "enum": [
+              "UNIVERSAL",
+              "FREE",
+              "PREMIUM"
+            ],
+            "description": "`UNIVERSAL` : jar unique, la clé de licence décide de l’édition. `FREE` / `PREMIUM` : les deux jars de Tag et Crate."
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "PAPER"
+            ]
+          },
+          "fileName": {
+            "type": "string",
+            "example": "fondamentaltag-free-2.2.0-obf.jar"
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "Taille en octets."
+          },
+          "sha256": {
+            "type": "string",
+            "description": "SHA-256 en hexadécimal, à afficher pour la vérification du fichier."
+          },
+          "minecraftVersions": {
+            "example": [
+              "1.21.11",
+              "1.21.4"
+            ],
+            "description": "De la plus récente à la plus ancienne.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "downloadCount": {
+            "type": "number"
+          },
+          "downloadUrl": {
+            "type": "string",
+            "example": "/api/downloads/8f1b3c1e-0000-4000-8000-000000000001"
+          },
+          "release": {
+            "$ref": "#/components/schemas/ReleaseInfoApiResponse"
+          }
+        },
+        "required": [
+          "id",
+          "edition",
+          "platform",
+          "fileName",
+          "sizeBytes",
+          "sha256",
+          "minecraftVersions",
+          "downloadCount",
+          "downloadUrl",
+          "release"
         ]
       }
     }

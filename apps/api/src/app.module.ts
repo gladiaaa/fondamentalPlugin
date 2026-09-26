@@ -10,6 +10,7 @@ import { type Env, validateEnv } from './config/env.js';
 import { LOG_REDACT } from './config/logging.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { ReleasesModule } from './releases/releases.module.js';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     PrismaModule,
     AuthModule,
     CatalogModule,
+    ReleasesModule,
   ],
   controllers: [HealthController],
   providers: [

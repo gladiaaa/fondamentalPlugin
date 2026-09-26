@@ -93,3 +93,41 @@ export interface ProductResponse {
   /** `false` : ne pas proposer l'achat (prix ou paiement pas encore configurés). */
   purchasable: boolean;
 }
+
+// ─── Fichiers ───────────────────────────────────────────────────
+
+/**
+ * `UNIVERSAL` : le jar unique (Bedwars, Pass), la clé de licence décide de l'édition.
+ * `FREE` / `PREMIUM` : les deux jars de Tag et Crate (un jar Premium sans clé valide se comporte comme le Free).
+ */
+export type ReleaseEdition = "UNIVERSAL" | "FREE" | "PREMIUM";
+
+export type ReleaseChannel = "RELEASE" | "BETA";
+
+/** La version du plugin à laquelle appartient un fichier. */
+export interface ReleaseInfo {
+  /** Texte libre (`2.2.0`, `1.0-SNAPSHOT`) : ne pas la traiter comme un numéro. */
+  version: string;
+  channel: ReleaseChannel;
+  /** Notes de version, en texte brut (peut être vide). */
+  changelog: string;
+  /** Date ISO 8601. */
+  releasedAt: string;
+}
+
+/** Un jar téléchargeable (`GET /api/products/:slug/files`). */
+export interface ReleaseFileResponse {
+  id: string;
+  edition: ReleaseEdition;
+  platform: "PAPER";
+  fileName: string;
+  sizeBytes: number;
+  /** Empreinte SHA-256 en hexadécimal, à afficher pour que le client vérifie son fichier. */
+  sha256: string;
+  /** Versions de Minecraft couvertes, de la plus récente à la plus ancienne. */
+  minecraftVersions: string[];
+  downloadCount: number;
+  /** Adresse du téléchargement (`/api/downloads/:id`), publique. */
+  downloadUrl: string;
+  release: ReleaseInfo;
+}

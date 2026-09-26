@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Réglages personnels de Claude Code (CLAUDE.md et .claude/skills sont partagés)
 .claude/settings.local.json
+
+# fichiers publiés en local (jars des plugins)
+apps/api/data/
