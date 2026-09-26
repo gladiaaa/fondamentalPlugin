@@ -4,19 +4,23 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 
 ## Stack
 
+- Monorepo npm workspaces : `apps/web` (site Next.js, `@fondamental/web`), `apps/api` (API NestJS, `@fondamental/api`, à venir), `packages/shared` (types partagés, `@fondamental/shared`, livré en TypeScript). Dépendances installées à la racine uniquement ; ajouter un paquet avec `-w <espace>`.
 - Next.js 16 (App Router, `output: "standalone"`), React 19, TypeScript, Tailwind CSS 4.
 - Docker (image `ghcr.io/gladiaaa/fondamentalplugin`) sur le VPS, derrière nginx.
 - Next.js 16 diffère des versions précédentes : `params` et `searchParams` sont des Promise, `middleware` s'appelle `proxy`. En cas de doute, lire la doc dans `node_modules/next/dist/docs/`.
 
 ## Commandes
 
+Depuis la racine (chaque commande s'applique à tous les espaces) :
+
 | Commande | Rôle |
 |---|---|
-| `npm run dev` | serveur local sur http://localhost:3000 |
+| `npm run dev` | site en local sur http://localhost:3000 |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | types |
 | `npm run build` | build de production |
-| `docker build -t fondamentalplugin .` | image Docker |
+| `npm run test` | tests |
+| `docker build -f apps/web/Dockerfile -t fondamentalplugin .` | image Docker du site (contexte : racine du dépôt) |
 
 Avant de proposer une PR : lint, types et build doivent passer.
 
@@ -30,7 +34,7 @@ Avant de proposer une PR : lint, types et build doivent passer.
 
 ## Déploiement
 
-Automatique à chaque push sur `dev` (https://dev.fondamentalplugin.fr) ou `prod` (https://fondamentalplugin.fr) : voir `deploy/README.md`. `/api/health` renvoie la version en ligne. Ne pas modifier `deploy/`, `.github/` ni le `Dockerfile` sans le signaler clairement dans la PR.
+Automatique à chaque push sur `dev` (https://dev.fondamentalplugin.fr) ou `prod` (https://fondamentalplugin.fr) : voir `deploy/README.md`. `/api/health` renvoie la version en ligne. Ne pas modifier `deploy/`, `.github/` ni les `Dockerfile` sans le signaler clairement dans la PR. Un nouvel espace de travail doit aussi être ajouté à l'étape `deps` des `Dockerfile` (copie de son `package.json`), sinon `npm ci` échoue.
 
 ## Sécurité
 

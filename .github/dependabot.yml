@@ -32,7 +32,7 @@ updates:
 
   # Image Docker : on reste sur une version LTS de Node, mises à jour mineures seulement.
   - package-ecosystem: docker
-    directory: /
+    directory: /apps/web
     target-branch: dev
     schedule:
       interval: weekly

@@ -14,12 +14,24 @@ Pour le client : il choisit un plugin, paie avec Stripe, puis reçoit immédiate
 | Licences | `license-server` Fondamental (API admin, clés signées Ed25519) |
 | E-mails | [Resend](https://resend.com) (optionnel) |
 
+## Organisation du dépôt
+
+Monorepo npm (workspaces) :
+
+| Dossier | Contenu |
+|---|---|
+| `apps/web` | Le site : Next.js (`@fondamental/web`) |
+| `apps/api` | L'API : NestJS (`@fondamental/api`), à venir |
+| `packages/shared` | Types partagés entre le site et l'API (`@fondamental/shared`) |
+
+Les dépendances s'installent **une seule fois, à la racine**. Pour ajouter un paquet à un espace : `npm install <paquet> -w @fondamental/web`.
+
 ## Démarrer
 
 ```bash
 npm install
-cp .env.example .env.local   # puis remplir les valeurs
-npm run dev                  # http://localhost:3000
+cp .env.example apps/web/.env.local   # puis remplir les valeurs
+npm run dev                           # site sur http://localhost:3000
 ```
 
 Paiements en local : utiliser les **clés de test** Stripe et relayer les webhooks avec la [CLI Stripe](https://stripe.com/docs/stripe-cli) :
@@ -30,12 +42,15 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 ## Scripts
 
+À lancer depuis la racine : chaque commande s'applique à tous les espaces de travail.
+
 | Commande | Rôle |
 |---|---|
-| `npm run dev` | Serveur de développement |
-| `npm run build` | Build de production (vérifie aussi les types) |
+| `npm run dev` | Serveur de développement du site |
+| `npm run build` | Build de production |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Vérification des types |
+| `npm run test` | Tests |
 
 ## Variables d'environnement
 
@@ -51,7 +66,7 @@ Voir [`.env.example`](.env.example). Aucun secret ne doit être commité : `.env
 Chaque push sur `dev` ou `prod` construit l'image Docker et la déploie automatiquement, avec retour à la version précédente si le site ne répond pas : voir [deploy/README.md](deploy/README.md).
 
 ```bash
-docker build -t fondamentalplugin .
+docker build -f apps/web/Dockerfile -t fondamentalplugin .
 docker run --rm -p 3000:3000 fondamentalplugin   # http://localhost:3000
 ```
 

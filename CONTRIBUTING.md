@@ -55,6 +55,6 @@ Corrige le double envoi de licence au rejeu du webhook
 
 ## Environnement
 
-- Node.js 22, npm, Docker (pour tester l'image : `docker build -t fondamentalplugin .`).
+- Node.js 22, npm, Docker (pour tester l'image : `docker build -f apps/web/Dockerfile -t fondamentalplugin .`).
 - Stripe en **mode test** uniquement en local (carte de test : `4242 4242 4242 4242`).
 - Ne jamais pointer un environnement local vers le serveur de licences de production avec un vrai token : demandez un token de test.
