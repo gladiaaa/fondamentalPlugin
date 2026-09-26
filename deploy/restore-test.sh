@@ -21,13 +21,12 @@ docker run -d --rm --name "$NAME" --network none \
   -e POSTGRES_USER=fondamental -e POSTGRES_DB=fondamental -e POSTGRES_PASSWORD=restore-test \
   postgres:17-alpine >/dev/null
 
+# En TCP : pendant l'initialisation, le serveur temporaire n'écoute que sur le socket local.
 i=0
-until docker exec "$NAME" pg_isready -U fondamental -d fondamental >/dev/null 2>&1; do
+until docker exec "$NAME" pg_isready -h 127.0.0.1 -U fondamental -d fondamental >/dev/null 2>&1; do
   i=$((i + 1)); [ $i -lt 30 ] || { echo "la base jetable ne démarre pas" >&2; exit 1; }
   sleep 1
 done
-# pg_isready répond pendant l'initialisation : on attend la fin du démarrage.
-sleep 2
 
 docker exec -i "$NAME" pg_restore -U fondamental -d fondamental --no-owner --exit-on-error < "$FILE"
 
