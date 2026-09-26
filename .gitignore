@@ -22,6 +22,9 @@ out/
 build/
 dist/
 
+# client Prisma généré (prisma generate, lancé avant build, lint et tests)
+apps/api/src/generated/
+
 # misc
 .DS_Store
 *.pem

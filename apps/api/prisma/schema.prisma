@@ -1,0 +1,14 @@
+// Schéma de la base de la boutique (PostgreSQL dédié, jamais le MySQL de Minecraft).
+// Les tables arrivent avec les fonctionnalités : comptes (#17), catalogue (#21), commandes (#23)…
+
+generator client {
+  provider = "prisma-client"
+  // Client généré dans le code source (ignoré par Git), compilé avec l'API.
+  output   = "../src/generated/prisma"
+  // Imports en `.js` : l'API est en ESM (module nodenext).
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
