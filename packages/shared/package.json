@@ -1,0 +1,16 @@
+{
+  "name": "@fondamental/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Types partagés entre le site (apps/web) et l'API (apps/api)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

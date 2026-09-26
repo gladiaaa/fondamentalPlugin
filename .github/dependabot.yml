@@ -19,7 +19,7 @@ updates:
     labels: [chore]
 
   - package-ecosystem: docker
-    directory: /
+    directory: /apps/web
     target-branch: dev
     schedule:
       interval: weekly
