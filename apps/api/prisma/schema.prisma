@@ -71,3 +71,41 @@ model EmailToken {
   @@index([userId, type])
   @@map("email_tokens")
 }
+
+// ─── Catalogue ──────────────────────────────────────────────────
+
+enum ProductDistribution {
+  /// Un seul jar : la clé de licence décide de l'édition (Bedwars, Pass).
+  SINGLE_JAR
+  /// Deux jars, `free` et `premium` (Tag, Crate).
+  FREE_PREMIUM_JARS
+
+  @@map("product_distribution")
+}
+
+/// Un plugin vendu. Ajouter un plugin = ajouter une ligne (migration ou, plus tard, back-office).
+model Product {
+  id String @id @default(uuid()) @db.Uuid
+  /// Identifiant dans les adresses du site (`/plugins/tag`).
+  slug String @unique
+  name String
+  description String
+  /// Produit correspondant sur le serveur de licences (`tagcustom` est l'ancien nom de Tag).
+  licenseProduct String @unique @map("license_product")
+  distribution ProductDistribution
+  /// `{ platform, java, dependencies: [{ name, required, note }] }` : voir `ProductRequirements` dans @fondamental/shared.
+  requirements Json
+  /// Prix en centimes. Vide tant que le prix n'est pas fixé : le produit n'est alors pas achetable.
+  priceCents Int? @map("price_cents")
+  currency String @default("eur")
+  /// Prix Stripe (`price_…`). Vide tant que le produit n'est pas créé chez Stripe.
+  stripePriceId String? @map("stripe_price_id")
+  /// Nombre d'installations (serveurs) par licence. À confirmer (#21) : chaque serveur d'un réseau compte pour une.
+  maxActivations Int @default(5) @map("max_activations")
+  active Boolean @default(true)
+  sortOrder Int @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}

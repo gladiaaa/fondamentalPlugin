@@ -46,3 +46,50 @@ export interface ApiError {
   error?: string;
   code?: "EMAIL_NOT_VERIFIED" | "PASSWORD_COMPROMISED" | "INVALID_LINK" | "CURRENT_PASSWORD_INVALID" | "NO_PASSWORD" | "SAME_PASSWORD";
 }
+
+// ─── Catalogue ──────────────────────────────────────────────────
+
+/** Un plugin dont dépend (ou que complète) un produit. */
+export interface ProductDependency {
+  name: string;
+  /** `true` : le plugin ne démarre pas sans lui. */
+  required: boolean;
+  /** Pourquoi il est utile (texte affichable). */
+  note: string;
+}
+
+/** Ce qu'il faut sur le serveur pour installer le plugin. */
+export interface ProductRequirements {
+  /** Ex. « Paper 1.21.4+ ». */
+  platform: string;
+  /** Version minimale de Java. */
+  java: number;
+  dependencies: ProductDependency[];
+}
+
+/**
+ * `SINGLE_JAR` : un seul jar, la clé de licence décide de l'édition.
+ * `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`.
+ */
+export type ProductDistribution = "SINGLE_JAR" | "FREE_PREMIUM_JARS";
+
+export interface ProductPrice {
+  /** En centimes (1999 = 19,99). */
+  amountCents: number;
+  /** Code ISO 4217 en minuscules (`eur`). */
+  currency: string;
+}
+
+/** Un plugin de la boutique, tel que le site l'affiche (`GET /api/products`). */
+export interface ProductResponse {
+  /** Identifiant dans les adresses du site (`bedwars`, `tag`, `crate`, `pass`). */
+  slug: string;
+  name: string;
+  description: string;
+  distribution: ProductDistribution;
+  requirements: ProductRequirements;
+  /** `null` tant que le prix n'est pas fixé. */
+  price: ProductPrice | null;
+  /** `false` : ne pas proposer l'achat (prix ou paiement pas encore configurés). */
+  purchasable: boolean;
+}
