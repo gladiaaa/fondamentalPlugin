@@ -16,4 +16,4 @@ Il faut pouvoir **fermer une session à distance** (« se déconnecter partout �
 - Révocation immédiate : supprimer les lignes de `sessions` suffit.
 - Une fuite de la base ne donne aucune session utilisable (seules des empreintes y figurent).
 - Une lecture de base de plus par requête protégée : négligeable à cette échelle.
-- Les sessions expirées restent en base tant qu'un nettoyage planifié n'existe pas (elles sont ignorées à la lecture).
+- Les sessions expirées sont ignorées à la lecture, et une tâche horaire de l'API (`CleanupService`) les supprime, avec les liens d'e-mail périmés.
