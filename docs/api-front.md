@@ -60,6 +60,24 @@ Préfixe : `/api`. « Session » = cookie de session + `X-CSRF-Token` sur les re
 - `purchasable` : à respecter pour afficher ou non le bouton d'achat. Il n'est `true` que si le plugin a un prix et est configuré chez Stripe.
 - Les textes (`name`, `description`, `note`) sont en français ; la version anglaise viendra avec la question des langues.
 
+### Fichiers : publics, sans compte
+
+| Route | Réponse |
+|---|---|
+| `GET /products/:slug/minecraft-versions` | `200` : tableau de versions (`["1.21.11", "1.21.4"]`), de la plus récente à la plus ancienne, celles qui ont au moins un fichier : c'est le contenu du **sélecteur de version** ; `404` si le plugin est inconnu |
+| `GET /products/:slug/files` | `200` : tableau de `ReleaseFileResponse`, du plus récent au plus ancien |
+| `GET /products/:slug/files?minecraft=1.21.4` | idem, seulement les fichiers compatibles avec cette version (`400` si le format est mauvais ; tableau vide si aucun fichier) |
+| `GET /downloads/:fileId` | le fichier (`Content-Disposition: attachment`) ; `404` si inconnu ; `429` au-delà de 30 par minute et par adresse IP |
+
+`ReleaseFileResponse` (type dans `@fondamental/shared`) : `id`, `edition`, `platform`, `fileName`, `sizeBytes`, `sha256`, `minecraftVersions`, `downloadCount`, `downloadUrl`, `release` (`version`, `channel`, `changelog`, `releasedAt`).
+
+- **`edition`** : `UNIVERSAL` = jar unique (Bedwars, Pass), la clé de licence décide de l'édition ; `FREE` / `PREMIUM` = les deux jars de Tag et Crate (`distribution: FREE_PREMIUM_JARS` dans le catalogue). Pour ces deux plugins, chaque version a **deux fichiers** : présenter « Gratuit » et « Premium » côte à côte, et préciser qu'un jar Premium sans clé valide fonctionne comme le gratuit. Les téléchargements sont publics : ne demander aucun compte.
+- **`release.version`** : texte libre (`2.2.0`, `1.0-SNAPSHOT`) : ne jamais la traiter comme un numéro ni la trier soi-même (l'API trie déjà par date de sortie).
+- `downloadUrl` : lien direct (`/api/downloads/:id`) à mettre dans un `<a href>` : pas de `fetch`, le navigateur télécharge tout seul.
+- `sha256` : à afficher avec le fichier pour que le client puisse le vérifier.
+- Tant qu'aucune version n'est publiée (#28), toutes ces listes sont **vides** : prévoir l'état « aucun fichier disponible pour l'instant ».
+- Une version de Minecraft mal formée (`?minecraft=abc`) donne `400` : le sélecteur ne propose que celles de `minecraft-versions`, donc cela n'arrive pas en usage normal.
+
 ### Comptes : `/auth`
 
 | Route | Accès | Corps | Réponse |
@@ -115,11 +133,6 @@ Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive
 ## 7. Routes prévues (contrat indicatif, non implémentées)
 
 Chaque groupe a une issue GitHub : les détails et décisions y sont.
-
-### Fichiers (#27), publics, sans compte
-- `GET /products/:slug/minecraft-versions` : versions de Minecraft ayant au moins un fichier (Paper 1.21.x au départ).
-- `GET /products/:slug/files?minecraft=1.21.4` : fichiers compatibles, du plus récent au plus ancien : version du plugin (texte libre, pas toujours `1.2.3`), **`edition`** (`UNIVERSAL`, `FREE` ou `PREMIUM`), versions Minecraft couvertes, date, changelog, taille, **SHA-256**.
-- `GET /downloads/:fileId` : téléchargement du jar.
 
 ### Achat (#23, #24)
 - `POST /checkout` `{ productSlug }` (session) → `{ url }` : rediriger le navigateur vers Stripe Checkout. Le paiement est confirmé par un webhook côté serveur : le site ne déclenche jamais la licence.

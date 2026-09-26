@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 // Tests e2e : l'API complète contre une vraie base PostgreSQL (DATABASE_URL).
@@ -10,6 +12,7 @@ export default defineConfig({
     // Une seule base partagée : pas de fichiers en parallèle.
     fileParallelism: false,
     // Seuls les avertissements et erreurs de l'API s'affichent (pas une ligne par requête).
-    env: { LOG_LEVEL: 'warn' },
+    // Dossier des jars publiés : temporaire, jamais le vrai. Doit être fixé ici : la configuration de l'API est lue à l'import.
+    env: { LOG_LEVEL: 'warn', RELEASES_DIR: join(tmpdir(), 'fondamental-e2e-releases') },
   },
 });
