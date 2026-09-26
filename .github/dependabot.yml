@@ -1,5 +1,7 @@
 version: 2
 updates:
+  # Dépendances npm : mineures et correctifs seulement, groupés en une PR.
+  # Les versions majeures (TypeScript, ESLint, Next...) se font à la main, testées.
   - package-ecosystem: npm
     directory: /
     target-branch: dev
@@ -9,18 +11,32 @@ updates:
       dependances:
         patterns: ["*"]
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Les types de Node suivent la version de Node de l'image Docker (22).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     labels: [chore]
 
+  # Actions GitHub : toutes les mises à jour, regroupées en une PR.
   - package-ecosystem: github-actions
     directory: /
     target-branch: dev
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
     labels: [chore]
 
+  # Image Docker : on reste sur une version LTS de Node, mises à jour mineures seulement.
   - package-ecosystem: docker
     directory: /
     target-branch: dev
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
     labels: [chore]
