@@ -4,10 +4,20 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 
 ## Stack
 
-- Monorepo npm workspaces : `apps/web` (site Next.js, `@fondamental/web`), `apps/api` (API NestJS, `@fondamental/api`, à venir), `packages/shared` (types partagés, `@fondamental/shared`, livré en TypeScript). Dépendances installées à la racine uniquement ; ajouter un paquet avec `-w <espace>`.
+- Monorepo npm workspaces : `apps/web` (site Next.js, `@fondamental/web`), `apps/api` (API NestJS, `@fondamental/api`), `packages/shared` (types partagés, `@fondamental/shared`, livré en TypeScript). Dépendances installées à la racine uniquement ; ajouter un paquet avec `-w <espace>`.
 - Next.js 16 (App Router, `output: "standalone"`), React 19, TypeScript, Tailwind CSS 4.
 - Docker (image `ghcr.io/gladiaaa/fondamentalplugin`) sur le VPS, derrière nginx.
 - Next.js 16 diffère des versions précédentes : `params` et `searchParams` sont des Promise, `middleware` s'appelle `proxy`. En cas de doute, lire la doc dans `node_modules/next/dist/docs/`.
+
+## API (`apps/api`)
+
+- **NestJS 12, ESM uniquement** : imports relatifs avec l'extension `.js` (`import { X } from './x.js'`), `module: nodenext`. Un module par domaine (`src/auth`, `src/orders`…), branché dans `app.module.ts`.
+- Toutes les routes sous `/api` (préfixe global). `src/app.setup.ts` applique helmet, `ValidationPipe` (`whitelist` + `forbidNonWhitelisted`), trust proxy et Swagger (hors prod) : il est utilisé par `main.ts` **et** les tests e2e, ne pas dupliquer ces réglages ailleurs.
+- Configuration : toute nouvelle variable d'environnement s'ajoute au schéma zod de `src/config/env.ts` et à `apps/api/.env.example`. Lecture via `ConfigService<Env, true>` avec `{ infer: true }`, jamais `process.env` directement.
+- Base : **PostgreSQL dédié** via Prisma 7 (`PrismaService`, global). Jamais le MySQL du VPS (Minecraft). Schéma dans `prisma/schema.prisma` ; créer une migration avec `npm run db:migrate -w @fondamental/api -- --name <nom>` et la versionner. Le client est généré dans `src/generated/` (ignoré par Git) avant build, lint, types et tests.
+- `@fondamental/shared` : **types uniquement** (`import type`), l'API ne peut pas exécuter son TypeScript.
+- Tests Vitest : unitaires `src/**/*.spec.ts` (doublures, aucun service externe), e2e `test/**/*.e2e-spec.ts` (API complète + vraie base, `compose.dev.yml` en local). Toute route a au moins un test e2e ; toute route protégée teste l'accès refusé.
+- Logs pino : jamais de mot de passe, jeton, clé de licence ni cookie en clair.
 
 ## Commandes
 
@@ -16,13 +26,16 @@ Depuis la racine (chaque commande s'applique à tous les espaces) :
 | Commande | Rôle |
 |---|---|
 | `npm run dev` | site en local sur http://localhost:3000 |
-| `npm run lint` | ESLint |
+| `npm run dev -w @fondamental/api` | API en local sur http://localhost:4000/api (base : `docker compose -f compose.dev.yml up -d`) |
+| `npm run lint` | ESLint (site), oxlint (API) |
 | `npm run typecheck` | types |
 | `npm run build` | build de production |
-| `npm run test` | tests |
+| `npm run test` | tests unitaires |
+| `npm run test:e2e -w @fondamental/api` | tests e2e de l'API (`DATABASE_URL` vers la base locale) |
 | `docker build -f apps/web/Dockerfile -t fondamentalplugin .` | image Docker du site (contexte : racine du dépôt) |
+| `docker build -f apps/api/Dockerfile -t fondamentalplugin-api .` | image Docker de l'API (`--target migrate` : migrations) |
 
-Avant de proposer une PR : lint, types et build doivent passer.
+Avant de proposer une PR : lint, types, tests et build doivent passer (et les tests e2e si l'API change).
 
 ## Git : règles strictes
 
