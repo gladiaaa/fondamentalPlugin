@@ -29,6 +29,8 @@ export const THROTTLE = {
   forgotPassword: { limit: 5, ttl: MINUTE },
   resetPassword: { limit: 10, ttl: MINUTE },
   changePassword: { limit: 5, ttl: MINUTE },
+  exportAccount: { limit: 10, ttl: MINUTE },
+  deleteAccount: { limit: 5, ttl: MINUTE },
 } as const;
 
 export const MESSAGES = {

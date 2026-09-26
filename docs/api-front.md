@@ -93,6 +93,15 @@ Préfixe : `/api`. « Session » = cookie de session + `X-CSRF-Token` sur les re
 | `POST /auth/reset-password` | public | `{ token, password }` | `204` ; `400 INVALID_LINK` ou `PASSWORD_COMPROMISED` |
 | `POST /auth/change-password` | session | `{ currentPassword, newPassword }` | `204` ; ferme les **autres** sessions |
 
+### Mes données : `/me` (RGPD)
+
+| Route | Accès | Corps | Réponse |
+|---|---|---|---|
+| `GET /me/export` | session | (vide) | `200` : JSON de toutes les données du compte (`AccountExport`), servi en téléchargement `mes-donnees-fondamental.json`. Jamais de mot de passe ni de jeton |
+| `DELETE /me` | session | `{ password }` | `204` : compte supprimé, cookie effacé, e-mail de confirmation envoyé ; `400 CURRENT_PASSWORD_INVALID` (mot de passe faux, l'échec compte pour le blocage) ; `400 NO_PASSWORD` (compte sans mot de passe) |
+
+La suppression est **définitive** : demander une confirmation claire et le mot de passe dans le formulaire, puis renvoyer le visiteur vers l'accueil (plus aucune session). Pour l'export, appeler la route avec `fetch` puis proposer le fichier au téléchargement (ou ouvrir l'adresse dans un nouvel onglet : c'est un `GET`).
+
 Règles utiles pour les formulaires :
 
 - E-mail : valide, 254 caractères maximum ; l'API le met en minuscules et retire les espaces.
@@ -101,7 +110,7 @@ Règles utiles pour les formulaires :
 - Un compte est **bloqué 15 min après 5 échecs de connexion** ; l'erreur est alors la même que pour un mauvais mot de passe (le site ne doit pas distinguer).
 - **Aucune connexion tant que l'adresse n'est pas confirmée** : mot de passe correct sur un compte non confirmé → `403 EMAIL_NOT_VERIFIED`. La page doit alors proposer « Renvoyer le lien » (`resend-verification`).
 - Session : 30 jours, absolue.
-- Limites par IP et par minute : inscription 5, connexion 10, confirmation 10, renvoi du lien 3, mot de passe oublié 5, réinitialisation 10, changement de mot de passe 5. Dépassement : `429`.
+- Limites par IP et par minute : inscription 5, connexion 10, confirmation 10, renvoi du lien 3, mot de passe oublié 5, réinitialisation 10, changement de mot de passe 5, export des données 10, suppression du compte 5. Dépassement : `429`.
 - `503` sur inscription, renvoi et mot de passe oublié si l'envoi d'e-mails est indisponible : afficher « Réessayez plus tard ».
 
 Objet `user` : `{ id: string, email: string, createdAt: string (ISO 8601) }`. Il ne contient **jamais** de mot de passe.
@@ -129,6 +138,7 @@ Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive
 4. **Au chargement du site** : `GET /auth/me` (401 = visiteur non connecté, pas une erreur à afficher) pour récupérer l'état de connexion et un `csrfToken` frais.
 5. **Mot de passe oublié** → `forgot-password` → e-mail → **page `/reinitialiser-mot-de-passe?token=…`** → `reset-password` → connexion (toutes les sessions sont fermées).
 6. **Compte** : changer le mot de passe (`change-password`), se déconnecter partout (`logout-all`).
+7. **Mes données** : télécharger l'export (`GET /me/export`), supprimer le compte (`DELETE /me` avec le mot de passe).
 
 ## 7. Routes prévues (contrat indicatif, non implémentées)
 
@@ -154,8 +164,8 @@ Chaque groupe a une issue GitHub : les détails et décisions y sont.
 ### Connexion OAuth (#18)
 - `GET /auth/oauth/:provider` (`microsoft`, `discord`, `google`) : redirection vers le fournisseur ; retour sur `GET /auth/oauth/:provider/callback` qui ouvre la session et redirige vers le site. Boutons « Continuer avec … » à prévoir, en plus du formulaire e-mail.
 
-### Données personnelles (#19) et administration (#32)
-Export et suppression du compte ; back-office (commandes, licences, produits, versions). Routes pas encore définies.
+### Administration (#32)
+Back-office (commandes, licences, produits, versions). Routes pas encore définies. À la suppression d'un compte, les commandes seront **anonymisées et conservées** (obligation comptable) et les licences resteront valides : ce sera ajouté avec #23.
 
 ## 8. Piège : appeler l'API depuis le serveur Next.js
 

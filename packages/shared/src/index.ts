@@ -47,6 +47,33 @@ export interface ApiError {
   code?: "EMAIL_NOT_VERIFIED" | "PASSWORD_COMPROMISED" | "INVALID_LINK" | "CURRENT_PASSWORD_INVALID" | "NO_PASSWORD" | "SAME_PASSWORD";
 }
 
+/** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
+export interface AccountExportSession {
+  createdAt: string;
+  expiresAt: string;
+  /** `true` pour la session qui a demandé l'export. */
+  current: boolean;
+}
+
+/**
+ * Toutes les données que la boutique détient sur un compte (`GET /api/me/export`).
+ * Ne contient jamais de secret : ni mot de passe, ni empreinte, ni jeton. Les commandes, licences et
+ * configurations s'ajouteront ici quand elles existeront.
+ */
+export interface AccountExport {
+  /** Date ISO 8601. */
+  exportedAt: string;
+  account: {
+    id: string;
+    email: string;
+    createdAt: string;
+    emailVerifiedAt: string | null;
+    /** `false` pour un compte qui n'utilise que la connexion par un service tiers. */
+    hasPassword: boolean;
+  };
+  sessions: AccountExportSession[];
+}
+
 // ─── Catalogue ──────────────────────────────────────────────────
 
 /** Un plugin dont dépend (ou que complète) un produit. */

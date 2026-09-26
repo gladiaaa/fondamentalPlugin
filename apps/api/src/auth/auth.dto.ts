@@ -76,3 +76,14 @@ export class ChangePasswordDto {
   @MaxLength(PASSWORD_MAX_LENGTH, passwordRules.max)
   newPassword!: string;
 }
+
+export class DeleteAccountDto {
+  @ApiProperty({
+    type: String,
+    maxLength: PASSWORD_MAX_LENGTH,
+    description: 'Le mot de passe du compte, redemandé par sécurité.',
+  })
+  @IsString()
+  @Length(1, PASSWORD_MAX_LENGTH)
+  password!: string;
+}

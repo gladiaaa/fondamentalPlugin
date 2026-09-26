@@ -7,10 +7,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { AccountExport } from '@fondamental/shared';
 import type { Env } from '../config/env.js';
 import { EmailTokenType, type User } from '../generated/prisma/client.js';
 import { Mailer } from '../mail/mailer.js';
 import {
+  accountDeletedEmail,
   accountExistsEmail,
   type MailContent,
   passwordChangedEmail,
@@ -210,6 +212,57 @@ export class AuthService {
       await tx.session.deleteMany({ where: { userId: user.id, id: { not: sessionId } } });
     });
     this.notify(user.email, passwordChangedEmail());
+  }
+
+  // ─── Données personnelles (RGPD) ───────────────────────────────
+
+  /** Toutes les données que la boutique détient sur le compte, sans aucun secret (ni mot de passe, ni jeton). */
+  async exportAccount(user: User, currentSessionId: string): Promise<AccountExport> {
+    const sessions = await this.prisma.session.findMany({
+      where: { userId: user.id, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, createdAt: true, expiresAt: true },
+    });
+    return {
+      exportedAt: new Date().toISOString(),
+      account: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt.toISOString(),
+        emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+        hasPassword: user.passwordHash !== null,
+      },
+      sessions: sessions.map((s) => ({
+        createdAt: s.createdAt.toISOString(),
+        expiresAt: s.expiresAt.toISOString(),
+        current: s.id === currentSessionId,
+      })),
+    };
+  }
+
+  /**
+   * Supprime le compte et tout ce qui s'y rattache (sessions, liens en attente). Le mot de passe est redemandé :
+   * une session volée ne suffit pas à détruire un compte. Les échecs comptent comme à la connexion (blocage).
+   *
+   * Quand les commandes existeront (#23), elles seront **anonymisées et conservées** (obligation comptable) dans
+   * la même transaction, et les licences resteront valides.
+   */
+  async deleteAccount(user: User, password: string): Promise<void> {
+    if (!user.passwordHash) throw new BadRequestException({ code: 'NO_PASSWORD', message: MESSAGES.noPassword });
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      await this.passwords.burn(password);
+      throw new BadRequestException({ code: 'CURRENT_PASSWORD_INVALID', message: MESSAGES.currentPasswordInvalid });
+    }
+    if (!(await this.passwords.verify(user.passwordHash, password))) {
+      await this.recordFailedLogin(user);
+      throw new BadRequestException({ code: 'CURRENT_PASSWORD_INVALID', message: MESSAGES.currentPasswordInvalid });
+    }
+    const { count } = await this.prisma.user.deleteMany({ where: { id: user.id } });
+    // Deux demandes simultanées : une seule supprime, une seule prévient.
+    if (count === 1) {
+      this.logger.log(`Compte supprimé (${user.id})`);
+      this.notify(user.email, accountDeletedEmail());
+    }
   }
 
   // ─── Outils internes ───────────────────────────────────────────
