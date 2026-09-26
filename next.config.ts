@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Pas de fichiers d'instructions générés automatiquement dans le dépôt.
+  // Serveur autonome minimal, copié tel quel dans l'image Docker.
+  output: "standalone",
+  // Pas de fichier AGENTS.md généré automatiquement : CLAUDE.md est maintenu à la main.
   agentRules: false,
 };
 

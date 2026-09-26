@@ -1,0 +1,27 @@
+name: Source de la PR
+
+# prod ne reçoit que des pull requests venant de la branche dev de ce dépôt.
+# Ce contrôle est obligatoire dans les règles de la branche prod.
+on:
+  pull_request:
+    branches: [prod]
+    types: [opened, reopened, synchronize, edited]
+
+permissions: {}
+
+jobs:
+  source:
+    name: PR vers prod depuis dev uniquement
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier la branche source
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "dev" ] || [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "::error::prod n'accepte que les PR venant de dev ($REPO). Reçu : $HEAD_REPO:$HEAD_REF"
+            exit 1
+          fi
+          echo "Source valide : $HEAD_REPO:$HEAD_REF"
