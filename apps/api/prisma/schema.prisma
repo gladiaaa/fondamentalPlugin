@@ -12,3 +12,62 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ─── Comptes ────────────────────────────────────────────────────
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  /// Toujours en minuscules (normalisé par l'API).
+  email String @unique
+  /// Renseigné à la confirmation de l'adresse. Sans lui, aucune connexion possible.
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  /// argon2id. Vide pour un compte qui n'utilise que OAuth (#18).
+  passwordHash String? @map("password_hash")
+  failedLogins Int @default(0) @map("failed_logins")
+  lastFailedLoginAt DateTime? @map("last_failed_login_at")
+  lockedUntil DateTime? @map("locked_until")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sessions Session[]
+  emailTokens EmailToken[]
+
+  @@map("users")
+}
+
+/// Session ouverte par une connexion. Le jeton du cookie n'est jamais stocké : seulement son empreinte.
+model Session {
+  id String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique @map("token_hash")
+  /// Jeton anti-CSRF exigé (en-tête X-CSRF-Token) sur les requêtes qui modifient des données.
+  csrfToken String @map("csrf_token")
+  userId String @map("user_id") @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+enum EmailTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+
+  @@map("email_token_type")
+}
+
+/// Lien envoyé par e-mail : à usage unique, valable peu de temps. Seule l'empreinte du jeton est stockée.
+model EmailToken {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type EmailTokenType
+  tokenHash String @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, type])
+  @@map("email_tokens")
+}

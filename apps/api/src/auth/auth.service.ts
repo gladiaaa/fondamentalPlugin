@@ -1,0 +1,318 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Env } from '../config/env.js';
+import { EmailTokenType, type User } from '../generated/prisma/client.js';
+import { Mailer } from '../mail/mailer.js';
+import {
+  accountExistsEmail,
+  type MailContent,
+  passwordChangedEmail,
+  passwordResetEmail,
+  verificationEmail,
+} from '../mail/templates.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import {
+  EMAIL_COOLDOWN_MS,
+  FAILED_LOGIN_WINDOW_MS,
+  LOCKOUT_MS,
+  MAX_FAILED_LOGINS,
+  MESSAGES,
+  RESET_PASSWORD_TTL_MS,
+  VERIFY_EMAIL_TTL_MS,
+} from './auth.constants.js';
+import { PasswordService } from './password.service.js';
+import { PwnedPasswordsService } from './pwned-passwords.service.js';
+import { type CreatedSession, SessionService } from './session.service.js';
+import { generateToken, hashToken } from './tokens.js';
+
+/** Erreur Prisma « valeur déjà utilisée » (contrainte d'unicité). */
+const UNIQUE_VIOLATION = 'P2002';
+
+@Injectable()
+export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly siteUrl: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly passwords: PasswordService,
+    private readonly pwned: PwnedPasswordsService,
+    private readonly sessions: SessionService,
+    private readonly mailer: Mailer,
+    config: ConfigService<Env, true>,
+  ) {
+    this.siteUrl = config.get('SITE_URL', { infer: true });
+  }
+
+  // ─── Inscription et confirmation de l'adresse ──────────────────
+
+  /**
+   * Répond toujours pareil, que l'adresse soit déjà inscrite ou non : on ne révèle pas qui a un compte.
+   *
+   * - Adresse nouvelle : compte créé (inutilisable tant que l'adresse n'est pas confirmée).
+   * - Compte jamais confirmé : le dernier inscrit remplace le mot de passe. Personne ne peut donc « réserver »
+   *   l'adresse d'un tiers avec un mot de passe qu'il connaît : et de toute façon aucune connexion n'est
+   *   possible avant la confirmation.
+   * - Compte confirmé : rien ne change ; le titulaire reçoit un e-mail de prévention.
+   */
+  async register(email: string, password: string): Promise<void> {
+    this.assertMailAvailable();
+    await this.assertPasswordAllowed(password);
+    // Toujours calculé, même si le compte existe : la durée de la réponse ne trahit rien.
+    const passwordHash = await this.passwords.hash(password);
+
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+
+    if (existing?.emailVerifiedAt) {
+      this.notify(email, accountExistsEmail(this.link('reinitialiser-mot-de-passe')));
+      return;
+    }
+
+    let user: User;
+    if (existing) {
+      if (await this.hasRecentToken(existing.id, EmailTokenType.VERIFY_EMAIL)) return;
+      user = await this.prisma.user.update({
+        where: { id: existing.id },
+        data: { passwordHash, failedLogins: 0, lastFailedLoginAt: null, lockedUntil: null },
+      });
+    } else {
+      try {
+        user = await this.prisma.user.create({ data: { email, passwordHash } });
+      } catch (error) {
+        // Deux inscriptions simultanées avec la même adresse : l'autre a gagné, rien à faire.
+        if ((error as { code?: string }).code === UNIQUE_VIOLATION) return;
+        throw error;
+      }
+    }
+    await this.sendVerificationEmail(user);
+  }
+
+  /** Renvoie le lien de confirmation. Réponse identique quelle que soit l'adresse. */
+  async resendVerification(email: string): Promise<void> {
+    this.assertMailAvailable();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || user.emailVerifiedAt) return;
+    if (await this.hasRecentToken(user.id, EmailTokenType.VERIFY_EMAIL)) return;
+    await this.sendVerificationEmail(user);
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const record = await this.findUsableToken(token, EmailTokenType.VERIFY_EMAIL);
+    await this.prisma.$transaction(async (tx) => {
+      await this.consumeToken(tx, record.id);
+      await tx.user.updateMany({
+        where: { id: record.userId, emailVerifiedAt: null },
+        data: { emailVerifiedAt: new Date() },
+      });
+      await tx.emailToken.deleteMany({ where: { userId: record.userId, type: EmailTokenType.VERIFY_EMAIL, usedAt: null } });
+    });
+  }
+
+  // ─── Connexion et déconnexion ──────────────────────────────────
+
+  async login(email: string, password: string): Promise<{ user: User; session: CreatedSession }> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    const now = new Date();
+
+    // Compte inconnu, sans mot de passe ou bloqué : même réponse et même durée qu'un mauvais mot de passe.
+    if (!user?.passwordHash || (user.lockedUntil && user.lockedUntil > now)) {
+      await this.passwords.burn(password);
+      throw new UnauthorizedException(MESSAGES.invalidCredentials);
+    }
+    if (!(await this.passwords.verify(user.passwordHash, password))) {
+      await this.recordFailedLogin(user);
+      throw new UnauthorizedException(MESSAGES.invalidCredentials);
+    }
+    // Mot de passe correct mais adresse non confirmée : pas de session. Le message n'apprend rien
+    // à quelqu'un qui ne connaît pas déjà le mot de passe.
+    if (!user.emailVerifiedAt) {
+      throw new ForbiddenException({ code: 'EMAIL_NOT_VERIFIED', message: MESSAGES.emailNotVerified });
+    }
+
+    if (user.failedLogins > 0 || user.lastFailedLoginAt || user.lockedUntil) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { failedLogins: 0, lastFailedLoginAt: null, lockedUntil: null },
+      });
+    }
+    return { user, session: await this.sessions.create(user.id) };
+  }
+
+  async logout(token: string): Promise<void> {
+    await this.sessions.revoke(token);
+  }
+
+  async logoutAll(userId: string): Promise<void> {
+    await this.sessions.revokeAll(userId);
+  }
+
+  // ─── Mot de passe oublié, réinitialisation, changement ─────────
+
+  /** Réponse identique que le compte existe ou non. */
+  async forgotPassword(email: string): Promise<void> {
+    this.assertMailAvailable();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return;
+    if (await this.hasRecentToken(user.id, EmailTokenType.RESET_PASSWORD)) return;
+    const token = await this.issueToken(user.id, EmailTokenType.RESET_PASSWORD, RESET_PASSWORD_TTL_MS);
+    this.notify(user.email, passwordResetEmail(this.link('reinitialiser-mot-de-passe', token)));
+  }
+
+  /**
+   * Définit un nouveau mot de passe grâce au lien reçu par e-mail. Effets : le lien est consommé, toutes
+   * les sessions sont fermées, le compte est débloqué, et l'adresse est confirmée (le lien prouve qu'on
+   * lit cette boîte). Un mot de passe refusé ne consomme pas le lien.
+   */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const record = await this.findUsableToken(token, EmailTokenType.RESET_PASSWORD);
+    await this.assertPasswordAllowed(newPassword);
+    const passwordHash = await this.passwords.hash(newPassword);
+
+    await this.prisma.$transaction(async (tx) => {
+      await this.consumeToken(tx, record.id);
+      await tx.user.update({
+        where: { id: record.userId },
+        data: {
+          passwordHash,
+          failedLogins: 0,
+          lastFailedLoginAt: null,
+          lockedUntil: null,
+          emailVerifiedAt: record.user.emailVerifiedAt ?? new Date(),
+        },
+      });
+      await tx.session.deleteMany({ where: { userId: record.userId } });
+      await tx.emailToken.deleteMany({ where: { userId: record.userId, usedAt: null } });
+    });
+    this.notify(record.user.email, passwordChangedEmail());
+  }
+
+  /** Change le mot de passe d'un compte connecté. Les autres sessions sont fermées, la courante est conservée. */
+  async changePassword(user: User, sessionId: string, currentPassword: string, newPassword: string): Promise<void> {
+    if (!user.passwordHash) throw new BadRequestException({ code: 'NO_PASSWORD', message: MESSAGES.noPassword });
+    if (!(await this.passwords.verify(user.passwordHash, currentPassword))) {
+      throw new BadRequestException({ code: 'CURRENT_PASSWORD_INVALID', message: MESSAGES.currentPasswordInvalid });
+    }
+    if (currentPassword === newPassword) {
+      throw new BadRequestException({ code: 'SAME_PASSWORD', message: MESSAGES.samePassword });
+    }
+    await this.assertPasswordAllowed(newPassword);
+    const passwordHash = await this.passwords.hash(newPassword);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({ where: { id: user.id }, data: { passwordHash } });
+      await tx.session.deleteMany({ where: { userId: user.id, id: { not: sessionId } } });
+    });
+    this.notify(user.email, passwordChangedEmail());
+  }
+
+  // ─── Outils internes ───────────────────────────────────────────
+
+  /** Sans moyen d'envoi, on refuse d'emblée (503) plutôt que d'accepter une demande qui restera sans suite. */
+  private assertMailAvailable(): void {
+    if (!this.mailer.isConfigured) throw new ServiceUnavailableException(MESSAGES.mailUnavailable);
+  }
+
+  private async assertPasswordAllowed(password: string): Promise<void> {
+    if (await this.pwned.isPwned(password)) {
+      throw new BadRequestException({ code: 'PASSWORD_COMPROMISED', message: MESSAGES.passwordCompromised });
+    }
+  }
+
+  private async recordFailedLogin(user: User): Promise<void> {
+    const now = new Date();
+    // Les échecs trop anciens ne comptent plus : le compteur repart de zéro.
+    await this.prisma.user.updateMany({
+      where: {
+        id: user.id,
+        OR: [{ lastFailedLoginAt: null }, { lastFailedLoginAt: { lt: new Date(now.getTime() - FAILED_LOGIN_WINDOW_MS) } }],
+      },
+      data: { failedLogins: 0 },
+    });
+    // Incrément atomique : deux essais simultanés comptent bien pour deux.
+    const { failedLogins } = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { failedLogins: { increment: 1 }, lastFailedLoginAt: now },
+      select: { failedLogins: true },
+    });
+    if (failedLogins >= MAX_FAILED_LOGINS) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { failedLogins: 0, lockedUntil: new Date(now.getTime() + LOCKOUT_MS) },
+      });
+    }
+  }
+
+  private async sendVerificationEmail(user: User): Promise<void> {
+    const token = await this.issueToken(user.id, EmailTokenType.VERIFY_EMAIL, VERIFY_EMAIL_TTL_MS);
+    this.notify(user.email, verificationEmail(this.link('verifier-email', token)));
+  }
+
+  /** Crée un lien à usage unique. Les liens précédents de même type, non utilisés, sont invalidés. */
+  private async issueToken(userId: string, type: EmailTokenType, ttlMs: number): Promise<string> {
+    const token = generateToken();
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.emailToken.deleteMany({
+        where: { userId, OR: [{ expiresAt: { lte: now } }, { type, usedAt: null }] },
+      }),
+      this.prisma.emailToken.create({
+        data: { userId, type, tokenHash: hashToken(token), expiresAt: new Date(now.getTime() + ttlMs) },
+      }),
+    ]);
+    return token;
+  }
+
+  private async hasRecentToken(userId: string, type: EmailTokenType): Promise<boolean> {
+    const recent = await this.prisma.emailToken.count({
+      where: { userId, type, createdAt: { gt: new Date(Date.now() - EMAIL_COOLDOWN_MS) } },
+    });
+    return recent > 0;
+  }
+
+  /** Le lien correspondant au jeton s'il existe, est du bon type, n'a pas servi et n'a pas expiré. */
+  private async findUsableToken(token: string, type: EmailTokenType) {
+    const record = await this.prisma.emailToken.findUnique({
+      where: { tokenHash: hashToken(token) },
+      include: { user: true },
+    });
+    if (!record || record.type !== type || record.usedAt || record.expiresAt <= new Date()) {
+      throw new BadRequestException({ code: 'INVALID_LINK', message: MESSAGES.invalidLink });
+    }
+    return record;
+  }
+
+  /** Marque le lien comme utilisé, de façon atomique : de deux requêtes simultanées, une seule réussit. */
+  private async consumeToken(
+    tx: Pick<PrismaService, 'emailToken'>,
+    id: string,
+  ): Promise<void> {
+    const now = new Date();
+    const { count } = await tx.emailToken.updateMany({
+      where: { id, usedAt: null, expiresAt: { gt: now } },
+      data: { usedAt: now },
+    });
+    if (count !== 1) throw new BadRequestException({ code: 'INVALID_LINK', message: MESSAGES.invalidLink });
+  }
+
+  /** Lien vers une page du site (jamais vers l'API : les antivirus des messageries ouvrent les liens tout seuls). */
+  private link(page: string, token?: string): string {
+    return token ? `${this.siteUrl}/${page}?token=${token}` : `${this.siteUrl}/${page}`;
+  }
+
+  /**
+   * Envoi sans attendre : la réponse ne dépend pas de la rapidité du service d'e-mails, donc son
+   * délai ne révèle pas si un e-mail est parti. Un échec est journalisé sans adresse ni contenu.
+   */
+  private notify(to: string, content: MailContent): void {
+    this.mailer.send({ to, ...content }).catch((error: Error) => {
+      this.logger.error(`Envoi d'e-mail échoué : ${error.message}`);
+    });
+  }
+}

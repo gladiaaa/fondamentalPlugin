@@ -1,0 +1,125 @@
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import type { AuthUser, MessageResponse, SessionResponse } from '@fondamental/shared';
+import type { Request, Response } from 'express';
+import type { Env } from '../config/env.js';
+import type { User } from '../generated/prisma/client.js';
+import { MESSAGES, THROTTLE } from './auth.constants.js';
+import { Auth, type AuthContext } from './auth.decorators.js';
+import { ChangePasswordDto, EmailDto, LoginDto, RegisterDto, ResetPasswordDto, TokenDto } from './auth.dto.js';
+import { AuthService } from './auth.service.js';
+import {
+  clearedSessionCookieOptions,
+  isSecureEnv,
+  readCookie,
+  sessionCookieName,
+  sessionCookieOptions,
+} from './session-cookie.js';
+import { SessionGuard } from './session.guard.js';
+
+function publicUser(user: User): AuthUser {
+  return { id: user.id, email: user.email, createdAt: user.createdAt.toISOString() };
+}
+
+@ApiTags('auth')
+@Controller('auth')
+export class AuthController {
+  private readonly secure: boolean;
+  private readonly cookieName: string;
+
+  constructor(
+    private readonly auth: AuthService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.secure = isSecureEnv(config.get('APP_ENV', { infer: true }));
+    this.cookieName = sessionCookieName(this.secure);
+  }
+
+  // ─── Inscription et confirmation de l'adresse ──────────────────
+
+  @Post('register')
+  @HttpCode(202)
+  @Throttle({ default: THROTTLE.register })
+  async register(@Body() dto: RegisterDto): Promise<MessageResponse> {
+    await this.auth.register(dto.email, dto.password);
+    return { message: MESSAGES.registerAccepted };
+  }
+
+  /** Appelée par la page du site ouverte depuis le lien de l'e-mail (POST : un simple aperçu du lien ne le consomme pas). */
+  @Post('verify-email')
+  @HttpCode(200)
+  @Throttle({ default: THROTTLE.verifyEmail })
+  async verifyEmail(@Body() dto: TokenDto): Promise<{ emailVerified: true }> {
+    await this.auth.verifyEmail(dto.token);
+    return { emailVerified: true };
+  }
+
+  @Post('resend-verification')
+  @HttpCode(202)
+  @Throttle({ default: THROTTLE.resendVerification })
+  async resendVerification(@Body() dto: EmailDto): Promise<MessageResponse> {
+    await this.auth.resendVerification(dto.email);
+    return { message: MESSAGES.registerAccepted };
+  }
+
+  // ─── Session ───────────────────────────────────────────────────
+
+  @Post('login')
+  @HttpCode(200)
+  @Throttle({ default: THROTTLE.login })
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<SessionResponse> {
+    const { user, session } = await this.auth.login(dto.email, dto.password);
+    res.cookie(this.cookieName, session.token, sessionCookieOptions(this.secure, session.expiresAt));
+    return { user: publicUser(user), csrfToken: session.csrfToken };
+  }
+
+  /** Sans `SessionGuard` : se déconnecter doit toujours fonctionner, même avec une session déjà expirée. */
+  @Post('logout')
+  @HttpCode(204)
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const token = readCookie(req.headers.cookie, this.cookieName);
+    if (token) await this.auth.logout(token);
+    res.clearCookie(this.cookieName, clearedSessionCookieOptions(this.secure));
+  }
+
+  @Post('logout-all')
+  @UseGuards(SessionGuard)
+  @HttpCode(204)
+  async logoutAll(@Auth() auth: AuthContext, @Res({ passthrough: true }) res: Response): Promise<void> {
+    await this.auth.logoutAll(auth.user.id);
+    res.clearCookie(this.cookieName, clearedSessionCookieOptions(this.secure));
+  }
+
+  @Get('me')
+  @UseGuards(SessionGuard)
+  me(@Auth() auth: AuthContext): SessionResponse {
+    return { user: publicUser(auth.user), csrfToken: auth.csrfToken };
+  }
+
+  // ─── Mot de passe ──────────────────────────────────────────────
+
+  @Post('forgot-password')
+  @HttpCode(202)
+  @Throttle({ default: THROTTLE.forgotPassword })
+  async forgotPassword(@Body() dto: EmailDto): Promise<MessageResponse> {
+    await this.auth.forgotPassword(dto.email);
+    return { message: MESSAGES.resetAccepted };
+  }
+
+  @Post('reset-password')
+  @HttpCode(204)
+  @Throttle({ default: THROTTLE.resetPassword })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.auth.resetPassword(dto.token, dto.password);
+  }
+
+  @Post('change-password')
+  @UseGuards(SessionGuard)
+  @HttpCode(204)
+  @Throttle({ default: THROTTLE.changePassword })
+  async changePassword(@Auth() auth: AuthContext, @Body() dto: ChangePasswordDto): Promise<void> {
+    await this.auth.changePassword(auth.user, auth.sessionId, dto.currentPassword, dto.newPassword);
+  }
+}
