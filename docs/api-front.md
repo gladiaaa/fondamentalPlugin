@@ -45,6 +45,21 @@ Préfixe : `/api`. « Session » = cookie de session + `X-CSRF-Token` sur les re
 |---|---|---|
 | `GET /health` | public | `200 { ok: true, version: "dev-4a9b293", database: "up" }` ; `503` si la base est en panne |
 
+### Catalogue : `/products`, public, sans compte
+
+| Route | Réponse |
+|---|---|
+| `GET /products` | `200` : tableau de `ProductResponse`, dans l'ordre d'affichage (bedwars, tag, crate, pass) |
+| `GET /products/:slug` | `200` : un `ProductResponse` ; `404` si le plugin n'existe pas ou n'est plus en vente |
+
+`ProductResponse` (type dans `@fondamental/shared`) : `slug`, `name`, `description`, `distribution`, `requirements`, `price`, `purchasable`.
+
+- `distribution` : `SINGLE_JAR` (Bedwars, Pass : un seul jar, la licence décide de l'édition) ou `FREE_PREMIUM_JARS` (Tag, Crate : deux jars, `free` et `premium`).
+- `requirements` : `{ platform, java, dependencies: [{ name, required, note }] }`. À afficher sur la page du plugin : les dépendances obligatoires (`required: true`, ex. FastAsyncWorldEdit pour Bedwars) en évidence, les autres comme « recommandé ».
+- `price` : `{ amountCents, currency }` (en centimes : 1999 = 19,99) ou `null` tant que le prix n'est pas fixé. **Aujourd'hui les 4 plugins n'ont pas de prix** : afficher « Bientôt disponible » quand `price` est `null`.
+- `purchasable` : à respecter pour afficher ou non le bouton d'achat. Il n'est `true` que si le plugin a un prix et est configuré chez Stripe.
+- Les textes (`name`, `description`, `note`) sont en français ; la version anglaise viendra avec la question des langues.
+
 ### Comptes : `/auth`
 
 | Route | Accès | Corps | Réponse |
@@ -82,6 +97,7 @@ Corps : `{ statusCode, message: string | string[], error?, code? }`. `message` e
 | 400 | Validation, lien invalide, mot de passe refusé | `INVALID_LINK`, `PASSWORD_COMPROMISED`, `CURRENT_PASSWORD_INVALID`, `NO_PASSWORD`, `SAME_PASSWORD` |
 | 401 | Pas de session, ou e-mail / mot de passe incorrect (message volontairement générique) | – |
 | 403 | Origin refusée, jeton CSRF absent ou faux, adresse non confirmée | `EMAIL_NOT_VERIFIED` pour ce dernier cas |
+| 404 | Plugin inconnu ou retiré de la vente (et, plus tard, ressource qui n'appartient pas au compte) | – |
 | 429 | Trop de requêtes | – |
 | 503 | E-mails indisponibles, ou base en panne (`/health`) | – |
 
@@ -99,17 +115,6 @@ Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive
 ## 7. Routes prévues (contrat indicatif, non implémentées)
 
 Chaque groupe a une issue GitHub : les détails et décisions y sont.
-
-### Catalogue (#21)
-- `GET /products` : les 4 plugins. Champs prévus : `slug`, `name`, `description`, `price`, `currency`, `distribution` (`SINGLE_JAR` ou `FREE_PREMIUM_JARS`), `requirements` (Paper, Java, dépendances obligatoires et facultatives avec une note), `active`.
-- `GET /products/:slug`.
-
-| Plugin | `slug` | Jars |
-|---|---|---|
-| FondamentalBedwars | `bedwars` | 1 (la licence débloque le premium) ; **FastAsyncWorldEdit obligatoire**, LuckPerms quasi indispensable |
-| FondamentalTag | `tag` | 2 : free et premium |
-| FondamentalCrate | `crate` | 2 : free et premium |
-| FondamentalPass | `pass` | 1 |
 
 ### Fichiers (#27), publics, sans compte
 - `GET /products/:slug/minecraft-versions` : versions de Minecraft ayant au moins un fichier (Paper 1.21.x au départ).

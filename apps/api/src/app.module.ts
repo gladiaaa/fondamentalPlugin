@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module.js';
 import { OriginGuard } from './auth/origin.guard.js';
+import { CatalogModule } from './catalog/catalog.module.js';
 import { type Env, validateEnv } from './config/env.js';
 import { LOG_REDACT } from './config/logging.js';
 import { HealthController } from './health/health.controller.js';
@@ -36,6 +37,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 
     PrismaModule,
     AuthModule,
+    CatalogModule,
   ],
   controllers: [HealthController],
   providers: [
