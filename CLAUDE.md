@@ -14,7 +14,7 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 |---|---|
 | `npm run dev` | serveur local sur http://localhost:3000 |
 | `npm run lint` | ESLint |
-| `npx tsc --noEmit` | types |
+| `npm run typecheck` | types |
 | `npm run build` | build de production |
 | `docker build -t fondamentalplugin .` | image Docker |
 

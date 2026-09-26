@@ -8,7 +8,7 @@ Closes #
 
 ## Comment tester
 
-- [ ] `npm run lint` et `npx tsc --noEmit`
+- [ ] `npm run lint` et `npm run typecheck`
 - [ ] `npm run build`
 - [ ] Parcours testé en local (étapes ci-dessous)
 

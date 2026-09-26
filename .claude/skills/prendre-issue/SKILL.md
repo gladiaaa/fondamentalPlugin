@@ -16,7 +16,7 @@ Argument : le numéro de l'issue (`/prendre-issue 12`).
    ```
    Type : `feature` (fonctionnalité), `fix` (bug), `chore` (outillage), `docs`.
 4. **Coder** en suivant les conventions de `CLAUDE.md`. Petits commits en français.
-5. **Vérifier** : `npm run lint`, `npx tsc --noEmit`, `npm run build`. Tester le parcours concerné avec `npm run dev`.
+5. **Vérifier** : `npm run lint`, `npm run typecheck`, `npm run build`. Tester le parcours concerné avec `npm run dev`.
 6. **Pousser et ouvrir la PR vers `dev`** :
    ```bash
    git push -u origin HEAD

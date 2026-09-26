@@ -35,7 +35,7 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 | `npm run dev` | Serveur de développement |
 | `npm run build` | Build de production (vérifie aussi les types) |
 | `npm run lint` | ESLint |
-| `npx tsc --noEmit` | Vérification des types |
+| `npm run typecheck` | Vérification des types |
 
 ## Variables d'environnement
 
