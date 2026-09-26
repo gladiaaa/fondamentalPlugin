@@ -37,6 +37,16 @@ export const envSchema = z
      * Sinon l'API envoie elle-même le fichier.
      */
     DOWNLOADS_ACCEL_PREFIX: optional(z.string().regex(/^\/[A-Za-z0-9_\-/]*[A-Za-z0-9_-]$/)),
+    /**
+     * Jeton de la CI des plugins pour publier une version (`Authorization: Bearer …`). Sans lui, la
+     * publication est refusée pour tout le monde. Au moins 32 caractères : `openssl rand -base64 32`.
+     */
+    RELEASES_TOKEN: optional(z.string().min(32)),
+    /** Taille maximale d'un jar envoyé à la publication, en Mo. */
+    RELEASES_MAX_UPLOAD_MB: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.coerce.number().int().min(1).max(200).default(50),
+    ),
   })
   .transform((env) => ({
     ...env,

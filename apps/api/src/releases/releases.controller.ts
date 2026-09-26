@@ -3,13 +3,14 @@ import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/
 import type { ReleaseFileResponse } from '@fondamental/shared';
 import { IsOptional, Matches } from 'class-validator';
 import { ApiErrors } from '../common/api-docs.js';
+import { MINECRAFT_VERSION } from './minecraft-version.js';
 import { toReleaseFileResponse } from './releases.mapper.js';
 import { ReleaseFileApiResponse } from './releases.responses.js';
 import { ReleasesService } from './releases.service.js';
 
 class FilesQuery {
   @IsOptional()
-  @Matches(/^\d{1,3}\.\d{1,3}(\.\d{1,3})?$/, { message: 'Version de Minecraft invalide (ex. 1.21.4).' })
+  @Matches(MINECRAFT_VERSION, { message: 'Version de Minecraft invalide (ex. 1.21.4).' })
   minecraft?: string;
 }
 

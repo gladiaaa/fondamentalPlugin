@@ -13,6 +13,12 @@ export default defineConfig({
     fileParallelism: false,
     // Seuls les avertissements et erreurs de l'API s'affichent (pas une ligne par requête).
     // Dossier des jars publiés : temporaire, jamais le vrai. Doit être fixé ici : la configuration de l'API est lue à l'import.
-    env: { LOG_LEVEL: 'warn', RELEASES_DIR: join(tmpdir(), 'fondamental-e2e-releases') },
+    env: {
+      LOG_LEVEL: 'warn',
+      RELEASES_DIR: join(tmpdir(), 'fondamental-e2e-releases'),
+      // Jeton de publication de test (64 caractères) et limite d'envoi réduite à 1 Mo pour tester le refus d'un gros fichier.
+      RELEASES_TOKEN: 'test-only-releases-token-0123456789abcdef0123456789abcdef',
+      RELEASES_MAX_UPLOAD_MB: '1',
+    },
   },
 });
