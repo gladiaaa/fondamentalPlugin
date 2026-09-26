@@ -48,12 +48,13 @@ npm run dev -w @fondamental/api                # API sur http://localhost:4000/a
 
 - Santé : http://localhost:4000/api/health
 - Documentation interactive (Swagger) : http://localhost:4000/api/docs (jamais en production)
+- Contrat de l'API pour le site : [`apps/api/openapi.json`](apps/api/openapi.json) (à régénérer avec `npm run openapi -w @fondamental/api` quand une route change) et le guide [`docs/api-front.md`](docs/api-front.md)
 - Tests : `npm run test -w @fondamental/api` (unitaires), `npm run test:e2e -w @fondamental/api` (contre la base locale, `DATABASE_URL` exportée)
 - Migrations : `npm run db:migrate -w @fondamental/api` (création en local), `db:deploy` (application)
 
 ### Comptes et authentification (API)
 
-Inscription et connexion par e-mail et mot de passe. Toutes les routes sont sous `/api/auth` (détail et schémas dans Swagger).
+Inscription et connexion par e-mail et mot de passe. Toutes les routes sont sous `/api/auth` (détail et schémas dans Swagger et `openapi.json`).
 
 | Route | Rôle |
 |---|---|

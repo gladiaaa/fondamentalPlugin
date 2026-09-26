@@ -1,0 +1,912 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthApiResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "La base ne répond pas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthApiResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "État de l'API et de sa base",
+        "tags": [
+          "santé"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "description": "Envoie un e-mail de confirmation. La réponse est **identique** que l’adresse soit déjà inscrite ou non : ne jamais dire « adresse déjà utilisée ».",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Créer un compte",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "description": "Appelée par la page `/verifier-email?token=…` du site. Le lien est valable 24 h et à usage unique.",
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailVerifiedApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirmer l’adresse e-mail",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "description": "Une minute minimum entre deux envois. Réponse identique que l’adresse existe ou non.",
+        "operationId": "AuthController_resendVerification",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Renvoyer le lien de confirmation",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "description": "Ouvre la session : un cookie `HttpOnly` est posé et le `csrfToken` est renvoyé. **Refusé tant que l’adresse n’est pas confirmée** (403, `EMAIL_NOT_VERIFIED`). Compte bloqué 15 min après 5 échecs, avec la même erreur 401 qu’un mauvais mot de passe.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Se connecter",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Fonctionne même avec une session déjà expirée. Efface le cookie.",
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Déconnecté."
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Se déconnecter",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout-all": {
+      "post": {
+        "description": "Ferme toutes les sessions du compte.",
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Toutes les sessions sont fermées."
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Se déconnecter partout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "description": "À appeler au chargement du site : `401` signifie simplement « visiteur non connecté ». Renvoie aussi un `csrfToken` à jour.",
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Compte connecté",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "description": "Envoie un lien valable 30 min, à usage unique. Réponse identique que le compte existe ou non.",
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Mot de passe oublié",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "description": "Appelée par la page `/reinitialiser-mot-de-passe?token=…`. Ferme toutes les sessions, débloque le compte et confirme l’adresse.",
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Mot de passe changé."
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Choisir un nouveau mot de passe",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "description": "Ferme les **autres** sessions du compte ; la session courante reste ouverte.",
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Mot de passe changé."
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Changer son mot de passe",
+        "tags": [
+          "auth"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "API Fondamental Plugin",
+    "description": "API de la boutique Fondamental Plugin, servie sous `/api` sur le même domaine que le site.\n\n**À respecter dans tous les appels**\n- Appels faits depuis le navigateur, sur le même domaine, avec les cookies (`credentials: 'same-origin'`).\n- Toute requête qui modifie des données (POST, PUT, PATCH, DELETE) doit venir de l'origine du site (en-tête `Origin`, posé par le navigateur).\n- Si la route exige une session, ces requêtes doivent aussi porter l'en-tête `X-CSRF-Token` (valeur `csrfToken` reçue à la connexion ou par `GET /auth/me`).\n- Les champs inconnus dans un corps JSON sont refusés (400).\n- Les erreurs ont toutes la forme `ApiErrorResponse` ; lire `message` et, s'il existe, `code`.\n\nGuide complet : `docs/api-front.md`.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-session",
+        "description": "Cookie de session (`session` en local), posé par `POST /auth/login`. `HttpOnly` : le JavaScript ne le lit pas."
+      },
+      "csrf": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Valeur de `csrfToken`, exigée sur les requêtes qui modifient des données quand la route demande une session."
+      }
+    },
+    "schemas": {
+      "HealthApiResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string",
+            "example": "dev-4a9b293",
+            "description": "Version en ligne : `<branche>-<commit court>`."
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "version",
+          "database"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ada@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128,
+            "description": "Refusé (`PASSWORD_COMPROMISED`) s’il figure dans des fuites de données connues."
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "MessageApiResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ApiErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": 400
+          },
+          "message": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Texte affichable. Un tableau (un texte par champ invalide) pour les erreurs de validation."
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "EMAIL_NOT_VERIFIED",
+              "PASSWORD_COMPROMISED",
+              "INVALID_LINK",
+              "CURRENT_PASSWORD_INVALID",
+              "NO_PASSWORD",
+              "SAME_PASSWORD"
+            ],
+            "description": "Présent pour les erreurs que le site doit distinguer."
+          }
+        },
+        "required": [
+          "statusCode",
+          "message"
+        ]
+      },
+      "TokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 200,
+            "description": "Jeton lu dans l’adresse de la page ouverte depuis le lien de l’e-mail."
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "EmailVerifiedApiResponse": {
+        "type": "object",
+        "properties": {
+          "emailVerified": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "emailVerified"
+        ]
+      },
+      "EmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ada@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ada@example.com"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "ada@example.com"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "createdAt"
+        ]
+      },
+      "SessionApiResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponse"
+          },
+          "csrfToken": {
+            "type": "string",
+            "description": "À renvoyer dans l’en-tête `X-CSRF-Token` de chaque requête qui modifie des données tant qu’on est connecté. À garder en mémoire, jamais dans `localStorage` ni dans une URL."
+          }
+        },
+        "required": [
+          "user",
+          "csrfToken"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 200,
+            "description": "Jeton lu dans l’adresse de la page ouverte depuis le lien de l’e-mail."
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128,
+            "description": "Refusé (`PASSWORD_COMPROMISED`) s’il figure dans des fuites de données connues."
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128,
+            "description": "Refusé (`PASSWORD_COMPROMISED`) s’il figure dans des fuites de données connues."
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      }
+    }
+  }
+}
