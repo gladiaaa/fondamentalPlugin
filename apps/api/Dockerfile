@@ -20,11 +20,19 @@ RUN npm ci
 COPY . .
 RUN npm run build -w @fondamental/api
 
-# ─── Migrations : outils de build + CLI Prisma, exécution ponctuelle ─
-FROM build AS migrate
-WORKDIR /app/apps/api
+# ─── Migrations : CLI Prisma seule, exécution ponctuelle ─────────
+# Même version que dans apps/api/package.json (lue au build, jamais dupliquée).
+FROM node:22-alpine AS migrate
+WORKDIR /migrate
+COPY apps/api/package.json /tmp/api-package.json
+RUN PRISMA_VERSION=$(node -p "require('/tmp/api-package.json').devDependencies.prisma") \
+ && npm install --no-save --no-package-lock --no-audit --no-fund "prisma@${PRISMA_VERSION}" \
+ && npm cache clean --force && rm /tmp/api-package.json
+COPY apps/api/prisma ./prisma
+COPY apps/api/prisma.config.ts ./
+ENV PRISMA_HIDE_UPDATE_MESSAGE=1
 USER node
-CMD ["npx", "prisma", "migrate", "deploy"]
+CMD ["npx", "--no-install", "prisma", "migrate", "deploy"]
 
 # ─── Dépendances de production uniquement ───────────────────────
 # --omit=optional --omit=peer : la CLI Prisma (~300 Mo) est une dépendance « peer »

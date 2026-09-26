@@ -1,8 +1,9 @@
-# Conteneur du site sur le VPS : une copie par environnement dans
+# Conteneurs de la boutique sur le VPS : une copie par environnement dans
 # /opt/fondamentalplugin/<dev|prod>/compose.yml (voir deploy/README.md).
-# Les variables viennent de .env (APP_ENV, HOST_PORT) et de deploy.env (IMAGE_TAG),
-# écrit par deploy.sh à chaque déploiement.
+# Variables : .env (APP_ENV, HOST_PORT, API_PORT), secrets.env (POSTGRES_PASSWORD)
+# et deploy.env (IMAGE_TAG, écrit par deploy.sh à chaque déploiement).
 services:
+  # ─── Site Next.js ───────────────────────────────────────────────
   web:
     image: ghcr.io/gladiaaa/fondamentalplugin:${IMAGE_TAG:?IMAGE_TAG manquant}
     container_name: fondamentalplugin-${APP_ENV:?APP_ENV manquant}
@@ -16,8 +17,79 @@ services:
     security_opt:
       - no-new-privileges:true
     mem_limit: 512m
-    logging:
+    logging: &logs
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ─── API NestJS : nginx lui envoie /api/* ──────────────────────
+  api:
+    image: ghcr.io/gladiaaa/fondamentalplugin-api:${IMAGE_TAG:?IMAGE_TAG manquant}
+    container_name: fondamentalplugin-api-${APP_ENV:?APP_ENV manquant}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_PORT:?API_PORT manquant}:4000"
+    environment:
+      APP_ENV: ${APP_ENV}
+      DATABASE_URL: postgresql://fondamental:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}@db:5432/fondamental
+    # Futurs secrets de l'API (Stripe, serveur de licences, e-mails) : uniquement sur le VPS.
+    env_file:
+      - api.env
+    # Réseau par défaut : sortie vers Internet (Stripe…). Réseau db : accès à la base.
+    networks: [default, db]
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    logging: *logs
+
+  # ─── Base PostgreSQL dédiée (jamais le MySQL de Minecraft) ─────
+  db:
+    image: postgres:17-alpine
+    container_name: fondamentalplugin-db-${APP_ENV:?APP_ENV manquant}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fondamental
+      POSTGRES_DB: fondamental
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Aucun port publié, réseau interne sans accès à Internet : seules l'API
+    # et les migrations joignent la base.
+    networks: [db]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fondamental -d fondamental"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    logging: *logs
+
+  # ─── Migrations Prisma : lancées par deploy.sh avant chaque mise en ligne ─
+  migrate:
+    image: ghcr.io/gladiaaa/fondamentalplugin-api-migrate:${IMAGE_TAG:?IMAGE_TAG manquant}
+    profiles: [outils]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://fondamental:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}@db:5432/fondamental
+    networks: [db]
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  db:
+    internal: true
+
+volumes:
+  db-data:
+    name: fondamentalplugin-db-${APP_ENV:?APP_ENV manquant}

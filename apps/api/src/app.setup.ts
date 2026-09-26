@@ -14,8 +14,12 @@ export function configureApp(app: INestApplication): void {
   app.useLogger(app.get(Logger));
   // Toutes les routes sous /api : nginx y envoie les requêtes, le reste va au site.
   app.setGlobalPrefix('api');
-  // Derrière nginx sur la même machine : l'IP réelle du client vient de X-Forwarded-For.
-  (app as NestExpressApplication).set('trust proxy', 'loopback');
+  // Derrière nginx : l'IP réelle du client vient de X-Forwarded-For. Dans Docker,
+  // les requêtes de nginx arrivent par la passerelle du réseau (172.16.0.0/12,
+  // incluse dans « uniquelocal ») et non par 127.0.0.1 : sans elle, tous les
+  // visiteurs partageraient la même IP, donc la même limite de requêtes.
+  // Sans risque : le port de l'API n'écoute que sur 127.0.0.1 côté serveur.
+  (app as NestExpressApplication).set('trust proxy', ['loopback', 'uniquelocal']);
   app.use(helmet());
   app.useGlobalPipes(
     new ValidationPipe({
