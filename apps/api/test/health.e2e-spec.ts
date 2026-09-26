@@ -35,6 +35,14 @@ describe('API (e2e)', () => {
     await request(app.getHttpServer()).get('/health').expect(404);
   });
 
+  it('fait confiance à nginx via la passerelle Docker, pas à une IP publique', () => {
+    // Fonction compilée par Express à partir du réglage « trust proxy ».
+    const trusts = app.getHttpAdapter().getInstance().get('trust proxy fn') as (ip: string, hop: number) => boolean;
+    expect(trusts('127.0.0.1', 0)).toBe(true); // nginx hors Docker
+    expect(trusts('172.18.0.1', 0)).toBe(true); // passerelle d'un réseau Docker
+    expect(trusts('203.0.113.7', 0)).toBe(false); // client sur Internet
+  });
+
   it('route inconnue : 404 en JSON', async () => {
     const res = await request(app.getHttpServer()).get('/api/inexistant').expect(404);
     expect(res.body).toMatchObject({ statusCode: 404 });

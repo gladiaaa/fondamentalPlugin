@@ -12,7 +12,8 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 ## API (`apps/api`)
 
 - **NestJS 12, ESM uniquement** : imports relatifs avec l'extension `.js` (`import { X } from './x.js'`), `module: nodenext`. Un module par domaine (`src/auth`, `src/orders`…), branché dans `app.module.ts`.
-- Toutes les routes sous `/api` (préfixe global). `src/app.setup.ts` applique helmet, `ValidationPipe` (`whitelist` + `forbidNonWhitelisted`), trust proxy et Swagger (hors prod) : il est utilisé par `main.ts` **et** les tests e2e, ne pas dupliquer ces réglages ailleurs.
+- Toutes les routes sous `/api` (préfixe global). En ligne, nginx envoie **tout `/api/*` à l'API** : le site (`apps/web`) ne doit pas créer de route sous `/api` (sa `/api/health` ne sert qu'au contrôle local de `deploy.sh`).
+- Migrations : toujours **compatibles avec la version précédente de l'API** (ajouter d'abord, supprimer dans une version ultérieure), car un retour arrière automatique n'annule pas les migrations. `src/app.setup.ts` applique helmet, `ValidationPipe` (`whitelist` + `forbidNonWhitelisted`), trust proxy et Swagger (hors prod) : il est utilisé par `main.ts` **et** les tests e2e, ne pas dupliquer ces réglages ailleurs.
 - Configuration : toute nouvelle variable d'environnement s'ajoute au schéma zod de `src/config/env.ts` et à `apps/api/.env.example`. Lecture via `ConfigService<Env, true>` avec `{ infer: true }`, jamais `process.env` directement.
 - Base : **PostgreSQL dédié** via Prisma 7 (`PrismaService`, global). Jamais le MySQL du VPS (Minecraft). Schéma dans `prisma/schema.prisma` ; créer une migration avec `npm run db:migrate -w @fondamental/api -- --name <nom>` et la versionner. Le client est généré dans `src/generated/` (ignoré par Git) avant build, lint, types et tests.
 - `@fondamental/shared` : **types uniquement** (`import type`), l'API ne peut pas exécuter son TypeScript.

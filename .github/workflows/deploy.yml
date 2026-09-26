@@ -25,6 +25,8 @@ jobs:
       url: ${{ github.ref_name == 'prod' && 'https://fondamentalplugin.fr' || 'https://dev.fondamentalplugin.fr' }}
     env:
       IMAGE: ghcr.io/gladiaaa/fondamentalplugin
+      IMAGE_API: ghcr.io/gladiaaa/fondamentalplugin-api
+      IMAGE_MIGRATE: ghcr.io/gladiaaa/fondamentalplugin-api-migrate
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +42,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Construire et publier l'image
+      # Les trois images portent la même étiquette : deploy.sh les met en ligne ensemble.
+      - name: Construire et publier l'image du site
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -51,8 +54,36 @@ jobs:
             ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
             ${{ env.IMAGE }}:${{ github.ref_name }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Construire et publier l'image de l'API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          build-args: APP_VERSION=${{ steps.tag.outputs.tag }}
+          tags: |
+            ${{ env.IMAGE_API }}:${{ steps.tag.outputs.tag }}
+            ${{ env.IMAGE_API }}:${{ github.ref_name }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Construire et publier l'image des migrations
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: migrate
+          push: true
+          tags: |
+            ${{ env.IMAGE_MIGRATE }}:${{ steps.tag.outputs.tag }}
+            ${{ env.IMAGE_MIGRATE }}:${{ github.ref_name }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=api-migrate
+          cache-to: type=gha,mode=max,scope=api-migrate
 
       - name: Déployer sur le VPS
         env:
@@ -69,6 +100,8 @@ jobs:
             "deploy ${GITHUB_REF_NAME} ${{ steps.tag.outputs.tag }}"
           rm -f ~/.ssh/deploy
 
+      # Une fois nginx configuré (deploy/README.md), /api/health est servi par l'API :
+      # cette vérification traverse alors nginx, l'API et la base.
       - name: Vérifier le site en ligne
         env:
           URL: ${{ github.ref_name == 'prod' && 'https://fondamentalplugin.fr' || 'https://dev.fondamentalplugin.fr' }}

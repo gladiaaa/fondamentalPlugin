@@ -91,3 +91,11 @@ jobs:
           push: false
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: migrate
+          push: false
+          cache-from: type=gha,scope=api-migrate
+          cache-to: type=gha,mode=max,scope=api-migrate
