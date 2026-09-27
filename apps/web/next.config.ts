@@ -1,5 +1,9 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import { createMDX } from "fumadocs-mdx/next";
+
+// Compile content/docs/*.mdx (wiki, #86) via source.config.ts.
+const withMDX = createMDX();
 
 // Racine du monorepo : les dépendances et packages/shared y vivent.
 const monorepoRoot = path.join(__dirname, "../..");
@@ -63,4 +67,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withMDX(nextConfig);

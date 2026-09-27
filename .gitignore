@@ -18,6 +18,9 @@ coverage/
 .next/
 out/
 
+# fumadocs-mdx généré (source.config.ts, apps/web, wiki #86)
+apps/web/.source/
+
 # production
 build/
 dist/
