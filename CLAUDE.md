@@ -1,6 +1,14 @@
 # Fondamental Plugin : boutique
 
-Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, FondamentalTag, FondamentalCrate) : paiement Stripe, puis clé de licence Premium générée par le serveur de licences Fondamental.
+Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, FondamentalTag, FondamentalCrate, FondamentalPass) : paiement Stripe, puis clé de licence Premium générée par le serveur de licences Fondamental.
+
+## Reprendre le travail (nouvelle conversation)
+
+1. `gh pr list --state open` et `gh issue list --state open` : l'état réel du dépôt prime toujours sur ce que dit une conversation précédente.
+2. [`docs/architecture.md`](docs/architecture.md) liste les modules de l'API, ce qui est fait et ce qui reste (avec le numéro d'issue). [`docs/adr/`](docs/adr/README.md) explique le pourquoi des choix. [`docs/runbook.md`](docs/runbook.md) pour une panne.
+3. **Aucune fusion sans ordre explicite d'Océane**, même une PR approuvée avec une CI verte : voir « Git : règles strictes » plus bas.
+4. Les PR s'empilent tant que les précédentes attendent une fusion : skill `/pr-empilee`.
+5. Une issue bloquée (serveur de licences, prix, identifiants OAuth/Stripe) le dit dans sa section « À décider » : ne pas deviner, demander.
 
 ## Stack
 
@@ -73,10 +81,12 @@ Avant de proposer une PR : lint, types, tests et build doivent passer (et les te
 ## Git : règles strictes
 
 - **Ne jamais pousser sur `prod`**, ni ouvrir de PR vers `prod` depuis une autre branche que `dev`.
-- Toute tâche part d'une **issue** et d'une branche créée depuis `dev` : `feature/<n°>-<sujet>`, `fix/<n°>-<sujet>`, `chore/…`, `docs/…`.
+- Toute tâche part d'une **issue** et d'une branche créée depuis `dev` : `feature/<n°>-<sujet>`, `fix/<n°>-<sujet>`, `chore/…`, `docs/…`. Si une ou plusieurs PR sont déjà ouvertes vers `dev`, la branche part de la tête de cette pile, pas de `dev` (skill `/pr-empilee`).
 - PR vers `dev` avec `Closes #<n°>` ; fusion en squash. La mise en production est une PR `dev` → `prod` (merge commit), ouverte seulement à la demande d'un humain.
-- Pas de force-push sur `dev` ni sur `prod`.
+- **Aucune fusion sans un ordre explicite d'Océane**, même si la PR est approuvée et sa CI verte : le dire et attendre, jamais fusionner de sa propre initiative.
+- Pas de force-push sur `dev` ni sur `prod` (une branche de travail personnelle peut être réécrite si Océane le demande explicitement).
 - Commits en français, à l'impératif ou au présent, courts.
+- **Jamais de mention « Generated with Claude Code » ni de trailer d'attribution** dans un commit, une PR ou une issue.
 
 ## Déploiement
 
@@ -91,5 +101,7 @@ Automatique à chaque push sur `dev` (https://dev.fondamentalplugin.fr) ou `prod
 ## Skills du projet
 
 - `/prendre-issue <n°>` : de l'issue à la PR vers `dev`.
+- `/pr-empilee` : ouvrir une PR empilée sur la dernière branche non fusionnée, tant que rien n'a été fusionné.
+- `/test-mutation` : vérifier qu'un test détecte vraiment les défauts qu'il prétend couvrir.
 - `/release` : prépare la PR `dev` → `prod` avec le résumé des changements.
 - `/check-deploy` : vérifie que dev et prod servent la bonne version.

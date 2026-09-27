@@ -120,8 +120,9 @@ docker build -f apps/api/Dockerfile -t fondamentalplugin-api .                  
 docker build -f apps/api/Dockerfile --target migrate -t fondamentalplugin-api-migrate .  # migrations
 ```
 
-Le déploiement de l'API sur le VPS arrive avec #15.
 
 ## Travailler sur le projet
+
+**Documentation** : [architecture](docs/architecture.md), [décisions](docs/adr/README.md), [runbook](docs/runbook.md) (déployer, revenir en arrière, restaurer, changer un secret), [contrat de l'API pour le site](docs/api-front.md), [publier une version d'un plugin](docs/release-plugin.md).
 
 Tout passe par des issues, des branches et des pull requests vers `dev` ; `prod` ne reçoit que des PR depuis `dev`. Voir [CONTRIBUTING.md](CONTRIBUTING.md).
