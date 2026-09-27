@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
 import { PwnedPasswordsService } from '../../src/auth/pwned-passwords.service.js';
+import { LicenseServerClient } from '../../src/licenses/license-server-client.js';
 import { type MailMessage, Mailer } from '../../src/mail/mailer.js';
 
 /** Origine du site en local : la seule que l'API accepte pour les requêtes qui modifient des données. */
@@ -40,13 +41,14 @@ export class InMemoryMailer extends Mailer {
   }
 }
 
-export async function createTestApp(mailer: Mailer): Promise<INestApplication> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+export async function createTestApp(mailer: Mailer, licenseServer?: unknown): Promise<INestApplication> {
+  let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(Mailer)
     .useValue(mailer)
     .overrideProvider(PwnedPasswordsService)
-    .useValue({ isPwned: async (password: string) => password === COMPROMISED_PASSWORD })
-    .compile();
+    .useValue({ isPwned: async (password: string) => password === COMPROMISED_PASSWORD });
+  if (licenseServer) builder = builder.overrideProvider(LicenseServerClient).useValue(licenseServer);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication({ bufferLogs: true });
   configureApp(app);
   await app.init();
