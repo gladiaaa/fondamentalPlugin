@@ -44,6 +44,7 @@ const ERROR_DESCRIPTIONS: Record<number, string> = {
   400: 'Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.',
   401: 'Pas de session, ou identifiants incorrects.',
   403: 'Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).',
+  404: 'Ressource introuvable (ou pas accessible à ce compte).',
   429: 'Trop de requêtes : réessayer plus tard.',
   503: 'Service momentanément indisponible (envoi d’e-mails, base de données).',
 };

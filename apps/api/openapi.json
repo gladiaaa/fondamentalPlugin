@@ -643,6 +643,95 @@
           "auth"
         ]
       }
+    },
+    "/api/products": {
+      "get": {
+        "description": "Dans l’ordre d’affichage. Public.",
+        "operationId": "CatalogController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductApiResponse"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Liste des plugins en vente",
+        "tags": [
+          "catalogue"
+        ]
+      }
+    },
+    "/api/products/{slug}": {
+      "get": {
+        "description": "Public. 404 si le plugin n’existe pas ou n’est plus en vente.",
+        "operationId": "CatalogController_get",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "tag",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductApiResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Un plugin",
+        "tags": [
+          "catalogue"
+        ]
+      }
     }
   },
   "info": {
@@ -905,6 +994,123 @@
         "required": [
           "currentPassword",
           "newPassword"
+        ]
+      },
+      "ProductDependencyApiResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "FastAsyncWorldEdit"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "`true` : le plugin ne démarre pas sans lui."
+          },
+          "note": {
+            "type": "string",
+            "description": "Pourquoi il est utile (texte affichable)."
+          }
+        },
+        "required": [
+          "name",
+          "required",
+          "note"
+        ]
+      },
+      "ProductRequirementsApiResponse": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "example": "Paper 1.21.4+"
+          },
+          "java": {
+            "type": "number",
+            "example": 21,
+            "description": "Version minimale de Java."
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductDependencyApiResponse"
+            }
+          }
+        },
+        "required": [
+          "platform",
+          "java",
+          "dependencies"
+        ]
+      },
+      "ProductPriceApiResponse": {
+        "type": "object",
+        "properties": {
+          "amountCents": {
+            "type": "number",
+            "example": 1999,
+            "description": "En centimes (1999 = 19,99)."
+          },
+          "currency": {
+            "type": "string",
+            "example": "eur",
+            "description": "Code ISO 4217 en minuscules."
+          }
+        },
+        "required": [
+          "amountCents",
+          "currency"
+        ]
+      },
+      "ProductApiResponse": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "tag",
+            "description": "Identifiant dans les adresses du site."
+          },
+          "name": {
+            "type": "string",
+            "example": "FondamentalTag"
+          },
+          "description": {
+            "type": "string"
+          },
+          "distribution": {
+            "type": "string",
+            "enum": [
+              "SINGLE_JAR",
+              "FREE_PREMIUM_JARS"
+            ],
+            "description": "`SINGLE_JAR` : un seul jar, la clé de licence décide de l’édition. `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`."
+          },
+          "requirements": {
+            "$ref": "#/components/schemas/ProductRequirementsApiResponse"
+          },
+          "price": {
+            "nullable": true,
+            "description": "`null` tant que le prix n’est pas fixé.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductPriceApiResponse"
+              }
+            ]
+          },
+          "purchasable": {
+            "type": "boolean",
+            "description": "`false` : ne pas proposer l’achat (prix ou paiement pas encore configurés)."
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "description",
+          "distribution",
+          "requirements",
+          "price",
+          "purchasable"
         ]
       }
     }
