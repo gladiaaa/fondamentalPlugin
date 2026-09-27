@@ -35,6 +35,31 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 - E-mails : passer par `Mailer` (jamais Resend en direct) ; les tests utilisent `InMemoryMailer` (`test/support/app.ts`) et n'appellent aucun service externe. Les liens envoyés pointent vers des pages du **site** (`SITE_URL`), jamais vers l'API.
 - Tests e2e d'authentification : `newBrowser()` donne un client avec ses cookies, son `Origin` et sa propre IP (`X-Forwarded-For`), pour que les limites de requêtes ne se mélangent pas entre tests. Les tests de sécurité doivent échouer quand on casse le code : vérifier en supprimant volontairement la protection testée.
 
+## Site (`apps/web`)
+
+- **Références** : [`docs/front/`](docs/front/README.md) (brief, maquette `maquettes-boutique.html`, charte graphique, rapport d'analyse des 4 plugins) pour le visuel et le contenu ; [`docs/api-front.md`](docs/api-front.md) pour le contrat API (fait foi sur les routes). Feuille de route par phase : issue [#58](https://github.com/gladiaaa/fondamentalPlugin/issues/58).
+- **Le back avance en parallèle** : `docs/api-front.md` change de PR en PR (une PR qui ajoute ou change une route le met à jour, cf. section API ci-dessus). Avant de commencer une phase front qui dépend de l'API, `git pull` sur `dev` et relire `docs/api-front.md` **à ce moment-là** — ne jamais coder contre une copie mentale ou un extrait d'une conversation précédente. `docs/front/brief.md` porte le même avertissement pour ses mentions « disponible »/« prévue ».
+- **Style** : Tailwind 4, jetons de la charte importés dans `globals.css` (`@theme`), thème sombre par défaut avec variante claire (`next-themes`, sans flash au chargement). Ne pas utiliser de couleur ou d'espacement hors jetons.
+- **Comportement accessible** : primitives Radix (Tabs, Switch, Accordion, Dialog…), stylées à la main avec les classes Tailwind du projet — jamais leur propre CSS.
+- **Toasts** : `sonner`, pour les retours brefs uniquement (« Clé copiée »…). Les confirmations d'action (libérer une installation, supprimer le compte) restent **dans la page**, jamais `alert`/`confirm`.
+- **Formulaires** : `react-hook-form` + `zod`. Erreur de champ affichée en texte sous le champ, jamais seulement en couleur.
+- **Wiki** : Fumadocs (MDX), public, couvre les éditions gratuite et Premium.
+- **Icônes** : SVG de `docs/front/charte/icones/` importés via SVGR (`currentColor`, trait 2 px).
+- **Arborescence** (`apps/web/src/`) :
+  ```
+  app/                      routes uniquement (page.tsx fins, peu de logique)
+  components/ui/            composants génériques (Button, Field, Badge, Switch, CodeBlock…)
+  components/layout/        Header, Footer, AccountSidebar…
+  features/<domaine>/       plugins, auth, licenses, checkout, config-generator…
+  lib/api/                  couche d'accès unique à l'API (adaptateur réel + mocks MSW)
+  ```
+  Composants en PascalCase, hooks en camelCase préfixés `use`, un composant = un fichier du même nom.
+- **Couche d'accès API** (`lib/api/`) : toute donnée passe par là, jamais un `fetch` direct dans un composant. Tant qu'une route n'est pas livrée (voir `docs/api-front.md` §7), elle est simulée avec **MSW**, avec la même forme que la route réelle — retirer le mock sans toucher aux composants une fois la route livrée.
+- **Session côté navigateur uniquement** : `GET /auth/me` au chargement (401 = visiteur, pas une erreur à afficher), `csrfToken` gardé **en mémoire** (contexte React), jamais `localStorage` ni une URL. Toute route qui dépend de la session (`/auth/me`, `/me/*`, `/checkout`, `/configs`) s'appelle depuis un composant client, jamais depuis un Server Component (le cookie et l'`Origin` doivent partir tout seuls).
+- **Données publiques** (catalogue, fichiers, versions) : peuvent être lues côté serveur (Server Components).
+- **Clé de licence** : masquée par défaut à l'affichage (bouton Afficher/Copier), jamais dans une URL (`/compte/licences/[id-interne]`, pas la clé).
+- **`apps/web/next.config.ts`** doit relayer `/api/:path*` vers `http://localhost:4000/api/:path*` en local (`rewrites()`) une fois posé par #57 — sans ça l'API n'est pas joignable en développement.
+
 ## Commandes
 
 Depuis la racine (chaque commande s'applique à tous les espaces) :

@@ -15,12 +15,13 @@ Argument : le numéro de l'issue (`/prendre-issue 12`).
    git switch -c <type>/<n°>-<sujet-court> origin/dev
    ```
    Type : `feature` (fonctionnalité), `fix` (bug), `chore` (outillage), `docs`.
-4. **Coder** en suivant les conventions de `CLAUDE.md`. Petits commits en français.
-5. **Vérifier** : `npm run lint`, `npm run typecheck`, `npm run build`. Tester le parcours concerné avec `npm run dev`.
-6. **Pousser et ouvrir la PR vers `dev`** :
+4. **Si l'issue touche `apps/web` et dépend de l'API** : relire `docs/api-front.md` à cet instant (la branche vient d'être créée depuis `dev` à jour, donc c'est déjà sa dernière version) — le back avance en parallèle, ne jamais coder contre un résumé ou une conversation antérieure.
+5. **Coder** en suivant les conventions de `CLAUDE.md`. Petits commits en français.
+6. **Vérifier** : `npm run lint`, `npm run typecheck`, `npm run build`. Tester le parcours concerné avec `npm run dev`.
+7. **Pousser et ouvrir la PR vers `dev`** :
    ```bash
    git push -u origin HEAD
    gh pr create --base dev --fill-first
    ```
    Remplir le modèle : ce qui change, pourquoi, comment tester, et `Closes #<n°>`.
-7. Donner le lien de la PR. Ne jamais fusionner soi-même sans accord, ne jamais viser `prod`.
+8. Donner le lien de la PR. Ne jamais fusionner soi-même sans accord, ne jamais viser `prod`.

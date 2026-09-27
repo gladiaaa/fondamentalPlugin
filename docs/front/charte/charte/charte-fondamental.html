@@ -1,0 +1,940 @@
+<title>Charte Fondamental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#120F1A;--sf:#1A1625;--sf2:#231D33;--ln:#2A2338;--tx:#F0ECF8;--mu:#9A90B3;--ac:#B7A0FF;--act:#B7A0FF;--on:#170F2A;
+  --ok:#7ED6A0;--warn:#F0C36A;--err:#F07A7A;--info:#8FB8FF;
+  --display:'Sora','Helvetica Neue',Arial,sans-serif;
+  --body:'Instrument Sans','Helvetica Neue',Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){color-scheme:light;--bg:#F3F0FA;--sf:#FFFFFF;--sf2:#EAE5F6;--ln:#DDD6EE;--tx:#170F2A;--mu:#5E5673;--act:#6A4FD0;--ok:#1F8A55;--warn:#9A6A00;--err:#C23B3B;--info:#2F63C9}
+}
+:root[data-theme="light"]{color-scheme:light;--bg:#F3F0FA;--sf:#FFFFFF;--sf2:#EAE5F6;--ln:#DDD6EE;--tx:#170F2A;--mu:#5E5673;--act:#6A4FD0;--ok:#1F8A55;--warn:#9A6A00;--err:#C23B3B;--info:#2F63C9}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{background:var(--bg);color:var(--tx);font:400 1rem/1.65 var(--body);padding-inline:clamp(16px,4vw,48px);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin-inline:auto}
+h1,h2,h3,h4,p,ul,ol,dl,dd,figure,table{margin:0}
+ul,ol{padding:0;list-style:none}
+svg{display:block;max-width:100%;height:auto}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--act);outline-offset:3px}
+h2{font:600 clamp(1.8rem,4.4vw,2.8rem)/1.05 var(--display);letter-spacing:-.04em;text-wrap:balance}
+h3{font:600 1.15rem/1.25 var(--display);letter-spacing:-.02em}
+.label{font:500 .72rem/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mu)}
+.mu{color:var(--mu)}
+code,.mono{font-family:var(--mono)}
+
+/* couverture */
+.cover{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(24px,6vw,72px);align-items:center;padding-block:clamp(40px,8vw,96px) clamp(32px,6vw,64px)}
+.cover-copy{container-type:inline-size;display:grid;gap:18px;justify-items:start}
+.cover h1{font:600 clamp(2.4rem,11cqi,5.2rem)/.98 var(--display);letter-spacing:-.05em;margin:0}
+.cover h1 span{display:block;font-weight:300;color:var(--act)}
+.cover .lead{color:var(--mu);max-width:52ch;font-size:1.1rem}
+.cover .tl{font:400 clamp(1.1rem,3vw,1.5rem)/1.3 var(--display);letter-spacing:-.02em}
+
+/* sommaire */
+.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-block:1px solid var(--ln);margin-inline:calc(-1 * clamp(16px,4vw,48px));padding-inline:clamp(16px,4vw,48px)}
+.toc ul{display:flex;gap:6px;overflow-x:auto;max-width:1120px;margin-inline:auto;padding-block:10px;scrollbar-width:none}
+.toc a{display:inline-flex;gap:8px;align-items:baseline;white-space:nowrap;padding:.45em .9em;border-radius:99px;color:var(--mu);text-decoration:none;font:500 .85rem/1 var(--body)}
+.toc a i{font:500 .68rem/1 var(--mono);font-style:normal;opacity:.7}
+.toc a:hover{color:var(--tx);background:var(--sf)}
+
+/* chapitres */
+section{padding-block:clamp(56px,9vw,104px);border-top:1px solid var(--ln)}
+.toc + section{border-top:0}
+.head{display:grid;gap:14px;max-width:72ch;margin-bottom:clamp(28px,5vw,48px)}
+.head p{color:var(--mu)}
+.sub{margin-top:clamp(36px,6vw,56px);display:grid;gap:14px}
+.sub > h3{font-size:1.3rem}
+.sub > p{color:var(--mu);max-width:70ch}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:20px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stage{display:grid;place-items:center;border-radius:20px;position:relative;padding:36px 20px 40px;min-height:230px}
+.stage .cap{position:absolute;left:16px;bottom:12px;font:500 .7rem/1.3 var(--mono);opacity:.7;letter-spacing:.03em}
+.s-nuit{background:#120F1A;color:#F0ECF8;border:1px solid #2A2338}
+.s-papier{background:#F3F0FA;color:#170F2A;border:1px solid #DDD6EE}
+.s-ame{background:#B7A0FF;color:#170F2A}
+.s-encre{background:#0B0912;color:#F0ECF8;border:1px solid #2A2338}
+.lk{display:inline-flex;align-items:center;gap:14px;white-space:nowrap}
+.lk.v{flex-direction:column;gap:12px;text-align:center}
+.wm{font:600 clamp(1.3rem,4.4vw,1.9rem)/1 var(--display);letter-spacing:-.045em}
+.wm small{display:block;font:300 .64em/1 var(--display);letter-spacing:-.02em;margin-top:.35em;color:#B7A0FF}
+.s-papier .wm small{color:#6A4FD0}
+.s-ame .wm small,.s-mono .wm small{color:inherit;opacity:.75}
+.x{position:absolute;top:12px;right:12px;width:26px;height:26px;color:#F07A7A}
+
+/* marque */
+.vals article,.concept article{padding:22px;display:grid;gap:8px;align-content:start}
+.vals p,.concept p{color:var(--mu);font-size:.95rem}
+.concept .cb{display:grid;place-items:center;height:112px;border-radius:14px;background:#120F1A;border:1px solid #2A2338;margin-bottom:6px}
+.prods{display:flex;flex-wrap:wrap;gap:12px}
+.pchip{display:inline-flex;align-items:center;gap:12px;padding:10px 18px 10px 10px;border-radius:99px;border:1px solid var(--ln);background:var(--sf);font:600 1rem/1 var(--display);letter-spacing:-.03em}
+.pchip .t{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:#170F2A}
+
+/* logo */
+.ratio-note{font:500 .78rem/1.5 var(--mono);color:var(--mu)}
+.build{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px}
+.build .stage{padding:20px}
+.construct{width:100%;max-width:460px;height:auto}
+.construct text{font:500 5px 'JetBrains Mono',monospace;fill:#9A90B3}
+.rules{display:grid;gap:14px;padding:26px;align-content:center}
+.rules li{display:grid;grid-template-columns:auto 1fr;gap:14px}
+.rules li b{font:600 .72rem/1 var(--mono);color:var(--act);padding-top:.45em}
+.sizes{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:26px}
+.misuse .stage{min-height:200px;padding:32px 16px 44px;overflow:hidden}
+
+/* couleurs */
+.sw{border-radius:16px;padding:16px;min-height:150px;display:grid;align-content:space-between;gap:20px;background:var(--c);color:var(--on-c);border:1px solid rgba(127,127,127,.28)}
+.sw h4{font:600 1.05rem/1.2 var(--display);letter-spacing:-.02em}
+.sw p{font-size:.84rem;opacity:.85}
+.sw .hx{font:500 .78rem/1.5 var(--mono)}
+.swrap{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
+.sig4 .sw{min-height:170px}
+.bar{display:flex;height:48px;border-radius:14px;overflow:hidden;border:1px solid var(--ln)}
+.bar i{display:block;background:var(--c)}
+.barkey{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:10px;font:500 .74rem/1.4 var(--mono);color:var(--mu)}
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
+.tbl th{font:500 .7rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mu);text-align:left;padding:10px 14px;border-bottom:1px solid var(--ln)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--ln);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .pair{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:6px 12px;border-radius:99px;font:600 .9rem/1 var(--display);background:var(--pb);color:var(--pf);border:1px solid rgba(127,127,127,.3)}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font:500 .72rem/1.5 var(--mono);white-space:nowrap}
+.b-aaa{background:rgba(126,214,160,.16);color:var(--ok)}
+.b-aa{background:rgba(143,184,255,.16);color:var(--info)}
+.b-lg{background:rgba(240,195,106,.16);color:var(--warn)}
+.b-no{background:rgba(240,122,122,.16);color:var(--err)}
+.tblwrap{overflow-x:auto;border-radius:20px}
+.tblwrap .tbl{min-width:560px}
+.codebox{position:relative;border-radius:16px;background:#0B0912;color:#F0ECF8;padding:18px;font:400 .82rem/1.75 var(--mono);overflow-x:auto;border:1px solid #2A2338}
+.codebox pre{margin:0;white-space:pre}
+.codebox .c{color:#9A90B3}.codebox .v{color:#B7A0FF}
+.crow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.btn-copy{appearance:none;cursor:pointer;border:1px solid var(--ln);background:var(--sf);border-radius:99px;padding:.55em 1.1em;font:500 .78rem/1 var(--mono)}
+.btn-copy:hover{border-color:var(--act)}
+
+/* typo */
+.spec{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:clamp(16px,4vw,48px);padding:clamp(20px,3vw,30px);align-items:center}
+.spec + .spec{margin-top:12px}
+.spec .m{display:grid;gap:6px}
+.spec .m b{font:600 1.1rem/1.2 var(--display);letter-spacing:-.02em}
+.spec .m span{color:var(--mu);font-size:.9rem}
+.glyphs{font:600 clamp(2rem,6vw,3.6rem)/1.05 var(--display);letter-spacing:-.04em}
+.scale{display:grid}
+.scale > div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--ln)}
+.scale > div:last-child{border-bottom:0}
+.scale .k{font:500 .72rem/1.5 var(--mono);color:var(--mu)}
+.scale .s{overflow-wrap:anywhere}
+
+/* icônes */
+.iconsheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,110px),1fr));gap:10px}
+.ico{display:grid;justify-items:center;gap:10px;padding:18px 8px 14px;border-radius:16px;border:1px solid var(--ln);background:var(--sf);color:var(--tx)}
+.ico span.n{font:500 .68rem/1 var(--mono);color:var(--mu)}
+.pi{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end}
+.pi figure{display:grid;justify-items:center;gap:10px}
+.pi figcaption{font:500 .75rem/1.3 var(--mono);opacity:.8}
+.pi .sol{display:grid;place-items:center;background:#B7A0FF;color:#170F2A}
+.pi .lin{display:grid;place-items:center;background:#1A1625;border:1px solid #2A2338;color:#B7A0FF}
+
+/* interface */
+.ui{--u-bg:#120F1A;--u-sf:#1A1625;--u-sf2:#231D33;--u-ln:#2A2338;--u-tx:#F0ECF8;--u-mu:#9A90B3;--u-ac:#B7A0FF;--u-on:#170F2A;background:var(--u-bg);color:var(--u-tx);border:1px solid var(--u-ln);border-radius:20px;padding:clamp(18px,3vw,28px);display:grid;gap:26px}
+.ui .row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:16px;align-items:center}
+.ui .row > .label{color:var(--u-mu)}
+.ui .set{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.ub{appearance:none;cursor:pointer;border:0;border-radius:99px;font:600 .9rem/1 var(--body);padding:.85em 1.4em;background:var(--u-ac);color:var(--u-on);transition:filter .12s,box-shadow .12s,transform .12s}
+.ub:hover,.ub.is-hover{filter:brightness(1.1)}
+.ub:active{transform:translateY(1px)}
+.ub.is-focus,.ub:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(183,160,255,.35)}
+.ub.sec{background:transparent;color:var(--u-tx);box-shadow:inset 0 0 0 1.5px var(--u-ln)}
+.ub.sec:hover,.ub.sec.is-hover{box-shadow:inset 0 0 0 1.5px var(--u-ac)}
+.ub.ghost{background:transparent;color:var(--u-ac);padding-inline:.6em}
+.ub.is-disabled,.ub:disabled{opacity:.4;cursor:not-allowed;filter:none}
+.ub.s{padding:.65em 1.1em;font-size:.82rem}.ub.l{padding:1.05em 1.8em;font-size:1rem}
+.fld{display:grid;gap:6px;min-width:0}
+.fld label{font:500 .82rem/1.2 var(--body);color:var(--u-tx)}
+.fld input{background:var(--u-sf2);border:1.5px solid var(--u-ln);border-radius:12px;padding:.8em 1em;color:var(--u-tx);width:100%;transition:border-color .12s,box-shadow .12s}
+.fld input:focus,.fld input.is-focus{outline:0;border-color:var(--u-ac);box-shadow:0 0 0 4px rgba(183,160,255,.22)}
+.fld input.is-err{border-color:#F07A7A}
+.fld input:disabled{opacity:.45}
+.fld small{font-size:.78rem;color:var(--u-mu)}
+.fld small.e{color:#F07A7A}
+.flds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px;width:100%}
+.chip2{display:inline-flex;align-items:center;gap:8px;padding:.5em 1em;border-radius:99px;background:var(--u-sf2);color:var(--u-mu);font:500 .84rem/1 var(--body);border:1px solid var(--u-ln);cursor:pointer}
+.chip2.on{background:rgba(183,160,255,.16);color:var(--u-ac);border-color:rgba(183,160,255,.5)}
+.bdg{display:inline-flex;align-items:center;gap:6px;padding:.3em .8em;border-radius:99px;font:500 .74rem/1.4 var(--mono);background:rgba(183,160,255,.16);color:var(--u-ac)}
+.bdg.n{background:var(--u-sf2);color:var(--u-mu)}
+.sw-t{position:relative;display:inline-block;width:46px;height:28px}
+.sw-t input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw-t i{position:absolute;inset:0;border-radius:99px;background:var(--u-sf2);border:1.5px solid var(--u-ln);transition:background .2s}
+.sw-t i::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:var(--u-mu);transition:transform .2s cubic-bezier(.2,.7,.2,1),background .2s}
+.sw-t input:checked + i{background:rgba(183,160,255,.25);border-color:var(--u-ac)}
+.sw-t input:checked + i::after{transform:translateX(18px);background:var(--u-ac)}
+.sw-t input:focus-visible + i{box-shadow:0 0 0 4px rgba(183,160,255,.35)}
+.al{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--u-bg));font-size:.92rem;width:100%}
+.al svg{flex:none;margin-top:2px;color:var(--c)}
+.al b{display:block;font-weight:600}
+.al span{color:var(--u-mu)}
+.tk{display:grid;gap:16px}
+.flds.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rad{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+.rad div{display:grid;justify-items:center;gap:8px;font:500 .72rem/1.3 var(--mono);color:var(--u-mu)}
+.rad i{display:block;width:70px;height:70px;background:var(--u-sf2);border:1.5px solid var(--u-ln)}
+.spc{display:grid;gap:8px}
+.spc div{display:grid;grid-template-columns:70px 1fr;gap:12px;align-items:center;font:500 .72rem/1.3 var(--mono);color:var(--u-mu)}
+.spc i{display:block;height:12px;border-radius:99px;background:var(--u-ac);opacity:.85}
+.pc{background:var(--u-sf);border:1px solid var(--u-ln);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px;max-width:340px;width:100%}
+.pc .t{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--u-ac);color:var(--u-on)}
+.pc h4{font:600 1.15rem/1.2 var(--display);letter-spacing:-.03em;margin-top:4px}
+.pc p{color:var(--u-mu);font-size:.92rem;flex:1}
+.pc .pf{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pc .pr{font:600 1.15rem/1 var(--display);letter-spacing:-.03em}
+
+/* en jeu */
+.mcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start}
+.mcw{display:grid;gap:10px}
+.mc{background:#08060D;color:#D8D2E6;border-radius:12px;border:1px solid #2A2338;padding:14px;font:400 .82rem/1.7 var(--mono)}
+.motd{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center}
+.motd-i{width:64px;height:64px;background:#120F1A;display:grid;place-items:center;border:1px solid #2A2338}
+.motd-t{display:grid;gap:2px;min-width:0}
+.motd-t div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dim{color:#8A8199}.pv{color:#B7A0FF}.g{color:#7ED6A0}.gr{background:linear-gradient(90deg,#B7A0FF,#6A5D94);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:500}
+.sb{max-width:250px;padding:10px 12px}
+.sb .ttl{text-align:center;letter-spacing:.14em;font-weight:500}
+.sb .ln{display:flex;justify-content:space-between;gap:12px}
+.sb hr{border:0;border-top:1px solid #2A2338;margin:6px 0}
+
+/* voix */
+.pr4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.pr4 article{padding:22px;display:grid;gap:8px;align-content:start}
+.pr4 p{color:var(--mu);font-size:.95rem}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--ln);border-radius:20px;overflow:hidden}
+.yn > div{padding:16px 20px;border-bottom:1px solid var(--ln)}
+.yn > div:nth-last-child(-n+2){border-bottom:0}
+.yn > div:nth-child(odd){background:var(--sf)}
+.yn > div:nth-child(even){border-left:1px solid var(--ln)}
+.yn .h{font:500 .7rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding-block:12px}
+.yn .h.y{color:var(--ok)}.yn .h.n{color:var(--err)}
+.yn .no{color:var(--mu);text-decoration:line-through;text-decoration-color:var(--err)}
+.micro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.micro > div{padding:16px 18px;border:1px solid var(--ln);border-radius:16px;background:var(--sf);display:grid;gap:4px}
+.micro small{font:500 .68rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}
+
+/* application */
+.site{--s-bg:#120F1A;--s-sf:#1A1625;--s-sf2:#231D33;--s-ln:#2A2338;--s-tx:#F0ECF8;--s-mu:#9A90B3;--s-ac:#B7A0FF;--s-on:#170F2A;background:var(--s-bg);color:var(--s-tx);border-radius:24px;overflow:hidden;border:1px solid var(--s-ln)}
+.s-nav{display:flex;align-items:center;gap:18px;padding:16px clamp(16px,3vw,32px)}
+.s-nav nav{display:flex;flex-wrap:wrap;gap:8px 24px;margin-left:auto;color:var(--s-mu);font-size:.92rem}
+.s-nav .wm{font-size:1.1rem}
+.pill{appearance:none;cursor:pointer;border:0;border-radius:99px;font:600 .9rem/1 var(--body);padding:.85em 1.4em;background:var(--s-ac);color:var(--s-on)}
+.pill.ghost{background:transparent;color:var(--s-tx);box-shadow:inset 0 0 0 1.5px var(--s-ln)}
+.pill.sm{padding:.65em 1.1em;font-size:.84rem}
+.cart{padding:.55em 1em;border-radius:99px;box-shadow:inset 0 0 0 1.5px var(--s-ln);font-size:.86rem;white-space:nowrap}
+.s-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(24px,5vw,56px);align-items:center;padding:clamp(28px,6vw,64px) clamp(16px,3vw,32px)}
+.s-copy{container-type:inline-size;display:grid;gap:18px;justify-items:start}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:.4em .9em;border-radius:99px;background:var(--s-sf2);font-size:.82rem;color:var(--s-mu)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--s-ac)}
+.s-copy h3{font:600 clamp(2rem,10cqi,3.6rem)/1 var(--display);letter-spacing:-.05em;text-wrap:balance}
+.s-copy h3 span{display:block;font-weight:300;color:var(--s-ac)}
+.s-copy p{color:var(--s-mu);max-width:44ch;font-size:1.05rem}
+.s-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.srv{background:var(--s-sf);border:1px solid var(--s-ln);border-radius:24px;padding:20px;display:grid;gap:16px}
+.srv-top{display:flex;align-items:center;gap:14px}
+.srv-top b{font:600 1.1rem/1.2 var(--display);letter-spacing:-.03em;display:block}
+.srv-top small{color:var(--s-mu);font-size:.85rem;display:flex;align-items:center;gap:6px}
+.srv-top small i{width:8px;height:8px;border-radius:50%;background:#7ED6A0}
+.srv ul{display:grid;gap:8px}
+.srv li{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:var(--s-sf2)}
+.srv li .t{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--s-bg);color:var(--s-ac);flex:none}
+.srv li em{margin-left:auto;font-style:normal;font-size:.76rem;padding:.3em .7em;border-radius:99px;background:rgba(126,214,160,.14);color:#7ED6A0}
+.s-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;padding:0 clamp(16px,3vw,32px) clamp(24px,4vw,36px)}
+
+/* fichiers */
+.files td:first-child{font-family:var(--mono);font-size:.84rem}
+.foot{padding-block:32px 64px;border-top:1px solid var(--ln);color:var(--mu);font:500 .78rem/1.6 var(--mono);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+@media (max-width:860px){
+  .cover{grid-template-columns:minmax(0,1fr)}
+  .g2,.g3,.g4,.build{grid-template-columns:minmax(0,1fr)}
+  .spec{grid-template-columns:minmax(0,1fr)}
+  .s-hero{grid-template-columns:minmax(0,1fr)}
+  .s-nav nav{display:none}
+  .s-nav .cart{margin-left:auto}
+  .ui .row{grid-template-columns:minmax(0,1fr);gap:8px}
+  .flds.two{grid-template-columns:minmax(0,1fr)}
+  .scale > div{grid-template-columns:minmax(0,1fr);gap:4px}
+}
+@media (min-width:861px) and (max-width:1000px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){
+  .yn{grid-template-columns:minmax(0,1fr)}
+  .yn > div:nth-child(even){border-left:0}
+  .yn > div:nth-last-child(-n+2){border-bottom:1px solid var(--ln)}
+  .yn > div:last-child{border-bottom:0}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.ub,.sw-t i,.sw-t i::after{transition:none}}
+
+/* impression et export PDF : pages larges, un chapitre par page */
+@page{size:1280px 1810px;margin:0}
+@media print{
+  html{scroll-behavior:auto}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .toc{position:static;backdrop-filter:none}
+  section{break-before:page;padding-block:56px}
+  #marque{break-before:auto}
+  .card,.stage,.sw,.al,.pc,.ico,.mc,.pchip,.yn,.micro > div,tr,figure{break-inside:avoid}
+  .sub{break-inside:avoid-page}
+  .ui{break-inside:avoid-page}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="cover">
+    <span data-cube='{"h":300}'></span>
+    <div class="cover-copy">
+      <p class="label">Charte graphique · version 1.0 · 26 septembre 2026</p>
+      <h1>Fondamental<span>Plugins</span></h1>
+      <p class="tl">Le socle de votre serveur.</p>
+      <p class="lead">Cette charte décrit la marque : son symbole, ses couleurs, ses typographies, ses icônes, son interface et sa voix. Elle sert à construire la boutique, les fiches produit et tout ce qui apparaît en jeu.</p>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Sommaire"><ul>
+    <li><a href="#marque"><i>01</i>Marque</a></li>
+    <li><a href="#logo"><i>02</i>Logo</a></li>
+    <li><a href="#couleurs"><i>03</i>Couleurs</a></li>
+    <li><a href="#typographie"><i>04</i>Typographie</a></li>
+    <li><a href="#icones"><i>05</i>Icônes</a></li>
+    <li><a href="#interface"><i>06</i>Interface</a></li>
+    <li><a href="#en-jeu"><i>07</i>En jeu</a></li>
+    <li><a href="#voix"><i>08</i>Voix</a></li>
+    <li><a href="#application"><i>09</i>Application</a></li>
+    <li><a href="#fichiers"><i>10</i>Fichiers</a></li>
+  </ul></nav>
+
+  <!-- 01 MARQUE -->
+  <section id="marque">
+    <div class="head">
+      <p class="label">01 · Marque</p>
+      <h2>Des bases solides, posées avec soin</h2>
+      <p>Fondamental Plugins vend des plugins Minecraft fiables, simples à installer et bien documentés, pour les gérants de serveurs de toute taille. La marque doit inspirer la confiance d'un outil sérieux, sans jamais perdre le plaisir du jeu.</p>
+    </div>
+    <div class="grid g3 vals">
+      <article class="card"><h3>Solide</h3><p>Des plugins pensés pour durer : stables, maintenus, avec une documentation à jour. Le visuel le dit par des formes pleines et des angles adoucis.</p></article>
+      <article class="card"><h3>Accessible</h3><p>Compris par un joueur curieux comme par un développeur. Peu de jargon, des phrases courtes, aucune barrière technique inutile.</p></article>
+      <article class="card"><h3>Soigné</h3><p>Du détail dans chaque bloc : un relief léger, des lettres gravées, un point final. Le soin se voit sans qu'on ait besoin de le souligner.</p></article>
+    </div>
+
+    <div class="sub">
+      <h3>Le nom</h3>
+      <p><b>Fondamental</b> dit les bases sur lesquelles un serveur se construit. <b>Plugins</b> dit ce que l'on vend. Les produits gardent le mot Fondamental collé au nom de la fonction, sans espace ni tiret.</p>
+      <div class="prods">
+        <span class="pchip"><span class="t" data-ic="bed" data-s="20"></span>FondamentalBedwars</span>
+        <span class="pchip"><span class="t" data-ic="tag" data-s="20"></span>FondamentalTag</span>
+        <span class="pchip"><span class="t" data-ic="crate" data-s="20"></span>FondamentalCrate</span>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Le symbole en quatre idées</h3>
+      <div class="grid g4 concept">
+        <article class="card"><div class="cb"><span data-cube='{"h":82,"fade":"P"}'></span></div><h3>F comme Fondamental</h3><p>La lettre est gravée sur la face de gauche, celle que l'on voit en premier.</p></article>
+        <article class="card"><div class="cb"><span data-cube='{"h":82,"fade":"F"}'></span></div><h3>P comme Plugins</h3><p>Sur la face de droite, la lettre qui nomme le produit. Les deux faces se lisent d'un seul regard : F P.</p></article>
+        <article class="card"><div class="cb"><span data-cube='{"h":82}'></span></div><h3>Le bloc</h3><p>Un cube isométrique aux angles adoucis rappelle le monde de Minecraft sans jamais copier le jeu.</p></article>
+        <article class="card"><div class="cb"><span data-cube='{"h":82,"fade":"FP"}'></span></div><h3>Le point</h3><p>Le petit point après le F est un point final : les bases sont posées, on peut construire dessus.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 LOGO -->
+  <section id="logo">
+    <div class="head">
+      <p class="label">02 · Logo</p>
+      <h2>Un cube, deux lettres, un point</h2>
+      <p>Le logo se compose du symbole et du nom. Le symbole peut s'employer seul dès que le nom est déjà présent ou que la place manque.</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="stage s-nuit"><span class="lk"><span data-cube='{"h":76}'></span><span class="wm">Fondamental<small>Plugins</small></span></span><span class="cap">Horizontal · version principale</span></div>
+      <div class="stage s-papier"><span class="lk"><span data-cube='{"h":76}'></span><span class="wm">Fondamental<small>Plugins</small></span></span><span class="cap">Horizontal · sur fond clair</span></div>
+      <div class="stage s-nuit"><span class="lk v"><span data-cube='{"h":120}'></span><span class="wm">Fondamental<small>Plugins</small></span></span><span class="cap">Vertical</span></div>
+      <div class="stage s-nuit"><span data-cube='{"h":160}'></span><span class="cap">Symbole seul</span></div>
+    </div>
+
+    <div class="sub">
+      <h3>Versions de couleur</h3>
+      <p>La version en couleur est la version de référence. Sur un fond qui n'offre pas assez de contraste, ou pour l'impression en une couleur, on utilise le symbole plein d'une seule teinte : les lettres et les arêtes sont alors évidées.</p>
+      <div class="grid g4">
+        <div class="stage s-nuit"><span data-cube='{"h":110}'></span><span class="cap">Couleur · sur Nuit</span></div>
+        <div class="stage s-papier"><span data-cube='{"h":110}'></span><span class="cap">Couleur · sur Papier</span></div>
+        <div class="stage s-ame"><span data-cube='{"h":110,"mode":"flat","col":"#170F2A"}'></span><span class="cap">Une couleur · Encre sur Améthyste</span></div>
+        <div class="stage s-encre"><span data-cube='{"h":110,"mode":"flat","col":"#F0ECF8"}'></span><span class="cap">Une couleur · Brume sur noir</span></div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Construction et zone de protection</h3>
+      <p>Le cube s'inscrit dans un hexagone à 30 degrés. La zone de protection vaut x, soit le quart de la hauteur du cube : aucun texte ni élément graphique ne s'y place.</p>
+      <div class="build">
+        <div class="stage s-nuit" style="min-height:0"><span id="construct"></span></div>
+        <ul class="card rules">
+          <li><b>H</b><span>Le cube fait 80 u de haut pour 69,3 u de large. Ses arêtes suivent des angles de 30 degrés.</span></li>
+          <li><b>R</b><span>Les six coins de l'hexagone sont arrondis sur un rayon de 9 u. Les arêtes intérieures sont des traits de 1,3 u.</span></li>
+          <li><b>X</b><span>La zone de protection vaut x = 20 u, un quart de la hauteur, sur les quatre côtés.</span></li>
+          <li><b>F P</b><span>Les lettres sont tracées au trait de 9 u, bouts arrondis, et gravées : un reflet clair décalé de 1,7 u les souligne.</span></li>
+          <li><b>·</b><span>Le point est un disque de 6,4 u posé à droite du pied du F. Il disparaît sous 32 px.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Tailles minimales</h3>
+      <p>Le symbole ne descend pas sous 16 px de haut à l'écran, ni sous 6 mm à l'impression. Sous 32 px, le point est retiré et le trait des lettres est épaissi pour rester net.</p>
+      <div class="stage s-nuit" style="min-height:0;padding:30px 20px">
+        <div class="sizes"><span data-cube='{"h":128}'></span><span data-cube='{"h":80}'></span><span data-cube='{"h":48}'></span><span data-cube='{"h":32,"small":true}'></span><span data-cube='{"h":24,"small":true}'></span><span data-cube='{"h":16,"small":true}'></span></div>
+        <span class="cap">128 · 80 · 48 · 32 · 24 · 16 px</span>
+      </div>
+    </div>
+
+    <div class="sub">
+      <h3>Icône de serveur et avatars</h3>
+      <p>L'icône d'un serveur Minecraft est un fichier PNG de 64 × 64 px nommé server-icon.png. Le cube y est centré sur la couleur Nuit. Pour un avatar rond, le cube en une couleur se pose sur l'Améthyste.</p>
+      <div class="stage s-nuit" style="min-height:0;padding:30px 20px">
+        <div class="sizes" style="gap:34px;align-items:center">
+          <div style="width:128px;height:128px;border-radius:26px;background:#120F1A;border:1px solid #2A2338;display:grid;place-items:center"><span data-cube='{"h":92}'></span></div>
+          <div style="width:64px;height:64px;background:#120F1A;border:1px solid #2A2338;display:grid;place-items:center"><span data-cube='{"h":46}'></span></div>
+          <div style="width:128px;height:128px;border-radius:50%;background:#B7A0FF;display:grid;place-items:center"><span data-cube='{"h":84,"mode":"flat","col":"#170F2A"}'></span></div>
+        </div>
+        <span class="cap">Tuile 128 · server-icon 64 × 64 · avatar rond</span>
+      </div>
+    </div>
+
+    <div class="sub misuse">
+      <h3>À éviter</h3>
+      <p>Le logo ne se modifie pas. Voici les six erreurs les plus fréquentes.</p>
+      <div class="grid g3">
+        <div class="stage s-nuit"><svg class="x" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9"/></g></svg><span style="display:block;transform:scaleX(1.55)" data-cube='{"h":100}'></span><span class="cap">Ne pas étirer ni déformer</span></div>
+        <div class="stage s-nuit"><svg class="x" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9"/></g></svg><span data-cube='{"h":100,"ac":"#F0A24B"}'></span><span class="cap">Ne pas changer les couleurs</span></div>
+        <div class="stage s-nuit"><svg class="x" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9"/></g></svg><span style="display:block;filter:drop-shadow(10px 12px 6px rgba(0,0,0,.85))" data-cube='{"h":100}'></span><span class="cap">Pas d'ombre portée</span></div>
+        <div class="stage s-nuit"><svg class="x" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9"/></g></svg><span style="display:block;transform:rotate(22deg)" data-cube='{"h":100}'></span><span class="cap">Ne pas incliner</span></div>
+        <div class="stage" style="background:#9280CC;color:#170F2A"><svg class="x" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9"/></g></svg><span data-cube='{"h":100}'></span><span class="cap">Pas de fond de même teinte</span></div>
+        <div class="stage s-nuit"><svg class="x" viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><path d="M11.5 11.5l9 9M20.5 11.5l-9 9"/></g></svg><span data-cube='{"h":100,"swap":true}'></span><span class="cap">Ne pas inverser F et P</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 COULEURS -->
+  <section id="couleurs">
+    <div class="head">
+      <p class="label">03 · Couleurs</p>
+      <h2>Un violet posé sur une nuit profonde</h2>
+      <p>L'Améthyste est l'unique accent. Il sort d'un fond très sombre, jamais d'un fond coloré. Les trois tons du cube servent aussi de repères pour les dégradés et les ombres colorées.</p>
+    </div>
+    <div class="sub" style="margin-top:0"><h3>Signature</h3><div class="swrap sig4" id="pal-sig"></div></div>
+    <div class="sub"><h3>Fonds sombres</h3><div class="swrap" id="pal-dark"></div></div>
+    <div class="sub"><h3>Textes et fonds clairs</h3><div class="swrap" id="pal-light"></div></div>
+    <div class="sub"><h3>Signaux</h3><p>Chaque signal existe en deux valeurs : une claire pour les fonds sombres, une foncée pour les fonds clairs. Ils servent aux messages d'état, jamais à décorer.</p><div class="swrap" id="pal-sem"></div></div>
+
+    <div class="sub">
+      <h3>Répartition sur une page</h3>
+      <div class="bar" role="img" aria-label="Nuit 62 %, Nuit 2 et 3 22 %, Brume 10 %, Améthyste 5 %, signaux 1 %"><i style="--c:#120F1A;width:62%"></i><i style="--c:#231D33;width:22%"></i><i style="--c:#F0ECF8;width:10%"></i><i style="--c:#B7A0FF;width:5%"></i><i style="--c:#7ED6A0;width:1%"></i></div>
+      <div class="barkey"><span>Nuit 62 %</span><span>Nuit 2 et 3 22 %</span><span>Brume 10 %</span><span>Améthyste 5 %</span><span>Signaux 1 %</span></div>
+    </div>
+
+    <div class="sub">
+      <h3>Contrastes vérifiés</h3>
+      <p>Les rapports sont calculés avec la formule WCAG 2.1. Le texte courant doit atteindre 4,5 : 1 au minimum. Les paires qui n'y arrivent pas sont réservées au décor.</p>
+      <div class="card tblwrap"><table class="tbl" id="contrast"><thead><tr><th>Paire</th><th>Aperçu</th><th>Rapport</th><th>Niveau</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="sub">
+      <h3>Variables prêtes à l'emploi</h3>
+      <div class="crow"><span class="label">CSS</span><button class="btn-copy" type="button" data-copy="css">Copier</button></div>
+      <div class="codebox"><pre id="css"><span class="c">:root {</span>
+  --color-bg:        <span class="v">#120F1A</span>;   <span class="c">/* Nuit */</span>
+  --color-surface:   <span class="v">#1A1625</span>;   <span class="c">/* Nuit 2 */</span>
+  --color-surface-2: <span class="v">#231D33</span>;   <span class="c">/* Nuit 3 */</span>
+  --color-line:      <span class="v">#2A2338</span>;
+  --color-text:      <span class="v">#F0ECF8</span>;   <span class="c">/* Brume */</span>
+  --color-muted:     <span class="v">#9A90B3</span>;   <span class="c">/* Lavande grise */</span>
+  --color-accent:    <span class="v">#B7A0FF</span>;   <span class="c">/* Améthyste */</span>
+  --color-accent-2:  <span class="v">#9280CC</span>;
+  --color-accent-3:  <span class="v">#6A5D94</span>;
+  --color-on-accent: <span class="v">#170F2A</span>;
+  --color-success:   <span class="v">#7ED6A0</span>;
+  --color-warning:   <span class="v">#F0C36A</span>;
+  --color-error:     <span class="v">#F07A7A</span>;
+  --color-info:      <span class="v">#8FB8FF</span>;
+<span class="c">}</span></pre></div>
+    </div>
+  </section>
+
+  <!-- 04 TYPOGRAPHIE -->
+  <section id="typographie">
+    <div class="head">
+      <p class="label">04 · Typographie</p>
+      <h2>Sora pour parler, Instrument Sans pour lire</h2>
+      <p>Sora a des formes larges et rondes qui adoucissent le cube. Elle porte les titres et le nom. Le texte courant passe en Instrument Sans, plus économe et très lisible en petit. Toutes deux sont libres et disponibles sur Google Fonts.</p>
+    </div>
+    <div class="card spec"><div class="m"><span class="label">Titres et nom</span><b>Sora</b><span>Light 300, Regular 400, SemiBold 600. Interlettrage serré, de −0,04 à −0,05 em sur les grands titres.</span></div><p class="glyphs">Aa Le socle de votre serveur.</p></div>
+    <div class="card spec"><div class="m"><span class="label">Texte courant</span><b>Instrument Sans</b><span>Regular 400, Medium 500, SemiBold 600. Interligne 1,65 pour les paragraphes.</span></div><p style="font-size:1.1rem;max-width:58ch">Chaque plugin s'installe en quelques minutes et se règle dans un fichier de configuration lisible. Vous gardez la main sur les règles, les récompenses et les messages.</p></div>
+    <div class="card spec"><div class="m"><span class="label">Code et étiquettes</span><b>JetBrains Mono</b><span>Regular 400, Medium 500. Réservée aux commandes, aux fichiers et aux petites étiquettes en capitales.</span></div><p class="mono" style="font-size:.95rem;line-height:1.8">/crate give Alex legendaire 3<br>plugins/FondamentalCrate/config.yml</p></div>
+    <div class="sub">
+      <h3>Échelle typographique</h3>
+      <div class="card" style="padding:6px 24px"><div class="scale" id="scale"></div></div>
+    </div>
+    <div class="sub">
+      <h3>Règles d'écriture</h3>
+      <div class="grid g3 vals">
+        <article class="card"><h3>Casse</h3><p>Phrases en casse normale, sans capitales forcées. Les capitales espacées sont réservées aux étiquettes en JetBrains Mono.</p></article>
+        <article class="card"><h3>Longueur de ligne</h3><p>Entre 45 et 70 caractères pour les paragraphes. Au-delà, on découpe en colonnes ou on réduit la largeur.</p></article>
+        <article class="card"><h3>Le nom</h3><p>« Fondamental » en Sora 600, « Plugins » en Sora 300 dans l'Améthyste, sur la ligne dessous. Jamais en une seule graisse.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 ICONES -->
+  <section id="icones">
+    <div class="head">
+      <p class="label">05 · Icônes</p>
+      <h2>Des traits ronds sur une grille de 32</h2>
+      <p>Toutes les icônes se dessinent au trait de 2 px sur une grille de 32 px, avec des bouts et des angles arrondis. Elles reprennent la douceur du cube et prennent la couleur du texte qui les entoure.</p>
+    </div>
+    <div class="sub" style="margin-top:0">
+      <h3>Les trois plugins</h3>
+      <p>Bedwars est un lit, Tag une étiquette, Crate un coffre. Chaque plugin existe en pastille pleine, pour les cartes et les boutiques, et en contour sur tuile sombre, pour les listes et l'interface.</p>
+      <div class="stage s-nuit" style="min-height:0;padding:30px 24px;place-items:start">
+        <div class="pi" id="pi"></div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3>Icônes d'interface</h3>
+      <div class="iconsheet" id="iconsheet"></div>
+    </div>
+    <div class="sub">
+      <h3>Règles</h3>
+      <div class="grid g3 vals">
+        <article class="card"><h3>Trait</h3><p>2 px de trait à 32 px. On garde le même rapport à d'autres tailles : 1,5 px à 24 px, 2,5 px à 48 px.</p></article>
+        <article class="card"><h3>Marge</h3><p>Le dessin reste dans un carré de 24 px centré, soit 4 px de marge de chaque côté, pour que toutes les icônes aient le même poids.</p></article>
+        <article class="card"><h3>Couleur</h3><p>Une seule couleur par icône, celle du texte voisin. L'Améthyste est réservée aux icônes actives ou aux pastilles de plugin.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 INTERFACE -->
+  <section id="interface">
+    <div class="head">
+      <p class="label">06 · Interface</p>
+      <h2>Des composants ronds, denses et calmes</h2>
+      <p>L'interface est sombre par défaut, avec une version claire pour les lecteurs qui la préfèrent. Les surfaces se distinguent par leur teinte et un filet fin, presque jamais par une ombre.</p>
+    </div>
+
+    <div class="ui">
+      <div class="row"><span class="label">Boutons</span><div class="set"><button class="ub" type="button">Ajouter au panier</button><button class="ub sec" type="button">Voir la documentation</button><button class="ub ghost" type="button">Plus d'infos</button></div></div>
+      <div class="row"><span class="label">Tailles</span><div class="set"><button class="ub s" type="button">Petit</button><button class="ub" type="button">Moyen</button><button class="ub l" type="button">Grand</button></div></div>
+      <div class="row"><span class="label">États</span><div class="set"><button class="ub" type="button">Repos</button><button class="ub is-hover" type="button">Survol</button><button class="ub is-focus" type="button">Focus</button><button class="ub is-disabled" type="button" disabled>Désactivé</button></div></div>
+      <div class="row"><span class="label">Champs</span><div class="flds">
+        <div class="fld"><label for="f1">Adresse e-mail</label><input id="f1" type="email" placeholder="vous@exemple.fr"><small>Pour recevoir votre facture.</small></div>
+        <div class="fld"><label for="f2">Nom du serveur</label><input id="f2" type="text" class="is-focus" value="Mon serveur"><small>État : sélectionné.</small></div>
+        <div class="fld"><label for="f3">Code de réduction</label><input id="f3" type="text" class="is-err" value="FONDA-2"><small class="e">Ce code n'existe pas.</small></div>
+        <div class="fld"><label for="f4">Licence</label><input id="f4" type="text" value="Non modifiable" disabled><small>État : désactivé.</small></div>
+      </div></div>
+      <div class="row"><span class="label">Étiquettes</span><div class="set"><span class="chip2 on">Tous</span><span class="chip2">Mini-jeux</span><span class="chip2">Chat</span><span class="chip2">Récompenses</span><span class="bdg">Nouveau</span><span class="bdg n">1.8 → 1.21</span><span class="bdg n">Paper</span></div></div>
+      <div class="row"><span class="label">Interrupteur</span><div class="set"><label class="sw-t"><input type="checkbox" checked aria-label="Mises à jour automatiques"><i></i></label><span class="mu" style="color:var(--u-mu)">Mises à jour automatiques</span></div></div>
+      <div class="row"><span class="label">Messages</span><div class="flds two">
+        <div class="al" style="--c:#7ED6A0"><span data-ic="check" data-s="20"></span><div><b>Commande confirmée</b><span>Le téléchargement est dans votre compte.</span></div></div>
+        <div class="al" style="--c:#8FB8FF"><span data-ic="info" data-s="20"></span><div><b>Nouvelle version</b><span>La version 2.4 est disponible.</span></div></div>
+        <div class="al" style="--c:#F0C36A"><span data-ic="alert" data-s="20"></span><div><b>Version non testée</b><span>Ce plugin n'a pas été testé sur la 1.21.</span></div></div>
+        <div class="al" style="--c:#F07A7A"><span data-ic="xcircle" data-s="20"></span><div><b>Paiement refusé</b><span>Vérifiez votre carte ou changez de moyen de paiement.</span></div></div>
+      </div></div>
+      <div class="row" style="align-items:start"><span class="label">Carte produit</span><div class="pc"><span class="t" data-ic="bed" data-s="28"></span><h4>FondamentalBedwars</h4><p>Des équipes, un lit à défendre, et la dernière équipe en lice gagne la partie.</p><div class="pf"><span class="pr">19,90 €</span><button class="ub s" type="button">Ajouter</button></div></div></div>
+    </div>
+
+    <div class="sub">
+      <h3>Formes, espaces et mouvement</h3>
+      <div class="ui tk">
+        <div class="row"><span class="label">Rayons</span><div class="rad">
+          <div><i style="border-radius:8px"></i>8 · champs</div><div><i style="border-radius:12px"></i>12 · champs, listes</div><div><i style="border-radius:20px"></i>20 · cartes</div><div><i style="border-radius:24px"></i>24 · grandes cartes</div><div><i style="border-radius:99px"></i>pilule · boutons</div>
+        </div></div>
+        <div class="row" style="align-items:start"><span class="label">Espaces</span><div class="spc" id="spc"></div></div>
+        <div class="row"><span class="label">Bordures</span><span class="mu" style="color:var(--u-mu)">1 px en Ligne #2A2338 pour les cartes, 1,5 px pour les champs et les boutons secondaires. Pas d'ombre portée : seule la lueur du focus est colorée (4 px, Améthyste à 35 %).</span></div>
+        <div class="row"><span class="label">Mouvement</span><span class="mu" style="color:var(--u-mu)">120 ms pour les survols, 200 ms pour les interrupteurs et les menus, 320 ms pour les panneaux. Courbe cubic-bezier(.2, .7, .2, 1). Aucune animation quand l'utilisateur réduit les mouvements.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 EN JEU -->
+  <section id="en-jeu">
+    <div class="head">
+      <p class="label">07 · En jeu</p>
+      <h2>La marque dans le chat, le scoreboard et la liste des serveurs</h2>
+      <p>Dans le jeu, la marque tient en une couleur et un préfixe. Le nom du plugin suit le préfixe, le message reste en gris clair. Les couleurs s'écrivent en hexadécimal avec les balises MiniMessage.</p>
+    </div>
+    <div class="mcs">
+      <div class="mcw">
+        <div class="mc motd">
+          <div class="motd-i"><span data-cube='{"h":46}'></span></div>
+          <div class="motd-t"><div>Mon serveur <span class="dim">· 1.21</span></div><div><span class="pv">Bedwars</span> <span class="dim">·</span> <span class="pv">Tag</span> <span class="dim">·</span> <span class="pv">Crate</span></div></div>
+          <span class="dim" style="align-self:start;font-size:.76rem">42/100</span>
+        </div>
+        <p class="label">Liste des serveurs · 64 × 64</p>
+      </div>
+      <div class="mcw">
+        <div class="mc">
+<div><span class="gr">[Fondamental]</span> Bedwars · Votre lit est protégé.</div>
+<div><span class="pv">[VIP]</span> Alex a rejoint la partie.</div>
+<div><span class="gr">[Fondamental]</span> <span class="g">Caisse Légendaire ouverte.</span></div>
+        </div>
+        <p class="label">Chat</p>
+      </div>
+      <div class="mcw">
+        <div class="mc sb">
+          <div class="ttl pv">BEDWARS</div><hr>
+          <div class="ln"><span>Équipe</span><span class="pv">Violette</span></div>
+          <div class="ln"><span>Lit</span><span>actif</span></div>
+          <div class="ln"><span>Éliminations</span><span>7</span></div>
+          <div class="ln"><span>Temps</span><span>12:34</span></div><hr>
+          <div class="dim" style="text-align:center">mon-serveur.fr</div>
+        </div>
+        <p class="label">Scoreboard</p>
+      </div>
+    </div>
+    <div class="sub">
+      <div class="crow"><span class="label">MiniMessage · prêt à coller</span><button class="btn-copy" type="button" data-copy="mm">Copier</button></div>
+      <div class="codebox"><pre id="mm"><span class="c">&lt;gradient:#B7A0FF:#6A5D94&gt;</span>[Fondamental]<span class="c">&lt;/gradient&gt;</span> <span class="c">&lt;#F0ECF8&gt;</span>Bedwars <span class="c">&lt;#9A90B3&gt;</span>· Votre lit est protégé.
+<span class="c">&lt;#B7A0FF&gt;</span>[VIP]<span class="c">&lt;/#B7A0FF&gt;</span> <span class="c">&lt;#F0ECF8&gt;</span>Alex <span class="c">&lt;#9A90B3&gt;</span>a rejoint la partie.
+<span class="c">&lt;#7ED6A0&gt;</span>Caisse Légendaire ouverte.
+<span class="c">&lt;#F07A7A&gt;</span>Vous n'avez pas la permission.</pre></div>
+    </div>
+  </section>
+
+  <!-- 08 VOIX -->
+  <section id="voix">
+    <div class="head">
+      <p class="label">08 · Voix</p>
+      <h2>Parler simplement, précisément, calmement</h2>
+      <p>La marque vouvoie. Elle s'adresse à des gérants de serveur, débutants ou expérimentés, et garde un ton posé, jamais scolaire ni familier.</p>
+    </div>
+    <div class="pr4">
+      <article class="card"><h3>Clair</h3><p>Une phrase, une idée. On dit ce que fait le plugin avant de dire comment.</p></article>
+      <article class="card"><h3>Chaleureux</h3><p>Des mots de tous les jours. Le jargon technique reste dans la documentation.</p></article>
+      <article class="card"><h3>Précis</h3><p>Des versions, des nombres, des noms exacts. Pas de « nombreux » ni de « rapidement ».</p></article>
+      <article class="card"><h3>Sobre</h3><p>Pas de superlatifs, pas de points d'exclamation, pas de majuscules pour crier.</p></article>
+    </div>
+    <div class="sub">
+      <h3>À dire, à éviter</h3>
+      <div class="yn">
+        <div class="h y">À dire</div><div class="h n">À éviter</div>
+        <div>Un lit à défendre, une équipe à battre.</div><div class="no">Vivez une expérience de jeu révolutionnaire !</div>
+        <div>Compatible Paper et Spigot, de la 1.8 à la 1.21.</div><div class="no">Compatible avec de nombreuses versions.</div>
+        <div>Tout se règle dans config.yml.</div><div class="no">Une configuration ultra-puissante.</div>
+        <div>Le paiement n'a pas abouti. Vérifiez votre carte.</div><div class="no">Oups ! Quelque chose s'est mal passé.</div>
+      </div>
+    </div>
+    <div class="sub">
+      <h3>Textes d'interface</h3>
+      <div class="micro">
+        <div><small>Bouton principal</small><span>Ajouter au panier</span></div>
+        <div><small>Bouton secondaire</small><span>Lire la documentation</span></div>
+        <div><small>Panier vide</small><span>Votre panier est vide. Choisissez un plugin pour commencer.</span></div>
+        <div><small>Confirmation</small><span>Commande confirmée. Le téléchargement est dans votre compte.</span></div>
+        <div><small>Erreur de champ</small><span>Cette adresse e-mail n'est pas valide.</span></div>
+        <div><small>Signature</small><span>Fondamental Plugins. Le socle de votre serveur.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 APPLICATION -->
+  <section id="application">
+    <div class="head">
+      <p class="label">09 · Application</p>
+      <h2>La page d'accueil de la boutique</h2>
+      <p>Toute la charte réunie sur une seule page : le logo, le violet sur nuit, Sora et Instrument Sans, les pilules, les cartes et une fiche de serveur qui montre les plugins actifs. Nombre de joueurs, textes et prix sont fictifs.</p>
+    </div>
+    <div class="site">
+      <div class="s-nav"><span class="lk" style="gap:10px"><span data-cube='{"h":34}'></span><span class="wm">Fondamental<small>Plugins</small></span></span><nav><span>Plugins</span><span>Documentation</span><span>Support</span></nav><span class="cart">Panier · 0</span></div>
+      <div class="s-hero">
+        <div class="s-copy">
+          <span class="chip"><i></i>Plugins pour serveurs Minecraft</span>
+          <h3>Le socle de votre serveur.</h3>
+          <p>Trois plugins fiables, simples à installer et bien documentés, pour faire vivre votre communauté.</p>
+          <div class="s-cta"><button class="pill" type="button">Voir les plugins</button><button class="pill ghost" type="button">Documentation</button></div>
+        </div>
+        <div class="srv">
+          <div class="srv-top"><div style="width:52px;height:52px;border-radius:14px;background:#120F1A;border:1px solid #2A2338;display:grid;place-items:center"><span data-cube='{"h":38}'></span></div><div><b>Mon serveur</b><small><i></i>42 / 100 joueurs en ligne</small></div></div>
+          <ul>
+            <li><span class="t" data-ic="bed" data-s="20"></span><span>Bedwars</span><em>Actif</em></li>
+            <li><span class="t" data-ic="tag" data-s="20"></span><span>Tag</span><em>Actif</em></li>
+            <li><span class="t" data-ic="crate" data-s="20"></span><span>Crate</span><em>Actif</em></li>
+          </ul>
+        </div>
+      </div>
+      <div class="s-cards">
+        <article class="pc" style="max-width:none;--u-bg:#120F1A;--u-sf:#1A1625;--u-ln:#2A2338;--u-mu:#9A90B3;--u-ac:#B7A0FF;--u-on:#170F2A;color:#F0ECF8"><span class="t" data-ic="bed" data-s="28"></span><h4>FondamentalBedwars</h4><p>Des équipes, un lit à défendre, et la dernière équipe en lice gagne la partie.</p><div class="pf"><span class="pr">19,90 €</span><button class="pill sm" type="button">Ajouter</button></div></article>
+        <article class="pc" style="max-width:none;--u-bg:#120F1A;--u-sf:#1A1625;--u-ln:#2A2338;--u-mu:#9A90B3;--u-ac:#B7A0FF;--u-on:#170F2A;color:#F0ECF8"><span class="t" data-ic="tag" data-s="28"></span><h4>FondamentalTag</h4><p>Des tags et des titres affichés à côté du pseudo de chaque joueur.</p><div class="pf"><span class="pr">12,90 €</span><button class="pill sm" type="button">Ajouter</button></div></article>
+        <article class="pc" style="max-width:none;--u-bg:#120F1A;--u-sf:#1A1625;--u-ln:#2A2338;--u-mu:#9A90B3;--u-ac:#B7A0FF;--u-on:#170F2A;color:#F0ECF8"><span class="t" data-ic="crate" data-s="28"></span><h4>FondamentalCrate</h4><p>Des caisses à ouvrir avec des clés, pour récompenser vos joueurs.</p><div class="pf"><span class="pr">14,90 €</span><button class="pill sm" type="button">Ajouter</button></div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 FICHIERS -->
+  <section id="fichiers">
+    <div class="head">
+      <p class="label">10 · Fichiers</p>
+      <h2>Les fichiers du logo</h2>
+      <p>Le cube est fourni en SVG, qui reste net à toutes les tailles, et en PNG pour les usages qui l'exigent. Les versions en une couleur sont évidées : elles prennent la couleur du fond sous les lettres.</p>
+    </div>
+    <div class="card tblwrap"><table class="tbl files" id="files"><thead><tr><th>Fichier</th><th>Usage</th><th>Format</th></tr></thead><tbody>
+      <tr><td>fondamental-cube.svg</td><td>Symbole en couleur, fond transparent</td><td>SVG</td></tr>
+      <tr><td>fondamental-cube-brume.svg</td><td>Symbole une couleur, Brume, pour fonds sombres</td><td>SVG</td></tr>
+      <tr><td>fondamental-cube-encre.svg</td><td>Symbole une couleur, Encre, pour fonds clairs</td><td>SVG</td></tr>
+      <tr><td>fondamental-bedwars-icone.svg</td><td>Pastille du plugin Bedwars</td><td>SVG</td></tr>
+      <tr><td>fondamental-tag-icone.svg</td><td>Pastille du plugin Tag</td><td>SVG</td></tr>
+      <tr><td>fondamental-crate-icone.svg</td><td>Pastille du plugin Crate</td><td>SVG</td></tr>
+      <tr><td>server-icon.png</td><td>Icône de serveur Minecraft</td><td>PNG 64 × 64</td></tr>
+      <tr><td>fondamental-avatar-512.png</td><td>Avatar de compte, Discord, réseaux</td><td>PNG 512 × 512</td></tr>
+      <tr><td>fondamental-cube-512.png</td><td>Symbole sur Nuit, prévisualisations</td><td>PNG 512 × 512</td></tr>
+    </tbody></table></div>
+    <p class="mu" style="margin-top:14px;max-width:70ch">Nommage : minuscules, mots séparés par des tirets, préfixe « fondamental- ». Les polices Sora et Instrument Sans se téléchargent sur Google Fonts.</p>
+  </section>
+
+  <footer class="foot"><span>Fondamental Plugins · Charte graphique 1.0</span><span>26 septembre 2026</span></footer>
+</div>
+
+<script>
+var AC = '#B7A0FF', INK = '#120F1A';
+
+function mix(hex, k, to) {
+  var n = parseInt(hex.slice(1), 16), t = to || 0;
+  function m(v) { return Math.round(v + (t - v) * k); }
+  var r = m(n >> 16 & 255), g = m(n >> 8 & 255), b = m(n & 255);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+function svgW(vb, w, h, inner) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '" width="' + w + '" height="' + h + '" aria-hidden="true">' + inner + '</svg>';
+}
+function pts(a) { return a.map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' '); }
+
+var TOP = [[50, 15], [84.64, 35], [50, 55], [15.36, 35]],
+    LEFT = [[15.36, 35], [50, 55], [50, 95], [15.36, 75]],
+    RIGHT = [[50, 55], [84.64, 35], [84.64, 75], [50, 95]],
+    HEX = [[50, 15], [84.64, 35], [84.64, 75], [50, 95], [15.36, 75], [15.36, 35]];
+var M_LEFT = 'matrix(.5413 .3125 0 .625 15.36 35)', M_RIGHT = 'matrix(.5413 -.3125 0 .625 50 55)';
+var EDGES = 'M50 55L15.36 35M50 55L84.64 35M50 55V95';
+
+/* contour à coins arrondis : on coupe chaque sommet à distance d et on le relie par une courbe */
+function roundPath(poly, d) {
+  var n = poly.length, s = '', i;
+  for (i = 0; i < n; i++) {
+    var v = poly[i], p = poly[(i + n - 1) % n], q = poly[(i + 1) % n];
+    var l1 = Math.sqrt(Math.pow(p[0] - v[0], 2) + Math.pow(p[1] - v[1], 2)), l2 = Math.sqrt(Math.pow(q[0] - v[0], 2) + Math.pow(q[1] - v[1], 2));
+    var a = [v[0] + (p[0] - v[0]) / l1 * d, v[1] + (p[1] - v[1]) / l1 * d];
+    var b = [v[0] + (q[0] - v[0]) / l2 * d, v[1] + (q[1] - v[1]) / l2 * d];
+    s += (i === 0 ? 'M' : 'L') + a[0].toFixed(2) + ' ' + a[1].toFixed(2) + 'Q' + v[0].toFixed(2) + ' ' + v[1].toFixed(2) + ' ' + b[0].toFixed(2) + ' ' + b[1].toFixed(2);
+  }
+  return s + 'Z';
+}
+function Fp(c, sw) { return '<path d="M20 48V16H44M20 31H38" fill="none" stroke="' + c + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round"/>'; }
+function Pp(c, sw) { return '<path d="M20 48V16H33a8.5 8.5 0 0 1 0 17H20" fill="none" stroke="' + c + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round"/>'; }
+function engraved(fn, faceColor, sw, ink) {
+  return '<g opacity=".6" transform="translate(0 1.7)">' + fn(mix(faceColor, .38, 255), sw) + '</g>' + fn(ink, sw);
+}
+
+var uid = 0;
+/* contenu du cube. o : small, mode 'color' | 'flat', ac, ink, col, dot, swap */
+function cubeInner(o) {
+  o = o || {};
+  var id = 'cb' + (++uid), small = !!o.small, sw = small ? 10 : 9, d = small ? 6 : 9;
+  var dot = o.dot !== false && !small;
+  var gl = o.swap ? [Pp, M_LEFT] : [Fp, M_LEFT], gr = o.swap ? [Fp, M_RIGHT] : [Pp, M_RIGHT];
+  var fL = o.swap ? Pp : Fp, fR = o.swap ? Fp : Pp;
+  if (o.mode === 'flat') {
+    var col = o.col || '#F0ECF8', k = '#000';
+    var mask = '<mask id="' + id + 'm" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="110"><rect width="100" height="110" fill="#fff"/>' +
+      (small ? '' : '<path d="' + EDGES + '" stroke="#000" stroke-width="1.8" stroke-linecap="round" fill="none"/>') +
+      '<g transform="' + M_LEFT + '">' + fL(k, sw) + (dot && !o.swap ? '<circle cx="34" cy="50" r="3.2" fill="#000"/>' : '') + '</g>' +
+      '<g transform="' + M_RIGHT + '">' + fR(k, sw) + (dot && o.swap ? '<circle cx="34" cy="50" r="3.2" fill="#000"/>' : '') + '</g></mask>';
+    return '<defs>' + mask + '</defs><path d="' + roundPath(HEX, d) + '" fill="' + col + '" mask="url(#' + id + 'm)"/>';
+  }
+  var ac = o.ac || AC, ink = o.ink || INK;
+  var cT = ac, cL = mix(ac, .2), cR = mix(ac, .42);
+  var edges = small ? '' : '<path d="' + EDGES + '" fill="none" stroke="' + ink + '" stroke-opacity=".38" stroke-width="1.3" stroke-linecap="round"/>';
+  var fa = o.fade || '', lf = o.swap ? 'P' : 'F', rf = o.swap ? 'F' : 'P';
+  function dim(str, letter) { return fa.indexOf(letter) >= 0 ? '<g opacity=".16">' + str + '</g>' : str; }
+  var dotEl = dot ? '<circle cx="34" cy="50" r="3.2" fill="' + ink + '" fill-opacity=".6"/>' : '';
+  return '<defs><clipPath id="' + id + '"><path d="' + roundPath(HEX, d) + '"/></clipPath></defs>' +
+    '<g clip-path="url(#' + id + ')">' +
+    '<polygon points="' + pts(HEX) + '" fill="' + cR + '"/>' +
+    '<polygon points="' + pts(LEFT) + '" fill="' + cL + '"/>' +
+    '<polygon points="' + pts(TOP) + '" fill="' + cT + '"/>' + edges + '</g>' +
+    '<g transform="' + M_LEFT + '">' + dim(engraved(fL, cL, sw, ink), lf) + (o.swap ? '' : dotEl) + '</g>' +
+    '<g transform="' + M_RIGHT + '">' + dim(engraved(fR, cR, sw, ink), rf) + (o.swap ? dotEl : '') + '</g>';
+}
+function cubeSVG(o) {
+  o = o || {};
+  var h = o.h || 100;
+  return svgW('0 0 100 110', Math.round(h * .91), h, cubeInner(o));
+}
+
+var LN = {
+  bed: '<path d="M6 9v14M6 18h20M26 18v5M11 18v-4h6v4"/>',
+  tag: '<path d="M6 16l7-7h13v14H13z"/><path d="M18 14h5M18 18h3"/><circle cx="13" cy="16" r="1.6" fill="currentColor" stroke="none"/>',
+  crate: '<path d="M6 12h20v12H6zM6 12v-1a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v1M6 17h20M16 15v4"/>',
+  cart: '<path d="M4 6h4l3 14h13l3-11H9"/><circle cx="13" cy="25" r="1.8" fill="currentColor" stroke="none"/><circle cx="22" cy="25" r="1.8" fill="currentColor" stroke="none"/>',
+  search: '<circle cx="14" cy="14" r="8"/><path d="M20 20l7 7"/>',
+  arrow: '<path d="M5 16h21M19 9l7 7-7 7"/>',
+  check: '<path d="M7 17l6 6 12-13"/>',
+  download: '<path d="M16 5v15M9 14l7 7 7-7M6 27h20"/>',
+  book: '<path d="M7 5h18v21H10a3 3 0 0 1-3-3zM7 23a3 3 0 0 1 3-3h15"/>',
+  support: '<circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="4.5"/><path d="M8.2 8.2l4.6 4.6M23.8 8.2l-4.6 4.6M8.2 23.8l4.6-4.6M23.8 23.8l-4.6-4.6"/>',
+  user: '<circle cx="16" cy="11" r="5"/><path d="M6 27c1-6 5-9.5 10-9.5s9 3.500 10 9.500"/>',
+  lock: '<rect x="7" y="14" width="18" height="13" rx="3"/><path d="M11 14v-3a5 5 0 0 1 10 0v3"/>',
+  zap: '<path d="M18 4L8 18h8l-2 10 10-14h-8z"/>',
+  external: '<path d="M13 7H9a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-4M19 5h8v8M27 5L14 18"/>',
+  shield: '<path d="M16 4l10 4v8c0 6-4 10-10 12C10 26 6 22 6 16V8z"/><path d="M11.500 16l3.500 3.500 6-7"/>',
+  server: '<rect x="5" y="6" width="22" height="9" rx="3"/><rect x="5" y="17" width="22" height="9" rx="3"/><circle cx="10" cy="10.500" r="1.200" fill="currentColor" stroke="none"/><circle cx="10" cy="21.500" r="1.200" fill="currentColor" stroke="none"/>',
+  key: '<circle cx="11" cy="16" r="5.500"/><path d="M16.500 16H27M23 16v4M27 16v3"/>',
+  info: '<circle cx="16" cy="16" r="11"/><path d="M16 15v7"/><circle cx="16" cy="10.500" r="1.300" fill="currentColor" stroke="none"/>',
+  alert: '<path d="M16 5L28 26H4z"/><path d="M16 13v6"/><circle cx="16" cy="22.500" r="1.200" fill="currentColor" stroke="none"/>',
+  xcircle: '<circle cx="16" cy="16" r="11"/><path d="M11.500 11.500l9 9M20.500 11.500l-9 9"/>'
+};
+function iconSVG(k, s, sw) {
+  return svgW('0 0 32 32', s, s, '<g fill="none" stroke="currentColor" stroke-width="' + (sw || 2) + '" stroke-linecap="round" stroke-linejoin="round">' + LN[k] + '</g>');
+}
+/* icône de plugin en pastille pleine, pour l'export */
+function plugTile(k, s) {
+  return svgW('0 0 32 32', s, s, '<rect width="32" height="32" rx="9" fill="' + AC + '"/><g fill="none" stroke="' + INK + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="' + INK + '">' + LN[k] + '</g>');
+}
+function hexToRgb(h) { var n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function lum(h) {
+  var c = hexToRgb(h).map(function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+  return .2126 * c[0] + .7152 * c[1] + .0722 * c[2];
+}
+function contrast(a, b) { var x = lum(a), y = lum(b), hi = Math.max(x, y), lo = Math.min(x, y); return (hi + .05) / (lo + .05); }
+
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* cubes : options en JSON, "only" isole un élément pour les schémas du concept */
+  document.querySelectorAll('[data-cube]').forEach(function (el) {
+    var o = {};
+    try { o = JSON.parse(el.getAttribute('data-cube')); } catch (e) {}
+    el.innerHTML = cubeSVG(o);
+    if (!el.style.display) el.style.display = 'block';
+  });
+  document.querySelectorAll('[data-ic]').forEach(function (el) {
+    el.innerHTML = iconSVG(el.getAttribute('data-ic'), +el.getAttribute('data-s'));
+    el.style.display = el.style.display || 'grid';
+  });
+
+  /* schéma de construction */
+  $('#construct').innerHTML =
+    '<svg class="construct" viewBox="-14 -14 148 138" role="img" aria-label="Construction du cube : hexagone à 30 degrés et zone de protection égale au quart de la hauteur">' +
+    '<rect x="-4.64" y="-5" width="109.28" height="120" rx="3" fill="none" stroke="#B7A0FF" stroke-opacity=".7" stroke-width=".7" stroke-dasharray="3 2.4"/>' +
+    '<rect x="-4.64" y="-5" width="20" height="20" fill="#B7A0FF" fill-opacity=".13"/><text x="-1" y="8">x</text>' +
+    '<rect x="84.64" y="95" width="20" height="20" fill="#B7A0FF" fill-opacity=".13"/><text x="88.5" y="108">x</text>' +
+    '<g stroke="#9A90B3" stroke-opacity=".45" stroke-width=".5"><path d="M50 55L96 81.6M50 55L4 28.4M50 55L96 28.4M50 55L4 81.6M50 8V102"/></g>' +
+    cubeInner({}) +
+    '<g stroke="#9A90B3" stroke-width=".6"><path d="M112 15V95M109 15H115M109 95H115"/></g><text x="116" y="58">h = 80</text>' +
+    '<text x="44" y="123">l = 69,3</text><path d="M15.36 118.500H84.64" stroke="#9A90B3" stroke-width=".6"/>' +
+    '<text x="55.500" y="45" >30°</text></svg>';
+
+  /* palettes */
+  function swatch(c) {
+    var rgb = hexToRgb(c.hex).join(', ');
+    return '<div class="sw" style="--c:' + c.hex + ';--on-c:' + c.on + '"><div><h4>' + c.n + '</h4><p>' + c.role + '</p></div><div class="hx">' + c.hex + '<br>rvb ' + rgb + (c.alt ? '<br>sur clair ' + c.alt : '') + '</div></div>';
+  }
+  function fill(id, list) { $(id).innerHTML = list.map(swatch).join(''); }
+  fill('#pal-sig', [
+    { n: 'Améthyste', hex: '#B7A0FF', on: '#170F2A', role: 'Accent principal, face du dessus, boutons' },
+    { n: 'Améthyste moyen', hex: '#9280CC', on: '#170F2A', role: 'Face de gauche du cube' },
+    { n: 'Améthyste profond', hex: '#6A5D94', on: '#F0ECF8', role: 'Face de droite, décors' }
+  ]);
+  fill('#pal-dark', [
+    { n: 'Nuit', hex: '#120F1A', on: '#F0ECF8', role: 'Fond principal' },
+    { n: 'Nuit 2', hex: '#1A1625', on: '#F0ECF8', role: 'Cartes et panneaux' },
+    { n: 'Nuit 3', hex: '#231D33', on: '#F0ECF8', role: 'Champs, survols' },
+    { n: 'Ligne', hex: '#2A2338', on: '#F0ECF8', role: 'Filets et bordures' }
+  ]);
+  fill('#pal-light', [
+    { n: 'Brume', hex: '#F0ECF8', on: '#120F1A', role: 'Texte sur fond sombre' },
+    { n: 'Lavande grise', hex: '#9A90B3', on: '#120F1A', role: 'Texte secondaire sur sombre' },
+    { n: 'Papier', hex: '#F3F0FA', on: '#170F2A', role: 'Fond clair' },
+    { n: 'Encre', hex: '#170F2A', on: '#F0ECF8', role: 'Texte sur fond clair' },
+    { n: 'Violet lisible', hex: '#6A4FD0', on: '#FFFFFF', role: 'Accent sur fond clair' },
+    { n: 'Gris lavande', hex: '#5E5673', on: '#FFFFFF', role: 'Texte secondaire sur clair' }
+  ]);
+  fill('#pal-sem', [
+    { n: 'Succès', hex: '#7ED6A0', on: '#0F2A1A', role: 'Confirmation', alt: '#1F8A55' },
+    { n: 'Alerte', hex: '#F0C36A', on: '#2A1E06', role: 'Attention', alt: '#9A6A00' },
+    { n: 'Erreur', hex: '#F07A7A', on: '#2A0D0D', role: 'Problème bloquant', alt: '#C23B3B' },
+    { n: 'Info', hex: '#8FB8FF', on: '#0B1A33', role: 'Information neutre', alt: '#2F63C9' }
+  ]);
+
+  /* contrastes calculés */
+  var pairs = [
+    ['Texte sur Nuit', '#F0ECF8', '#120F1A'], ['Texte secondaire sur Nuit', '#9A90B3', '#120F1A'], ['Améthyste sur Nuit', '#B7A0FF', '#120F1A'],
+    ['Bouton : Encre sur Améthyste', '#170F2A', '#B7A0FF'], ['Texte sur Papier', '#170F2A', '#F3F0FA'], ['Violet lisible sur Papier', '#6A4FD0', '#F3F0FA'],
+    ['Gris lavande sur Papier', '#5E5673', '#F3F0FA'], ['Succès sur Nuit', '#7ED6A0', '#120F1A'], ['Erreur sur Nuit', '#F07A7A', '#120F1A'],
+    ['Améthyste profond sur Nuit', '#6A5D94', '#120F1A']
+  ];
+  var rows = pairs.map(function (p) {
+    var r = contrast(p[1], p[2]), cl, lb;
+    if (r >= 7) { cl = 'b-aaa'; lb = 'AAA'; } else if (r >= 4.5) { cl = 'b-aa'; lb = 'AA'; } else if (r >= 3) { cl = 'b-lg'; lb = 'Grand texte'; } else { cl = 'b-no'; lb = 'Décor'; }
+    return '<tr><td>' + p[0] + '</td><td><span class="pair" style="--pb:' + p[2] + ';--pf:' + p[1] + '">Aa</span></td><td class="mono">' + r.toFixed(1).replace('.', ',') + ' : 1</td><td><span class="badge ' + cl + '">' + lb + '</span></td></tr>';
+  }).join('');
+  $('#contrast tbody').innerHTML = rows;
+
+  /* échelle typographique */
+  var sc = [
+    ['Titre principal', '56 / 56 · Sora 600 · −0,05 em', "font:600 clamp(2rem,7vw,3.5rem)/1 'Sora',sans-serif;letter-spacing:-.05em", 'Le socle de votre serveur.'],
+    ['Titre 1', '40 / 44 · Sora 600 · −0,04 em', "font:600 clamp(1.7rem,5vw,2.5rem)/1.1 'Sora',sans-serif;letter-spacing:-.04em", 'Trois plugins fiables'],
+    ['Titre 2', '28 / 34 · Sora 600 · −0,03 em', "font:600 1.75rem/1.2 'Sora',sans-serif;letter-spacing:-.03em", 'Simples à installer'],
+    ['Titre 3', '20 / 28 · Sora 600 · −0,02 em', "font:600 1.25rem/1.4 'Sora',sans-serif;letter-spacing:-.02em", 'Bien documentés'],
+    ['Texte', '16 / 26 · Instrument Sans 400', "font:400 1rem/1.65 'Instrument Sans',sans-serif", 'Chaque plugin se règle dans un fichier de configuration clair.'],
+    ['Petit texte', '14 / 22 · Instrument Sans 400', "font:400 .875rem/1.6 'Instrument Sans',sans-serif", 'Compatible Paper et Spigot, de la 1.8 à la 1.21.'],
+    ['Légende', '12 / 18 · Instrument Sans 500', "font:500 .75rem/1.5 'Instrument Sans',sans-serif", 'Prix TTC, licence à vie'],
+    ['Étiquette', '11 / 16 · JetBrains Mono 500 · +0,1 em', "font:500 .6875rem/1.45 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase", 'Plugins Minecraft']
+  ];
+  $('#scale').innerHTML = sc.map(function (r) { return '<div><span class="k">' + r[0] + '<br>' + r[1] + '</span><span class="s" style="' + r[2] + '">' + r[3] + '</span></div>'; }).join('');
+
+  /* icônes de plugin et d'interface */
+  $('#pi').innerHTML = [['bed', 'Bedwars'], ['tag', 'Tag'], ['crate', 'Crate']].map(function (p) {
+    return '<figure><span class="sol" style="width:72px;height:72px;border-radius:22px" data-ic="' + p[0] + '" data-s="40"></span><figcaption>Pastille · ' + p[1] + '</figcaption></figure>' +
+      '<figure><span class="lin" style="width:72px;height:72px;border-radius:22px" data-ic="' + p[0] + '" data-s="40"></span><figcaption>Contour · ' + p[1] + '</figcaption></figure>';
+  }).join('') +
+    '<figure><span class="sol" style="width:48px;height:48px;border-radius:15px" data-ic="bed" data-s="28"></span><figcaption>48</figcaption></figure>' +
+    '<figure><span class="sol" style="width:32px;height:32px;border-radius:10px" data-ic="bed" data-s="20"></span><figcaption>32</figcaption></figure>';
+  document.querySelectorAll('#pi [data-ic]').forEach(function (el) { el.innerHTML = iconSVG(el.getAttribute('data-ic'), +el.getAttribute('data-s')); });
+  var ui = [['cart', 'Panier'], ['search', 'Recherche'], ['arrow', 'Flèche'], ['check', 'Valider'], ['download', 'Télécharger'], ['book', 'Docs'], ['support', 'Support'], ['user', 'Compte'], ['lock', 'Licence'], ['zap', 'Rapide'], ['external', 'Lien externe'], ['shield', 'Fiable'], ['server', 'Serveur'], ['key', 'Clé'], ['info', 'Info'], ['alert', 'Alerte'], ['xcircle', 'Erreur']];
+  $('#iconsheet').innerHTML = ui.map(function (u) { return '<div class="ico">' + iconSVG(u[0], 32) + '<span class="n">' + u[1] + '</span></div>'; }).join('');
+
+  /* échelle d'espacement */
+  $('#spc').innerHTML = [4, 8, 12, 16, 24, 32, 48, 64, 96].map(function (n) { return '<div><span>' + n + ' px</span><i style="width:' + n * 2 + 'px"></i></div>'; }).join('');
+
+  /* copie */
+  function flash(btn, msg) {
+    var old = btn.getAttribute('data-l') || btn.textContent;
+    btn.setAttribute('data-l', old); btn.textContent = msg;
+    setTimeout(function () { btn.textContent = old; }, 1600);
+  }
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.getElementById(btn.getAttribute('data-copy'));
+      var sel = function () {
+        var r = document.createRange(); r.selectNodeContents(el);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); flash(btn, 'Sélectionné, Ctrl+C');
+      };
+      try { navigator.clipboard.writeText(el.textContent).then(function () { flash(btn, 'Copié'); }, sel); } catch (e) { sel(); }
+    });
+  });
+})();
+</script>
