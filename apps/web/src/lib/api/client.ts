@@ -29,6 +29,20 @@ export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
 }
 
 /**
+ * Un `fetch` avec un chemin relatif (`/api/...`) ne fonctionne que dans le
+ * navigateur : côté serveur (Server Component), Node n'a pas de page
+ * d'origine à compléter et lève une `TypeError`. `API_INTERNAL_URL` (jamais
+ * `NEXT_PUBLIC_*` : ne doit pas finir dans le bundle client) donne l'adresse
+ * de l'API à joindre directement depuis le serveur Next, sans passer par le
+ * `rewrites()` de next.config.ts (qui ne relaie que les requêtes déjà reçues
+ * par Next, pas les appels sortants de ses propres Server Components) ni par
+ * nginx (qui n'intercepte que les requêtes venues du navigateur). Doit être
+ * fixée dans l'environnement de déploiement ; vaut l'adresse locale de l'API
+ * par défaut, pour que `npm run dev` fonctionne sans rien configurer.
+ */
+const SERVER_API_BASE = process.env.API_INTERNAL_URL ?? "http://localhost:4000/api";
+
+/**
  * `fetch` vers `/api/*`, avec les en-têtes et le format d'erreur imposés par
  * l'API (docs/api-front.md §3 et §5). À appeler :
  * - côté serveur (Server Component) uniquement pour les données publiques ;
@@ -39,7 +53,8 @@ export async function apiFetch<T>(
   path: string,
   { body, csrfToken, headers, ...init }: ApiFetchOptions = {},
 ): Promise<T> {
-  const response = await fetch(`/api${path}`, {
+  const url = typeof window === "undefined" ? `${SERVER_API_BASE}${path}` : `/api${path}`;
+  const response = await fetch(url, {
     ...init,
     credentials: "same-origin",
     headers: {

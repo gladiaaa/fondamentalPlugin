@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { FlecheIcon } from "@/components/icons";
+import { formatPriceCents } from "@/lib/format";
 
 export interface PluginCardProps {
   slug: string;
@@ -31,7 +32,7 @@ export function PluginCard({ slug, name, description, priceCents, freeAvailable,
         <div className="min-w-0">
           <small className="block font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">Premium</small>
           <b className="block font-display text-[1.35rem] font-semibold tracking-[-.03em] tabular-nums whitespace-nowrap">
-            {priceCents === null ? "Bientôt disponible" : `${(priceCents / 100).toFixed(2).replace(".", ",")} €`}
+            {priceCents === null ? "Bientôt disponible" : formatPriceCents(priceCents)}
           </b>
         </div>
         <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-pill py-[.62em] px-[1.05em] text-[.82rem] font-semibold shadow-[inset_0_0_0_1.5px_var(--color-line)] group-hover:shadow-[inset_0_0_0_1.5px_var(--color-accent)]">
