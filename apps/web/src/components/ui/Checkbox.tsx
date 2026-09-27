@@ -11,7 +11,7 @@ export function Checkbox({ children, className, id, ...props }: CheckboxProps) {
   return (
     <label
       htmlFor={id}
-      className={cn("flex cursor-pointer items-start gap-2.5 text-[.88rem] text-muted [&_a]:text-accent", className)}
+      className={cn("flex cursor-pointer items-start gap-2.5 text-[.88rem] text-muted [&_a]:text-accent-text", className)}
     >
       <input
         id={id}

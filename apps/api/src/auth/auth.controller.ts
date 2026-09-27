@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -47,12 +47,16 @@ export class AuthController {
   @ApiOperation({
     summary: 'Créer un compte',
     description:
-      'Envoie un e-mail de confirmation. La réponse est **identique** que l’adresse soit déjà inscrite ou non : ne jamais dire « adresse déjà utilisée ».',
+      'Envoie un e-mail de confirmation. La réponse est **identique** que l’adresse soit déjà inscrite ou non : ne jamais dire « adresse déjà utilisée ». ' +
+      'La langue des e-mails du compte est choisie une fois pour toutes ici, d’après `Accept-Language` (français par défaut).',
   })
   @ApiResponse({ status: 202, type: MessageApiResponse })
   @ApiErrors(400, 403, 429, 503)
-  async register(@Body() dto: RegisterDto): Promise<MessageResponse> {
-    await this.auth.register(dto.email, dto.password);
+  async register(
+    @Body() dto: RegisterDto,
+    @Headers('accept-language') acceptLanguage?: string,
+  ): Promise<MessageResponse> {
+    await this.auth.register(dto.email, dto.password, acceptLanguage);
     return { message: MESSAGES.registerAccepted };
   }
 

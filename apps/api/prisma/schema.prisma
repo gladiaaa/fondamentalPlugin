@@ -15,10 +15,19 @@ datasource db {
 
 // ─── Comptes ────────────────────────────────────────────────────
 
+/// Langue des e-mails transactionnels, détectée à l'inscription (Accept-Language), jamais redemandée ensuite.
+enum Locale {
+  FR
+  EN
+
+  @@map("locale")
+}
+
 model User {
   id String @id @default(uuid()) @db.Uuid
   /// Toujours en minuscules (normalisé par l'API).
   email String @unique
+  locale Locale @default(FR)
   /// Renseigné à la confirmation de l'adresse. Sans lui, aucune connexion possible.
   emailVerifiedAt DateTime? @map("email_verified_at")
   /// argon2id. Vide pour un compte qui n'utilise que OAuth (#18).
@@ -31,6 +40,7 @@ model User {
 
   sessions Session[]
   emailTokens EmailToken[]
+  licenses License[]
 
   @@map("users")
 }
@@ -70,6 +80,20 @@ model EmailToken {
 
   @@index([userId, type])
   @@map("email_tokens")
+}
+
+/// Rattache au compte une clé de licence qui existe déjà sur le serveur de licences (anciens clients,
+/// clés créées à la main). Ne défait pas le lien à un achat : `order_id` s'ajoute avec les commandes (#23/#24).
+model License {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Clé telle que sur le serveur de licences. Une seule ligne par clé : jamais rattachée à deux comptes.
+  licenseKey String @unique @map("license_key")
+  claimedAt DateTime @default(now()) @map("claimed_at")
+
+  @@index([userId])
+  @@map("licenses")
 }
 
 // ─── Catalogue ──────────────────────────────────────────────────

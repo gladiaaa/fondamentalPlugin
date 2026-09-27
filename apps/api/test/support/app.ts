@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
 import { PwnedPasswordsService } from '../../src/auth/pwned-passwords.service.js';
+import { LicenseServerClient } from '../../src/licenses/license-server-client.js';
 import { type MailMessage, Mailer } from '../../src/mail/mailer.js';
 
 /** Origine du site en local : la seule que l'API accepte pour les requêtes qui modifient des données. */
@@ -40,13 +41,14 @@ export class InMemoryMailer extends Mailer {
   }
 }
 
-export async function createTestApp(mailer: Mailer): Promise<INestApplication> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+export async function createTestApp(mailer: Mailer, licenseServer?: unknown): Promise<INestApplication> {
+  let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(Mailer)
     .useValue(mailer)
     .overrideProvider(PwnedPasswordsService)
-    .useValue({ isPwned: async (password: string) => password === COMPROMISED_PASSWORD })
-    .compile();
+    .useValue({ isPwned: async (password: string) => password === COMPROMISED_PASSWORD });
+  if (licenseServer) builder = builder.overrideProvider(LicenseServerClient).useValue(licenseServer);
+  const moduleRef = await builder.compile();
   const app = moduleRef.createNestApplication({ bufferLogs: true });
   configureApp(app);
   await app.init();
@@ -60,6 +62,8 @@ interface RequestOptions {
   origin?: string | null;
   /** En-tête X-CSRF-Token. */
   csrf?: string;
+  /** En-tête Accept-Language (langue des e-mails à l'inscription). */
+  acceptLanguage?: string;
 }
 
 /**
@@ -72,10 +76,11 @@ export function newBrowser(app: INestApplication) {
   const ip = `203.0.113.${(nextIp % 250) + 1}`;
   const agent = request.agent(app.getHttpServer());
 
-  const prepare = (req: request.Test, { origin = ORIGIN, csrf }: RequestOptions) => {
+  const prepare = (req: request.Test, { origin = ORIGIN, csrf, acceptLanguage }: RequestOptions) => {
     req.set('X-Forwarded-For', ip);
     if (origin) req.set('Origin', origin);
     if (csrf) req.set('X-CSRF-Token', csrf);
+    if (acceptLanguage) req.set('Accept-Language', acceptLanguage);
     return req;
   };
 
