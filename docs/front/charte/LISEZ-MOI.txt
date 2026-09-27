@@ -1,0 +1,61 @@
+FONDAMENTAL PLUGINS · CHARTE GRAPHIQUE 1.0 · 26 septembre 2026
+==============================================================
+
+Contenu du dossier
+
+  charte/
+    charte-fondamental.pdf     La charte complète, 17 pages (format écran 1280 x 1810 px).
+    charte-fondamental.html    La même charte en page web. À ouvrir dans un navigateur, avec une
+                               connexion internet pour charger les polices. Pour obtenir votre
+                               propre PDF : Ctrl+P, puis « Enregistrer au format PDF ».
+
+  logo/
+    fondamental-cube.svg                       Symbole en couleur, fond transparent.
+    fondamental-cube-brume.svg                 Symbole une couleur, blanc Brume, pour fonds sombres.
+    fondamental-cube-encre.svg                 Symbole une couleur, Encre, pour fonds clairs.
+    fondamental-cube-amethyste.svg             Symbole une couleur, Améthyste.
+    fondamental-cube-512.png                   Symbole en couleur, 512 x 512, fond transparent.
+    fondamental-avatar-512.png                 Avatar 512 x 512 (cube Encre sur Améthyste).
+    server-icon.png                            Icône de serveur Minecraft, exactement 64 x 64 px.
+    fondamental-logo-horizontal-pour-fond-sombre.png   Logo complet, 2000 x 600, fond transparent.
+    fondamental-logo-horizontal-pour-fond-clair.png    Idem, texte foncé.
+    fondamental-logo-vertical-pour-fond-sombre.png     Logo vertical, 1440 x 1120, fond transparent.
+    fondamental-logo-vertical-pour-fond-clair.png      Idem, texte foncé.
+
+  icones/plugins/
+    fondamental-bedwars-pastille.svg / -512.png        Pastille violette, lit.
+    fondamental-tag-pastille.svg / -512.png            Pastille violette, étiquette.
+    fondamental-crate-pastille.svg / -512.png          Pastille violette, coffre.
+    fondamental-*-contour.svg                          Version contour sur tuile sombre.
+
+  icones/interface/
+    17 icônes SVG au trait de 2 px sur une grille de 32 px : panier, recherche, flèche, valider,
+    télécharger, documentation, support, compte, licence, rapide, lien externe, fiable, serveur,
+    clé, info, alerte, erreur. Elles utilisent la couleur du texte (currentColor) : dans une page
+    web, elles prennent la couleur de l'élément qui les contient. Ouvertes seules, elles s'affichent
+    en noir.
+
+  jetons/
+    fondamental-jetons.css     Variables CSS : couleurs, polices, rayons, espaces, mouvement, thème clair.
+    fondamental-jetons.json    Les mêmes valeurs en JSON, pour d'autres outils.
+    minimessage.txt            Balises MiniMessage prêtes à coller dans les plugins.
+
+Polices (libres, sur Google Fonts)
+
+  Sora            Titres et nom de la marque.        https://fonts.google.com/specimen/Sora
+  Instrument Sans Texte courant.                     https://fonts.google.com/specimen/Instrument+Sans
+  JetBrains Mono  Code et étiquettes.                https://fonts.google.com/specimen/JetBrains+Mono
+
+Couleurs principales
+
+  Améthyste #B7A0FF · Améthyste moyen #9280CC · Améthyste profond #6A5D94
+  Nuit #120F1A · Nuit 2 #1A1625 · Nuit 3 #231D33 · Ligne #2A2338
+  Brume #F0ECF8 · Lavande grise #9A90B3 · Papier #F3F0FA · Encre #170F2A
+
+Remarques
+
+  - Les fichiers PNG sont sur fond transparent, sauf server-icon.png et l'avatar.
+  - Les logos avec texte n'existent qu'en PNG : le texte est en Sora et dépend de la police.
+    Pour un logo vectoriel avec texte, placez le cube SVG à côté du nom composé en Sora 600
+    (« Plugins » en Sora 300, couleur Améthyste) dans votre outil de mise en page.
+  - Les prix, versions et nombres de joueurs de la charte sont des exemples.

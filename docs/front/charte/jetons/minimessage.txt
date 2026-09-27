@@ -1,0 +1,8 @@
+Fondamental Plugins · balises MiniMessage
+
+<gradient:#B7A0FF:#6A5D94>[Fondamental]</gradient> <#F0ECF8>Bedwars <#9A90B3>· Votre lit est protégé.
+<#B7A0FF>[VIP]</#B7A0FF> <#F0ECF8>Alex <#9A90B3>a rejoint la partie.
+<#7ED6A0>Caisse Légendaire ouverte.
+<#F07A7A>Vous n'avez pas la permission.
+
+Couleurs : Améthyste #B7A0FF · Brume #F0ECF8 · Lavande grise #9A90B3 · Succès #7ED6A0 · Erreur #F07A7A

@@ -1,0 +1,60 @@
+{
+  "nom": "Fondamental Plugins",
+  "version": "1.0",
+  "date": "2026-09-26",
+  "couleurs": {
+    "amethyste": "#B7A0FF",
+    "amethysteMoyen": "#9280CC",
+    "amethysteProfond": "#6A5D94",
+    "nuit": "#120F1A",
+    "nuit2": "#1A1625",
+    "nuit3": "#231D33",
+    "ligne": "#2A2338",
+    "brume": "#F0ECF8",
+    "lavandeGrise": "#9A90B3",
+    "papier": "#F3F0FA",
+    "encre": "#170F2A",
+    "violetLisible": "#6A4FD0",
+    "grisLavande": "#5E5673",
+    "signaux": {
+      "succes": "#7ED6A0",
+      "alerte": "#F0C36A",
+      "erreur": "#F07A7A",
+      "info": "#8FB8FF"
+    },
+    "signauxSurClair": {
+      "succes": "#1F8A55",
+      "alerte": "#9A6A00",
+      "erreur": "#C23B3B",
+      "info": "#2F63C9"
+    }
+  },
+  "typographie": {
+    "titres": "Sora (300, 400, 600)",
+    "texte": "Instrument Sans (400, 500, 600)",
+    "code": "JetBrains Mono (400, 500)"
+  },
+  "rayons": {
+    "champ": 12,
+    "carte": 20,
+    "grandeCarte": 24,
+    "pilule": 999
+  },
+  "espaces": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32,
+    48,
+    64,
+    96
+  ],
+  "mouvement": {
+    "rapide": "120ms",
+    "base": "200ms",
+    "lent": "320ms",
+    "courbe": "cubic-bezier(.2,.7,.2,1)"
+  }
+}
