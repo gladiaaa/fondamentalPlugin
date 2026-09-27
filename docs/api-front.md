@@ -139,6 +139,14 @@ Le paiement est confirmé par un webhook côté serveur (`/api/stripe/webhook`, 
 
 ⚠️ **Pas encore utilisable en ligne** : `POST /checkout` répond `503 PAYMENT_UNAVAILABLE` tant que les clés Stripe et les prix des produits ne sont pas configurés. Le front peut déjà être branché contre ce contrat, l'achat réel viendra une fois la configuration faite côté back.
 
+### Contact : `/support` (#81)
+
+| Route | Accès | Corps | Réponse |
+|---|---|---|---|
+| `POST /support` | public | `{ subject, email, licenseKey?, message }` | `202` : `{ message }` (ne détaille jamais si le message est bien arrivé à l'équipe, comme `/auth/register`) ; `503` si l'envoi d'e-mails est indisponible |
+
+Pas besoin de compte : pré-remplir `email` depuis la session si le visiteur est connecté, sinon lui demander. `licenseKey` facultatif (si le message porte sur une licence précise). Limite : 5 requêtes par minute et par IP. `subject` et `message` : 1 à 200 et 1 à 5000 caractères.
+
 ## 5. Erreurs
 
 Corps : `{ statusCode, message: string | string[], error?, code? }`. `message` est un tableau pour les erreurs de validation (un texte par champ invalide).

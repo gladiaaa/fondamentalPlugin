@@ -1497,6 +1497,79 @@
           "commandes"
         ]
       }
+    },
+    "/api/support": {
+      "post": {
+        "description": "Public (sans compte). La réponse ne détaille jamais si le message est bien arrivé à l’équipe, comme les autres routes qui envoient un e-mail (voir `/auth/register`).",
+        "operationId": "SupportController_contact",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactSupportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de requêtes : réessayer plus tard.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Écrire à l’équipe",
+        "tags": [
+          "support"
+        ]
+      }
     }
   },
   "info": {
@@ -2196,6 +2269,38 @@
           "status",
           "productSlug",
           "licenseKey"
+        ]
+      },
+      "ContactSupportDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ada@example.com"
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "licenseKey": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 128,
+            "description": "Facultatif : la clé concernée, si le message porte sur une licence."
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
+        },
+        "required": [
+          "email",
+          "subject",
+          "message"
         ]
       }
     }
