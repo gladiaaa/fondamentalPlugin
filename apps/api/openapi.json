@@ -1066,7 +1066,7 @@
     },
     "/api/me/licenses": {
       "get": {
-        "description": "Les clés rattachées au compte. Statut détaillé et installations : à venir avec #25.",
+        "description": "Les clés rattachées au compte. Statut détaillé et installations : `GET /me/licenses/:key`.",
         "operationId": "LicensesController_list",
         "parameters": [],
         "responses": {
@@ -1113,6 +1113,164 @@
           }
         ],
         "summary": "Mes licences",
+        "tags": [
+          "licences"
+        ]
+      }
+    },
+    "/api/me/licenses/{key}": {
+      "get": {
+        "description": "Édition, révocation et installations actives. Une clé qui ne vous appartient pas répond la **même erreur** (404) qu'une clé inconnue.",
+        "operationId": "LicensesController_getDetail",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LicenseDetailApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Statut d'une licence",
+        "tags": [
+          "licences"
+        ]
+      }
+    },
+    "/api/me/licenses/{key}/activations/{installationId}": {
+      "delete": {
+        "description": "Après une réinstallation de serveur, pour libérer un emplacement d’activation.",
+        "operationId": "LicensesController_releaseActivation",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "installationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Libérer une installation",
         "tags": [
           "licences"
         ]
@@ -1457,7 +1615,11 @@
               "NO_PASSWORD",
               "SAME_PASSWORD",
               "LICENSE_CLAIM_INVALID",
-              "LICENSE_SERVER_UNAVAILABLE"
+              "LICENSE_SERVER_UNAVAILABLE",
+              "LICENSE_NOT_FOUND",
+              "PRODUCT_NOT_PURCHASABLE",
+              "PAYMENT_UNAVAILABLE",
+              "ORDER_NOT_FOUND"
             ],
             "description": "Présent pour les erreurs que le site doit distinguer."
           }
@@ -1927,6 +2089,49 @@
         "required": [
           "key",
           "claimedAt"
+        ]
+      },
+      "LicenseActivationApiResponse": {
+        "type": "object",
+        "properties": {
+          "installationId": {
+            "type": "string",
+            "description": "À repasser à DELETE /me/licenses/:key/activations/:installationId."
+          }
+        },
+        "required": [
+          "installationId"
+        ]
+      },
+      "LicenseDetailApiResponse": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "claimedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "revoked": {
+            "type": "boolean"
+          },
+          "activations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LicenseActivationApiResponse"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "claimedAt",
+          "edition",
+          "revoked",
+          "activations"
         ]
       },
       "ClaimLicenseDto": {

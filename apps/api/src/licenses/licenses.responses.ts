@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { OwnedLicenseResponse } from '@fondamental/shared';
+import type { LicenseActivation, LicenseDetailResponse, OwnedLicenseResponse } from '@fondamental/shared';
 
 export class OwnedLicenseApiResponse implements OwnedLicenseResponse {
   @ApiProperty({ type: String })
@@ -7,4 +7,20 @@ export class OwnedLicenseApiResponse implements OwnedLicenseResponse {
 
   @ApiProperty({ type: String, format: 'date-time' })
   claimedAt!: string;
+}
+
+export class LicenseActivationApiResponse implements LicenseActivation {
+  @ApiProperty({ type: String, description: 'À repasser à DELETE /me/licenses/:key/activations/:installationId.' })
+  installationId!: string;
+}
+
+export class LicenseDetailApiResponse extends OwnedLicenseApiResponse implements LicenseDetailResponse {
+  @ApiProperty({ type: String })
+  edition!: string;
+
+  @ApiProperty({ type: Boolean })
+  revoked!: boolean;
+
+  @ApiProperty({ type: [LicenseActivationApiResponse] })
+  activations!: LicenseActivation[];
 }

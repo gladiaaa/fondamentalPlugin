@@ -53,6 +53,7 @@ export interface ApiError {
     | "SAME_PASSWORD"
     | "LICENSE_CLAIM_INVALID"
     | "LICENSE_SERVER_UNAVAILABLE"
+    | "LICENSE_NOT_FOUND"
     | "PRODUCT_NOT_PURCHASABLE"
     | "PAYMENT_UNAVAILABLE"
     | "ORDER_NOT_FOUND";
@@ -172,12 +173,28 @@ export interface ReleaseFileResponse {
 
 // ─── Licences ───────────────────────────────────────────────────
 
-/** Une licence rattachée au compte (`GET /api/me/licenses`). Son statut détaillé viendra avec #25. */
+/** Une licence rattachée au compte (`GET /api/me/licenses`). Son statut détaillé : `GET /api/me/licences/:key`. */
 export interface OwnedLicenseResponse {
   /** Clé de licence, propre au titulaire du compte : jamais affichée à quelqu'un d'autre. */
   key: string;
   /** Date ISO 8601 du rattachement (pas forcément celle de l'achat). */
   claimedAt: string;
+}
+
+/**
+ * Une installation (un serveur Minecraft) qui consomme une activation de la licence.
+ * `installationId` : à repasser tel quel à `DELETE /api/me/licenses/:key/activations/:installationId`
+ * pour la libérer. Forme provisoire (comme le reste de ce qui vient du serveur de licences, voir #22).
+ */
+export interface LicenseActivation {
+  installationId: string;
+}
+
+/** Statut détaillé d'une licence (`GET /api/me/licenses/:key`), #25. */
+export interface LicenseDetailResponse extends OwnedLicenseResponse {
+  edition: string;
+  revoked: boolean;
+  activations: LicenseActivation[];
 }
 
 // ─── Commandes ──────────────────────────────────────────────────

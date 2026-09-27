@@ -106,10 +106,14 @@ La suppression est **définitive** : demander une confirmation claire et le mot 
 
 | Route | Accès | Corps | Réponse |
 |---|---|---|---|
-| `GET /me/licenses` | session | (vide) | `200` : tableau `{ key, claimedAt }[]`, les plus récentes en premier. Statut et installations : à venir avec #25 |
+| `GET /me/licenses` | session | (vide) | `200` : tableau `{ key, claimedAt }[]`, les plus récentes en premier |
+| `GET /me/licenses/:key` | session | (vide) | `200` : `{ key, claimedAt, edition, revoked, activations: { installationId }[] }` ; `404 LICENSE_NOT_FOUND` (clé inconnue **ou d'un autre compte** — même réponse) ; `503 LICENSE_SERVER_UNAVAILABLE` |
+| `DELETE /me/licenses/:key/activations/:installationId` | session | (vide) | `204` : installation libérée ; `404 LICENSE_NOT_FOUND` (clé ou installation inconnue, ou clé d'un autre compte) ; `503 LICENSE_SERVER_UNAVAILABLE` |
 | `POST /me/licenses/claim` | session | `{ key }` | `204` : la clé est rattachée au compte ; `400 LICENSE_CLAIM_INVALID` (clé inconnue, révoquée, **ou déjà rattachée** — même réponse dans les trois cas, ne pas essayer de deviner laquelle) ; `503 LICENSE_SERVER_UNAVAILABLE` |
 
 Réservé aux clés qui existaient déjà **avant** la boutique (anciens clients, clés faites à la main) : une clé achetée sur le site sera rattachée automatiquement (#24), pas besoin de ce formulaire. Prévoir un champ simple (« Vous avez déjà une clé de licence ? ») plutôt qu'une page dédiée. Limite stricte : 5 tentatives par minute.
+
+`activations[].installationId` : à repasser tel quel à `DELETE .../activations/:installationId` pour libérer un emplacement (réinstallation de serveur). Forme provisoire (dépend du serveur de licences existant, voir #22).
 
 Règles utiles pour les formulaires :
 
@@ -123,6 +127,17 @@ Règles utiles pour les formulaires :
 - `503` sur inscription, renvoi et mot de passe oublié si l'envoi d'e-mails est indisponible : afficher « Réessayez plus tard ».
 
 Objet `user` : `{ id: string, email: string, createdAt: string (ISO 8601) }`. Il ne contient **jamais** de mot de passe.
+
+### Achat : `/checkout`, `/orders` (#23, #24)
+
+| Route | Accès | Corps | Réponse |
+|---|---|---|---|
+| `POST /checkout` | session | `{ productSlug }` | `201` : `{ url }`, rediriger le navigateur vers Stripe Checkout ; `400 PRODUCT_NOT_PURCHASABLE` ; `503 PAYMENT_UNAVAILABLE` |
+| `GET /orders/by-session/:sessionId` | session | (vide) | `200` : `{ status, productSlug, licenseKey }` (`status` : `PENDING`/`PAID`/`LICENSED`/`REFUNDED`, `licenseKey` non nul seulement si `LICENSED`) ; `404 ORDER_NOT_FOUND` |
+
+Le paiement est confirmé par un webhook côté serveur (`/api/stripe/webhook`, jamais appelé par le site) : le site ne déclenche jamais la licence lui-même. Sur `/merci`, **interroger `GET /orders/by-session/:sessionId` toutes les 2 s** tant que `status` n'est pas `LICENSED` (ou `REFUNDED`, en cas de remboursement immédiat). Adresse e-mail confirmée obligatoire pour acheter. Une case de renonciation au droit de rétractation est affichée par Stripe.
+
+⚠️ **Pas encore utilisable en ligne** : `POST /checkout` répond `503 PAYMENT_UNAVAILABLE` tant que les clés Stripe et les prix des produits ne sont pas configurés. Le front peut déjà être branché contre ce contrat, l'achat réel viendra une fois la configuration faite côté back.
 
 ## 5. Erreurs
 
@@ -154,16 +169,7 @@ Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive
 
 Chaque groupe a une issue GitHub : les détails et décisions y sont.
 
-### Achat (#23, #24)
-- `POST /checkout` `{ productSlug }` (session) → `{ url }` : rediriger le navigateur vers Stripe Checkout. Le paiement est confirmé par un webhook côté serveur : le site ne déclenche jamais la licence.
-- `GET /orders/by-session/:sessionId` (session) : état de la commande pour la page `/merci` (`pending`, `paid`, `licensed`, `refunded`) et la clé quand elle est prête. **Interroger toutes les 2 s** tant que la licence n'est pas prête.
-- Adresse e-mail confirmée obligatoire pour acheter. Une case de renonciation au droit de rétractation est affichée par Stripe.
-
-### Espace client (#25)
-- `GET /me/licenses` **existe déjà** (voir plus haut), mais sans statut ni installations pour l'instant.
-- `GET /me/licenses/:key` : détail et liste des installations.
-- `DELETE /me/licenses/:key/activations/:installationId` : libérer une installation.
-- `POST /me/licenses/claim` `{ key }` : rattacher une clé existante (anciens clients TagsCustom). Réponse volontairement identique pour clé inconnue, révoquée ou déjà prise.
+Achat (#23, #24) et espace client détaillé (#25) : maintenant dans la section 4 (`## 4. Routes disponibles`), ce sont de vraies routes.
 
 ### Générateur de configuration (#30), acheteurs uniquement
 - `GET /configs/:slug/:version/files` : fichiers configurables (ex. `crates.yml`, `tags.yml`, `season.yml`, `quests.yml`).
