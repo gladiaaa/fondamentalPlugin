@@ -16,6 +16,23 @@ export interface LicenseStatus {
   activations: unknown[];
 }
 
+/**
+ * Ce qu'on envoie pour créer une licence (`POST /api/v1/admin/licenses`). `product` doit être l'un des
+ * `licenseProduct` connus du serveur de licences (`bedwars`, `crate`, `tagcustom`… voir `Product` en base).
+ */
+export interface CreateLicenseInput {
+  product: string;
+  edition: string;
+  /** Identifie l'acheteur côté serveur de licences (texte libre, ex. `email (userId)`). */
+  customer: string;
+  maxActivations: number;
+}
+
+/** Réponse de la création : au minimum la clé générée. Forme provisoire, comme `LicenseStatus`. */
+export interface CreatedLicense {
+  key: string;
+}
+
 export class LicenseServerError extends Error {}
 
 /** La clé n'existe pas sur le serveur de licences. */
@@ -42,13 +59,49 @@ export class LicenseServerClient {
 
   /** @throws LicenseNotFoundError si la clé n'existe pas, LicenseServerError pour toute autre erreur. */
   async get(key: string): Promise<LicenseStatus> {
+    return this.request<LicenseStatus>('GET', `/api/v1/admin/licenses/${encodeURIComponent(key)}`);
+  }
+
+  /** Crée une licence après un paiement. N'appelle jamais deux fois pour la même commande (voir #24). */
+  async create(input: CreateLicenseInput): Promise<CreatedLicense> {
+    return this.request<CreatedLicense>('POST', '/api/v1/admin/licenses', { body: input });
+  }
+
+  /** @throws LicenseNotFoundError si la clé n'existe pas, LicenseServerError pour toute autre erreur. */
+  async revoke(key: string): Promise<void> {
+    await this.request('POST', `/api/v1/admin/licenses/${encodeURIComponent(key)}/revoke`, {
+      expectJson: false,
+    });
+  }
+
+  /** Libère une installation (réinstallation de serveur). @throws LicenseNotFoundError si clé ou installation inconnue. */
+  async releaseActivation(key: string, installationId: string): Promise<void> {
+    await this.request(
+      'DELETE',
+      `/api/v1/admin/licenses/${encodeURIComponent(key)}/activations/${encodeURIComponent(installationId)}`,
+      { expectJson: false },
+    );
+  }
+
+  /** @throws LicenseNotFoundError sur 404, LicenseServerError pour toute autre erreur ou panne réseau. */
+  private async request<T = void>(
+    method: string,
+    path: string,
+    options: { body?: unknown; expectJson?: boolean } = {},
+  ): Promise<T> {
+    const { body, expectJson = true } = options;
     if (!this.baseUrl || !this.token) {
       throw new LicenseServerError('Serveur de licences non configuré.');
     }
     let response: Response;
     try {
-      response = await fetch(`${this.baseUrl}/api/v1/admin/licenses/${encodeURIComponent(key)}`, {
-        headers: { Authorization: `Bearer ${this.token}` },
+      response = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
         signal: AbortSignal.timeout(5_000),
       });
     } catch (error) {
@@ -60,6 +113,7 @@ export class LicenseServerClient {
       this.logger.warn(`Serveur de licences a répondu ${response.status}`);
       throw new LicenseServerError(`Serveur de licences : réponse ${response.status}.`);
     }
-    return (await response.json()) as LicenseStatus;
+    if (!expectJson) return undefined as T;
+    return (await response.json()) as T;
   }
 }
