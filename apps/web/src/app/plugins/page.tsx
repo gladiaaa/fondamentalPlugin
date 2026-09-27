@@ -5,10 +5,11 @@ import { PLUGIN_ICONS } from "@/features/plugins/icons";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PanierIcon } from "@/components/icons";
 
-// Sans ça, Next.js met en cache le `fetch` de getProducts() indéfiniment et
-// prérend la page en statique au build : le catalogue ne bougerait plus
-// (prix, purchasable...) tant que le site n'est pas redéployé.
-export const revalidate = 60;
+// Sans ça, Next.js tente de prérendre la page en statique au build, ce qui
+// suppose l'API jointe à ce moment-là — faux en CI et dans l'image Docker
+// (`npm run build`, sans base ni API qui tourne : ECONNREFUSED). En rendu
+// dynamique, l'appel se fait à la requête, une fois l'API vraiment là.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Les plugins — Fondamental Plugins",

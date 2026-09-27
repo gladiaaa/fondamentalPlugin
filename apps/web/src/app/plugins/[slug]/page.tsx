@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { getFiles, getMinecraftVersions, getProduct } from "@/lib/api/products";
 import { PluginFiche } from "@/features/plugins/PluginFiche";
 
-// Voir app/plugins/page.tsx : sans ça, la fiche resterait figée au contenu
-// du dernier build (prix, fichiers publiés...).
-export const revalidate = 60;
+// Voir app/plugins/page.tsx : sans ça, `next build` tente de prérendre cette
+// route (et échoue, l'API n'étant pas joignable en CI/Docker au build).
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
