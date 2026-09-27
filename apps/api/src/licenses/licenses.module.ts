@@ -8,5 +8,7 @@ import { LicensesService } from './licenses.service.js';
   imports: [AuthModule],
   controllers: [LicensesController],
   providers: [LicensesService, LicenseServerClient],
+  // `LicenseServerClient` : réutilisé par le module `orders` pour créer/révoquer une licence après un achat (#24).
+  exports: [LicenseServerClient],
 })
 export class LicensesModule {}

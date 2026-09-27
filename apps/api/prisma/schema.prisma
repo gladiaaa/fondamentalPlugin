@@ -41,6 +41,7 @@ model User {
   sessions Session[]
   emailTokens EmailToken[]
   licenses License[]
+  orders Order[]
 
   @@map("users")
 }
@@ -83,13 +84,16 @@ model EmailToken {
 }
 
 /// Rattache au compte une clé de licence qui existe déjà sur le serveur de licences (anciens clients,
-/// clés créées à la main). Ne défait pas le lien à un achat : `order_id` s'ajoute avec les commandes (#23/#24).
+/// clés créées à la main, ou clé créée par un achat : voir `orderId`).
 model License {
   id String @id @default(uuid()) @db.Uuid
   userId String @map("user_id") @db.Uuid
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Clé telle que sur le serveur de licences. Une seule ligne par clé : jamais rattachée à deux comptes.
   licenseKey String @unique @map("license_key")
+  /// Vide pour une clé rattachée à la main (#45). Présent pour une clé créée par un achat (#24).
+  orderId String? @unique @map("order_id") @db.Uuid
+  order Order? @relation(fields: [orderId], references: [id])
   claimedAt DateTime @default(now()) @map("claimed_at")
 
   @@index([userId])
@@ -132,8 +136,47 @@ model Product {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   releases Release[]
+  orders Order[]
 
   @@map("products")
+}
+
+// ─── Commandes ──────────────────────────────────────────────────
+
+/// `PENDING` → `PAID` (webhook reçu) → `LICENSED` (clé créée) ; ou `REFUNDED` depuis `PAID`/`LICENSED`.
+enum OrderStatus {
+  PENDING
+  PAID
+  LICENSED
+  REFUNDED
+
+  @@map("order_status")
+}
+
+/// Un achat Stripe Checkout. `stripeCheckoutSessionId` est unique : un paiement ne peut
+/// jamais donner deux licences, même si Stripe rejoue son webhook (#24).
+model Order {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  /// Restrict : une commande ne disparaît jamais avec le compte (obligation comptable). La suppression
+  /// de compte (RGPD) devra anonymiser ses commandes plutôt que les supprimer — pas encore fait.
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  productId String @map("product_id") @db.Uuid
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  stripeCheckoutSessionId String @unique @map("stripe_checkout_session_id")
+  /// Vide tant que le paiement n'est pas confirmé (`checkout.session.completed`).
+  stripePaymentIntentId String? @unique @map("stripe_payment_intent_id")
+  /// Copie du prix au moment de l'achat : ne bouge pas si le prix du produit change ensuite.
+  amountCents Int @map("amount_cents")
+  currency String
+  status OrderStatus @default(PENDING)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  license License?
+
+  @@index([userId])
+  @@map("orders")
 }
 
 // ─── Fichiers ───────────────────────────────────────────────────

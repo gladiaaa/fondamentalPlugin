@@ -106,21 +106,25 @@ sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$NEW/" /opt/fondamentalplugin/
 
 Effets d'un changement : `RELEASES_TOKEN` : publications refusées tant que les dépôts n'ont pas le nouveau ; `RESEND_API_KEY` : e-mails en `503` tant que l'API n'est pas redémarrée avec la bonne clé.
 
-## 5. Rejouer un événement du webhook Stripe (à venir, #24)
+## 5. Rejouer un événement du webhook Stripe
 
 **Quand** : un paiement a réussi chez Stripe mais le client n'a pas reçu sa clé (webhook en échec, serveur de licences indisponible pendant le paiement).
 
 1. Dashboard Stripe → *Développeurs → Webhooks* → le point de terminaison → l'événement `checkout.session.completed` concerné → **Renvoyer**.
-2. Le traitement est **idempotent** : `stripe_checkout_session_id` est unique. Si la commande est déjà « licensed », l'API répond `200` sans rien faire ; sinon elle crée la licence, envoie l'e-mail et passe la commande en « licensed ».
+2. Le traitement est **idempotent** : `stripe_checkout_session_id` est unique. Si la commande est déjà « licensed », l'API répond `200` sans rien faire ; sinon elle crée la licence et passe la commande en « licensed » (l'e-mail avec la clé n'est pas encore envoyé : suite de #26).
 3. En dev, avec la CLI : `stripe events resend <evt_…>`.
 
-**Vérifier** : la commande est « licensed » et la clé apparaît dans « mes licences » du client.
+**Vérifier** : la commande est « licensed » (`GET /api/orders/by-session/:id`) et la clé apparaît dans « mes licences » du client.
 
 Stripe réessaie tout seul plusieurs jours quand l'API répond `500` : ne rejouer à la main qu'après avoir corrigé la cause.
 
-## 6. Révoquer ou recréer une licence à la main (à venir, #22)
+**Pas encore utilisable en ligne** : `POST /api/checkout` répond `503` (`PAYMENT_UNAVAILABLE`) tant que `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` ne sont pas configurées et que les produits n'ont pas de `stripe_price_id` (voir #23/#24).
 
-**Quand** : remboursement non détecté par le webhook, clé fuitée, litige. Les appels passent par l'API d'administration du serveur de licences (jeton administrateur : jamais depuis un navigateur).
+## 6. Révoquer ou recréer une licence à la main
+
+**Quand** : un remboursement est manqué par le webhook (`charge.refunded` non reçu), clé fuitée, litige. D'ordinaire, un remboursement Stripe révoque la licence et passe la commande en « refunded » tout seul (voir section 5).
+
+Les appels manuels passent par l'API d'administration du serveur de licences, via `LicenseServerClient` (`get`/`create`/`revoke`/`releaseActivation`, #22) ou directement :
 
 ```bash
 # Depuis le VPS (les valeurs sont dans api.env : ne jamais les coller dans une issue ou un message)
@@ -129,8 +133,6 @@ curl -sS -X POST "$LICENSE_SERVER_URL/api/v1/admin/licenses/<CLE>/revoke" \
 ```
 
 Ensuite, passer la commande en « refunded » en base (le back-office admin, #32, remplacera cette étape manuelle). Libérer une installation : `DELETE …/licenses/<CLE>/activations/<installationId>`.
-
-Le contrat exact (réponses, codes d'erreur) sera repris ici quand le client du serveur de licences (#22) existera.
 
 ## 7. Supprimer un compte à la demande (RGPD)
 

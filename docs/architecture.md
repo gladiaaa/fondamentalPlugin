@@ -10,7 +10,7 @@ Ce document explique **comment la boutique est construite** et où chercher quan
 Navigateur ─► nginx ─┬─ fondamentalplugin.fr/*      ─► conteneur web  (Next.js)
                      └─ fondamentalplugin.fr/api/*  ─► conteneur api  (NestJS) ─► conteneur db (PostgreSQL)
                                                             │
-Stripe ── webhook ─────► /api/stripe/webhook (à venir)      ├─► serveur de licences (existant)
+Stripe ── webhook ─────► /api/stripe/webhook                ├─► serveur de licences (existant)
 CI des plugins ── jar ─► /api/admin/releases                └─► Resend (e-mails)
 ```
 
@@ -43,8 +43,8 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests), bilingues FR/EN (langue choisie à l'inscription) | fait ; modèles React Email soignés et e-mails de commande (reçu, remboursement) : suite de #26 |
 | `prisma` | Accès à la base | fait |
 | `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs, erreurs inattendues remontées à Sentry | fait |
-| `licenses` | Client du serveur de licences (`LicenseServerClient`, minimal) ; rattacher une clé existante au compte | fait (#22 minimal, #45) ; statut détaillé et installations : #25 |
-| `orders` | Stripe Checkout et webhook | #23, #24 |
+| `licenses` | Client du serveur de licences (`LicenseServerClient` : `get`, `create`, `revoke`, `releaseActivation`) ; rattacher une clé existante au compte | fait (#22, #45) ; statut détaillé et installations : #25 |
+| `orders` | `POST /api/checkout` (session Stripe Checkout), `GET /api/orders/by-session/:id`, `POST /api/stripe/webhook` (licence créée une seule fois, remboursement → révocation) | code et tests faits (#23, #24) ; **pas encore utilisable en ligne** : il manque les clés Stripe et les prix des produits (`stripe_price_id`), voir [runbook.md](runbook.md) |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |
 | back-office | Commandes, licences, produits, versions | #32 |
@@ -61,8 +61,8 @@ Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées valid�
 | `products` | Les plugins : slug, description, prérequis, prix (nul tant que non fixé), nom côté serveur de licences |
 | `minecraft_versions` | Versions de Minecraft, avec un rang de tri calculé depuis le numéro |
 | `releases`, `release_files` | Versions d'un plugin et leurs jars (édition, taille, SHA-256, versions de Minecraft couvertes, compteur de téléchargements) |
-| `licenses` | Clés rattachées à un compte (une seule ligne par clé, jamais deux comptes) ; `order_id` s'ajoutera avec les commandes |
-| `orders` | Commandes Stripe et clés achetées (à venir, #23, #24) |
+| `licenses` | Clés rattachées à un compte (une seule ligne par clé, jamais deux comptes) ; `order_id` présent pour une clé créée par un achat |
+| `orders` | Commandes Stripe : statut (`pending` → `paid` → `licensed`/`refunded`), montant et devise au moment de l'achat |
 | `saved_configs`, `oauth_accounts` | Configurations enregistrées (#30) et comptes tiers (#18) (à venir) |
 
 Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiquement au déploiement. Elles doivent rester **compatibles avec la version précédente** de l'API (retour arrière automatique). Le catalogue est semé **dans une migration** : l'image de déploiement n'exécute que les migrations.
@@ -79,7 +79,7 @@ Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiqueme
 - **Conteneurs** : utilisateur non-root, système de fichiers de l'API en lecture seule, `no-new-privileges`, base sans port publié sur un réseau Docker sans accès à Internet.
 - **Logs** (pino) : cookies, en-têtes d'autorisation, mots de passe et jetons masqués.
 
-## Flux d'un achat (à venir, #23 et #24)
+## Flux d'un achat (#23 et #24)
 
 ```
 1. Le client connecté clique « Acheter »      POST /api/checkout {productSlug}
@@ -89,7 +89,7 @@ Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiqueme
 5. checkout.session.completed, payment_status = paid :
      commande → paid (déjà « licensed » : on répond 200 sans rien faire)
      POST /api/v1/admin/licenses sur le serveur de licences → clé
-     commande → licensed, e-mail avec la clé
+     commande → licensed (l'e-mail avec la clé viendra avec la suite de #26)
    serveur de licences indisponible : réponse 500, Stripe réessaie, aucune clé en double
 6. charge.refunded : la clé est révoquée, commande → refunded
 7. La page /merci lit GET /api/orders/by-session/:id jusqu'à ce que la clé soit prête
@@ -97,7 +97,7 @@ Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiqueme
 
 Garantie centrale : `stripe_checkout_session_id` est **unique** ; un paiement ne peut donner qu'une licence, même si Stripe rejoue le webhook.
 
-Blocages connus : l'API d'administration du serveur de licences (formes des réponses) et les prix des plugins doivent être fournis avant de coder ces étapes.
+**Code et tests faits**, mais **pas encore utilisable en ligne** : il manque les clés Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) et les prix Stripe des produits (`stripe_price_id`) pour dev et prod. Tant qu'ils ne sont pas configurés, `POST /api/checkout` répond `503`.
 
 ## Flux d'une publication de plugin
 

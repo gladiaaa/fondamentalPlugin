@@ -52,7 +52,10 @@ export interface ApiError {
     | "NO_PASSWORD"
     | "SAME_PASSWORD"
     | "LICENSE_CLAIM_INVALID"
-    | "LICENSE_SERVER_UNAVAILABLE";
+    | "LICENSE_SERVER_UNAVAILABLE"
+    | "PRODUCT_NOT_PURCHASABLE"
+    | "PAYMENT_UNAVAILABLE"
+    | "ORDER_NOT_FOUND";
 }
 
 /** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
@@ -175,4 +178,27 @@ export interface OwnedLicenseResponse {
   key: string;
   /** Date ISO 8601 du rattachement (pas forcément celle de l'achat). */
   claimedAt: string;
+}
+
+// ─── Commandes ──────────────────────────────────────────────────
+
+/**
+ * `PENDING` : session Stripe créée, paiement pas encore confirmé.
+ * `PAID` : webhook reçu, licence pas encore créée (ne devrait durer qu'un instant).
+ * `LICENSED` : la clé existe, l'e-mail est parti.
+ * `REFUNDED` : remboursée, la clé est révoquée sur le serveur de licences.
+ */
+export type OrderStatus = "PENDING" | "PAID" | "LICENSED" | "REFUNDED";
+
+/** Réponse de `GET /api/orders/by-session/:id`, lue par la page /merci jusqu'à ce que la clé soit prête. */
+export interface OrderResponse {
+  status: OrderStatus;
+  productSlug: string;
+  /** Présente seulement quand `status` vaut `LICENSED`. */
+  licenseKey: string | null;
+}
+
+/** Réponse de `POST /api/checkout` : l'adresse à laquelle rediriger le client (Stripe Checkout). */
+export interface CheckoutResponse {
+  url: string;
 }
