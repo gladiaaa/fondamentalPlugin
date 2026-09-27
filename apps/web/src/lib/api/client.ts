@@ -26,6 +26,12 @@ export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
    * lu depuis localStorage ou une URL.
    */
   csrfToken?: string;
+  /**
+   * Renvoie le corps brut (`Blob`) au lieu de le décoder en JSON : pour un
+   * fichier à télécharger (`GET /me/export`), dont la réponse n'est pas au
+   * format d'erreur JSON habituel non plus.
+   */
+  raw?: boolean;
 }
 
 /**
@@ -51,7 +57,7 @@ const SERVER_API_BASE = process.env.API_INTERNAL_URL ?? "http://localhost:4000/a
  */
 export async function apiFetch<T>(
   path: string,
-  { body, csrfToken, headers, ...init }: ApiFetchOptions = {},
+  { body, csrfToken, headers, raw, ...init }: ApiFetchOptions = {},
 ): Promise<T> {
   const url = typeof window === "undefined" ? `${SERVER_API_BASE}${path}` : `/api${path}`;
   const response = await fetch(url, {
@@ -65,15 +71,15 @@ export async function apiFetch<T>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  if (response.status === 204) return undefined as T;
-
-  const data = await response.json().catch(() => null);
-
   if (!response.ok) {
+    const data = await response.json().catch(() => null);
     throw new ApiRequestError(
       data ?? { statusCode: response.status, message: response.statusText },
     );
   }
 
-  return data as T;
+  if (raw) return (await response.blob()) as T;
+  if (response.status === 204) return undefined as T;
+
+  return (await response.json()) as T;
 }

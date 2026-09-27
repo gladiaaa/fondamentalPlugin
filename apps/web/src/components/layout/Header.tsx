@@ -59,7 +59,13 @@ export function Header() {
       </nav>
 
       <div className="relative ml-auto flex items-center gap-2.5">
-        {session === null ? (
+        {status === "loading" ? (
+          // Ni « Se connecter » ni le menu du compte tant que le GET
+          // /auth/me initial n'a pas répondu : éviter le flash visiteur sur
+          // un compte déjà connecté (une simple réservation de place, sans
+          // contenu qui clignote).
+          <span aria-hidden="true" className="hidden h-9 w-[110px] md:block" />
+        ) : session === null ? (
           <Button variant="secondary" size="sm" asChild className="hidden md:inline-flex">
             <Link href="/connexion">Se connecter</Link>
           </Button>

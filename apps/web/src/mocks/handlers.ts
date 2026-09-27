@@ -27,20 +27,11 @@ const checkoutHandlers = [
   ),
 ];
 
-// Espace client : licences (#25, #45)
+// Détail d'une licence et libération d'installation : toujours « prévues »
+// (#25 complet). `GET /me/licenses` (liste) et `POST /me/licenses/claim`
+// sont livrées depuis #65 (docs/api-front.md §4) : plus mockées ici, elles
+// passent par la vraie API (lib/api/account.ts).
 const licenseHandlers = [
-  http.get("/api/me/licenses", () =>
-    HttpResponse.json([
-      {
-        key: "FBW-DEMO-0000-0001",
-        product: { slug: "bedwars", name: "FondamentalBedwars" },
-        status: "ACTIVE",
-        purchasedAt: "2026-01-15T10:00:00.000Z",
-        activationsUsed: 1,
-        activationsMax: 3,
-      },
-    ]),
-  ),
   http.get("/api/me/licenses/:key", ({ params }) =>
     HttpResponse.json({
       key: params.key,
@@ -60,11 +51,6 @@ const licenseHandlers = [
   ),
   http.delete("/api/me/licenses/:key/activations/:installationId", () =>
     new HttpResponse(null, { status: 204 }),
-  ),
-  http.post("/api/me/licenses/claim", () =>
-    // Réponse volontairement identique pour clé inconnue, révoquée ou déjà
-    // prise (docs/api-front.md §7) : le mock ne distingue pas non plus.
-    HttpResponse.json({ message: "Si cette clé existe, elle a été rattachée à votre compte." }, { status: 202 }),
   ),
 ];
 

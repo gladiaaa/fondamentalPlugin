@@ -39,6 +39,8 @@ export { default as ImageIcon } from "./interface/image.svg";
 export { default as EclairIcon } from "./interface/eclair.svg";
 // Nécessaire aux écrans d'authentification (e-mail envoyé/à confirmer).
 export { default as EnveloppeIcon } from "./interface/enveloppe.svg";
+// Nécessaire à la navigation de l'espace client (réglages du compte).
+export { default as ParametresIcon } from "./interface/parametres.svg";
 
 export { default as BedwarsPastilleIcon } from "./plugins/fondamental-bedwars-pastille.svg";
 export { default as BedwarsContourIcon } from "./plugins/fondamental-bedwars-contour.svg";
