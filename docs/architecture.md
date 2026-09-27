@@ -43,7 +43,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests) | fait, modèles soignés : #26 |
 | `prisma` | Accès à la base | fait |
 | `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs | fait |
-| `licenses` | Client du serveur de licences ; « mes licences » | #22, #25 |
+| `licenses` | Client du serveur de licences (`LicenseServerClient`, minimal) ; rattacher une clé existante au compte | fait (#22 minimal, #45) ; statut détaillé et installations : #25 |
 | `orders` | Stripe Checkout et webhook | #23, #24 |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |
@@ -61,7 +61,8 @@ Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées valid�
 | `products` | Les plugins : slug, description, prérequis, prix (nul tant que non fixé), nom côté serveur de licences |
 | `minecraft_versions` | Versions de Minecraft, avec un rang de tri calculé depuis le numéro |
 | `releases`, `release_files` | Versions d'un plugin et leurs jars (édition, taille, SHA-256, versions de Minecraft couvertes, compteur de téléchargements) |
-| `orders`, `licenses` | Commandes Stripe et clés (à venir, #23, #24) |
+| `licenses` | Clés rattachées à un compte (une seule ligne par clé, jamais deux comptes) ; `order_id` s'ajoutera avec les commandes |
+| `orders` | Commandes Stripe et clés achetées (à venir, #23, #24) |
 | `saved_configs`, `oauth_accounts` | Configurations enregistrées (#30) et comptes tiers (#18) (à venir) |
 
 Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiquement au déploiement. Elles doivent rester **compatibles avec la version précédente** de l'API (retour arrière automatique). Le catalogue est semé **dans une migration** : l'image de déploiement n'exécute que les migrations.

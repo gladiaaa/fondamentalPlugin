@@ -102,6 +102,15 @@ Préfixe : `/api`. « Session » = cookie de session + `X-CSRF-Token` sur les re
 
 La suppression est **définitive** : demander une confirmation claire et le mot de passe dans le formulaire, puis renvoyer le visiteur vers l'accueil (plus aucune session). Pour l'export, appeler la route avec `fetch` puis proposer le fichier au téléchargement (ou ouvrir l'adresse dans un nouvel onglet : c'est un `GET`).
 
+### Licences : `/me/licenses`
+
+| Route | Accès | Corps | Réponse |
+|---|---|---|---|
+| `GET /me/licenses` | session | (vide) | `200` : tableau `{ key, claimedAt }[]`, les plus récentes en premier. Statut et installations : à venir avec #25 |
+| `POST /me/licenses/claim` | session | `{ key }` | `204` : la clé est rattachée au compte ; `400 LICENSE_CLAIM_INVALID` (clé inconnue, révoquée, **ou déjà rattachée** — même réponse dans les trois cas, ne pas essayer de deviner laquelle) ; `503 LICENSE_SERVER_UNAVAILABLE` |
+
+Réservé aux clés qui existaient déjà **avant** la boutique (anciens clients, clés faites à la main) : une clé achetée sur le site sera rattachée automatiquement (#24), pas besoin de ce formulaire. Prévoir un champ simple (« Vous avez déjà une clé de licence ? ») plutôt qu'une page dédiée. Limite stricte : 5 tentatives par minute.
+
 Règles utiles pour les formulaires :
 
 - E-mail : valide, 254 caractères maximum ; l'API le met en minuscules et retire les espaces.
@@ -121,12 +130,12 @@ Corps : `{ statusCode, message: string | string[], error?, code? }`. `message` e
 
 | Statut | Quand | `code` |
 |---|---|---|
-| 400 | Validation, lien invalide, mot de passe refusé | `INVALID_LINK`, `PASSWORD_COMPROMISED`, `CURRENT_PASSWORD_INVALID`, `NO_PASSWORD`, `SAME_PASSWORD` |
+| 400 | Validation, lien invalide, mot de passe refusé, clé de licence invalide | `INVALID_LINK`, `PASSWORD_COMPROMISED`, `CURRENT_PASSWORD_INVALID`, `NO_PASSWORD`, `SAME_PASSWORD`, `LICENSE_CLAIM_INVALID` |
 | 401 | Pas de session, ou e-mail / mot de passe incorrect (message volontairement générique) | – |
 | 403 | Origin refusée, jeton CSRF absent ou faux, adresse non confirmée | `EMAIL_NOT_VERIFIED` pour ce dernier cas |
 | 404 | Plugin inconnu ou retiré de la vente (et, plus tard, ressource qui n'appartient pas au compte) | – |
 | 429 | Trop de requêtes | – |
-| 503 | E-mails indisponibles, ou base en panne (`/health`) | – |
+| 503 | E-mails indisponibles, base en panne (`/health`), ou serveur de licences indisponible | `LICENSE_SERVER_UNAVAILABLE` pour ce dernier cas |
 
 Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive sur une route protégée, la session a expiré : rediriger vers la connexion.
 
@@ -139,6 +148,7 @@ Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive
 5. **Mot de passe oublié** → `forgot-password` → e-mail → **page `/reinitialiser-mot-de-passe?token=…`** → `reset-password` → connexion (toutes les sessions sont fermées).
 6. **Compte** : changer le mot de passe (`change-password`), se déconnecter partout (`logout-all`).
 7. **Mes données** : télécharger l'export (`GET /me/export`), supprimer le compte (`DELETE /me` avec le mot de passe).
+8. **Vieille clé de licence** : formulaire de rattachement (`POST /me/licenses/claim`), puis affichage dans `GET /me/licenses`.
 
 ## 7. Routes prévues (contrat indicatif, non implémentées)
 
@@ -149,8 +159,8 @@ Chaque groupe a une issue GitHub : les détails et décisions y sont.
 - `GET /orders/by-session/:sessionId` (session) : état de la commande pour la page `/merci` (`pending`, `paid`, `licensed`, `refunded`) et la clé quand elle est prête. **Interroger toutes les 2 s** tant que la licence n'est pas prête.
 - Adresse e-mail confirmée obligatoire pour acheter. Une case de renonciation au droit de rétractation est affichée par Stripe.
 
-### Espace client (#25, #45)
-- `GET /me/licenses` : mes licences (produit, clé, statut, installations utilisées / maximum).
+### Espace client (#25)
+- `GET /me/licenses` **existe déjà** (voir plus haut), mais sans statut ni installations pour l'instant.
 - `GET /me/licenses/:key` : détail et liste des installations.
 - `DELETE /me/licenses/:key/activations/:installationId` : libérer une installation.
 - `POST /me/licenses/claim` `{ key }` : rattacher une clé existante (anciens clients TagsCustom). Réponse volontairement identique pour clé inconnue, révoquée ou déjà prise.

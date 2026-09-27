@@ -1054,6 +1054,131 @@
           "fichiers"
         ]
       }
+    },
+    "/api/me/licenses": {
+      "get": {
+        "description": "Les clés rattachées au compte. Statut détaillé et installations : à venir avec #25.",
+        "operationId": "LicensesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OwnedLicenseApiResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Mes licences",
+        "tags": [
+          "licences"
+        ]
+      }
+    },
+    "/api/me/licenses/claim": {
+      "post": {
+        "description": "Pour les clés créées avant la boutique (anciens clients, clés faites à la main). Une clé inconnue, révoquée ou déjà rattachée à un compte (le vôtre ou un autre) répond la **même erreur**.",
+        "operationId": "LicensesController_claim",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimLicenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Rattacher une clé de licence existante",
+        "tags": [
+          "licences"
+        ]
+      }
     }
   },
   "info": {
@@ -1170,7 +1295,9 @@
               "INVALID_LINK",
               "CURRENT_PASSWORD_INVALID",
               "NO_PASSWORD",
-              "SAME_PASSWORD"
+              "SAME_PASSWORD",
+              "LICENSE_CLAIM_INVALID",
+              "LICENSE_SERVER_UNAVAILABLE"
             ],
             "description": "Présent pour les erreurs que le site doit distinguer."
           }
@@ -1624,6 +1751,36 @@
           "downloadCount",
           "downloadUrl",
           "release"
+        ]
+      },
+      "OwnedLicenseApiResponse": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "claimedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "key",
+          "claimedAt"
+        ]
+      },
+      "ClaimLicenseDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 128,
+            "description": "Clé telle qu’affichée par le plugin ou reçue par e-mail à l’achat."
+          }
+        },
+        "required": [
+          "key"
         ]
       }
     }

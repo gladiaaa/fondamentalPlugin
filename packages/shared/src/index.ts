@@ -44,7 +44,15 @@ export interface ApiError {
   statusCode: number;
   message: string | string[];
   error?: string;
-  code?: "EMAIL_NOT_VERIFIED" | "PASSWORD_COMPROMISED" | "INVALID_LINK" | "CURRENT_PASSWORD_INVALID" | "NO_PASSWORD" | "SAME_PASSWORD";
+  code?:
+    | "EMAIL_NOT_VERIFIED"
+    | "PASSWORD_COMPROMISED"
+    | "INVALID_LINK"
+    | "CURRENT_PASSWORD_INVALID"
+    | "NO_PASSWORD"
+    | "SAME_PASSWORD"
+    | "LICENSE_CLAIM_INVALID"
+    | "LICENSE_SERVER_UNAVAILABLE";
 }
 
 /** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
@@ -157,4 +165,14 @@ export interface ReleaseFileResponse {
   /** Adresse du téléchargement (`/api/downloads/:id`), publique. */
   downloadUrl: string;
   release: ReleaseInfo;
+}
+
+// ─── Licences ───────────────────────────────────────────────────
+
+/** Une licence rattachée au compte (`GET /api/me/licenses`). Son statut détaillé viendra avec #25. */
+export interface OwnedLicenseResponse {
+  /** Clé de licence, propre au titulaire du compte : jamais affichée à quelqu'un d'autre. */
+  key: string;
+  /** Date ISO 8601 du rattachement (pas forcément celle de l'achat). */
+  claimedAt: string;
 }
