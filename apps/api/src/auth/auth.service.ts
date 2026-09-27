@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import type { AccountExport } from '@fondamental/shared';
 import type { Env } from '../config/env.js';
 import { EmailTokenType, type User } from '../generated/prisma/client.js';
+import { type MailLocale, parseMailLocale } from './locale.js';
 import { Mailer } from '../mail/mailer.js';
 import {
   accountDeletedEmail,
@@ -58,13 +59,14 @@ export class AuthService {
   /**
    * Répond toujours pareil, que l'adresse soit déjà inscrite ou non : on ne révèle pas qui a un compte.
    *
-   * - Adresse nouvelle : compte créé (inutilisable tant que l'adresse n'est pas confirmée).
+   * - Adresse nouvelle : compte créé (inutilisable tant que l'adresse n'est pas confirmée). `acceptLanguage`
+   *   (en-tête du navigateur) choisit la langue des e-mails, mémorisée sur le compte et jamais redemandée.
    * - Compte jamais confirmé : le dernier inscrit remplace le mot de passe. Personne ne peut donc « réserver »
    *   l'adresse d'un tiers avec un mot de passe qu'il connaît : et de toute façon aucune connexion n'est
    *   possible avant la confirmation.
-   * - Compte confirmé : rien ne change ; le titulaire reçoit un e-mail de prévention.
+   * - Compte confirmé : rien ne change ; le titulaire reçoit un e-mail de prévention, dans sa langue déjà connue.
    */
-  async register(email: string, password: string): Promise<void> {
+  async register(email: string, password: string, acceptLanguage?: string): Promise<void> {
     this.assertMailAvailable();
     await this.assertPasswordAllowed(password);
     // Toujours calculé, même si le compte existe : la durée de la réponse ne trahit rien.
@@ -73,7 +75,7 @@ export class AuthService {
     const existing = await this.prisma.user.findUnique({ where: { email } });
 
     if (existing?.emailVerifiedAt) {
-      this.notify(email, accountExistsEmail(this.link('reinitialiser-mot-de-passe')));
+      this.notify(email, accountExistsEmail(this.link('reinitialiser-mot-de-passe'), this.mailLocale(existing)));
       return;
     }
 
@@ -86,7 +88,8 @@ export class AuthService {
       });
     } else {
       try {
-        user = await this.prisma.user.create({ data: { email, passwordHash } });
+        const locale = parseMailLocale(acceptLanguage).toUpperCase() as 'FR' | 'EN';
+        user = await this.prisma.user.create({ data: { email, passwordHash, locale } });
       } catch (error) {
         // Deux inscriptions simultanées avec la même adresse : l'autre a gagné, rien à faire.
         if ((error as { code?: string }).code === UNIQUE_VIOLATION) return;
@@ -94,6 +97,11 @@ export class AuthService {
       }
     }
     await this.sendVerificationEmail(user);
+  }
+
+  /** Langue des e-mails du compte, telle que stockée (`fr`/`en`). */
+  private mailLocale(user: Pick<User, 'locale'>): MailLocale {
+    return (user.locale as string).toLowerCase() as MailLocale;
   }
 
   /** Renvoie le lien de confirmation. Réponse identique quelle que soit l'adresse. */
@@ -164,7 +172,7 @@ export class AuthService {
     if (!user) return;
     if (await this.hasRecentToken(user.id, EmailTokenType.RESET_PASSWORD)) return;
     const token = await this.issueToken(user.id, EmailTokenType.RESET_PASSWORD, RESET_PASSWORD_TTL_MS);
-    this.notify(user.email, passwordResetEmail(this.link('reinitialiser-mot-de-passe', token)));
+    this.notify(user.email, passwordResetEmail(this.link('reinitialiser-mot-de-passe', token), this.mailLocale(user)));
   }
 
   /**
@@ -192,7 +200,7 @@ export class AuthService {
       await tx.session.deleteMany({ where: { userId: record.userId } });
       await tx.emailToken.deleteMany({ where: { userId: record.userId, usedAt: null } });
     });
-    this.notify(record.user.email, passwordChangedEmail());
+    this.notify(record.user.email, passwordChangedEmail(this.mailLocale(record.user)));
   }
 
   /** Change le mot de passe d'un compte connecté. Les autres sessions sont fermées, la courante est conservée. */
@@ -211,7 +219,7 @@ export class AuthService {
       await tx.user.update({ where: { id: user.id }, data: { passwordHash } });
       await tx.session.deleteMany({ where: { userId: user.id, id: { not: sessionId } } });
     });
-    this.notify(user.email, passwordChangedEmail());
+    this.notify(user.email, passwordChangedEmail(this.mailLocale(user)));
   }
 
   // ─── Données personnelles (RGPD) ───────────────────────────────
@@ -261,7 +269,7 @@ export class AuthService {
     // Deux demandes simultanées : une seule supprime, une seule prévient.
     if (count === 1) {
       this.logger.log(`Compte supprimé (${user.id})`);
-      this.notify(user.email, accountDeletedEmail());
+      this.notify(user.email, accountDeletedEmail(this.mailLocale(user)));
     }
   }
 
@@ -304,7 +312,7 @@ export class AuthService {
 
   private async sendVerificationEmail(user: User): Promise<void> {
     const token = await this.issueToken(user.id, EmailTokenType.VERIFY_EMAIL, VERIFY_EMAIL_TTL_MS);
-    this.notify(user.email, verificationEmail(this.link('verifier-email', token)));
+    this.notify(user.email, verificationEmail(this.link('verifier-email', token), this.mailLocale(user)));
   }
 
   /** Crée un lien à usage unique. Les liens précédents de même type, non utilisés, sont invalidés. */

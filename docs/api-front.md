@@ -82,7 +82,7 @@ Préfixe : `/api`. « Session » = cookie de session + `X-CSRF-Token` sur les re
 
 | Route | Accès | Corps | Réponse |
 |---|---|---|---|
-| `POST /auth/register` | public | `{ email, password }` | `202 { message }` : **identique** que l'adresse existe déjà ou non |
+| `POST /auth/register` | public | `{ email, password }` | `202 { message }` : **identique** que l'adresse existe déjà ou non. L'en-tête `Accept-Language` du navigateur choisit la langue des e-mails du compte (`fr` par défaut, `en` sinon), mémorisée une fois pour toutes |
 | `POST /auth/verify-email` | public | `{ token }` | `200 { emailVerified: true }` ; `400 INVALID_LINK` |
 | `POST /auth/resend-verification` | public | `{ email }` | `202 { message }` (une minute minimum entre deux envois) |
 | `POST /auth/login` | public | `{ email, password }` | `200 { user, csrfToken }` + cookie de session |

@@ -1,12 +1,28 @@
-// Textes des e-mails transactionnels. Version minimale en français ; les modèles
-// soignés en FR/EN (React Email) arrivent avec #26.
+// Textes des e-mails transactionnels, en français et en anglais (voir `../auth/locale.ts` pour
+// la détection de la langue). Version texte brut ; les modèles soignés (React Email) et les e-mails
+// liés aux commandes (reçu, remboursement) arrivent avec #23/#24.
+
+import type { MailLocale } from '../auth/locale.js';
 
 export interface MailContent {
   subject: string;
   text: string;
 }
 
-export function verificationEmail(link: string): MailContent {
+export function verificationEmail(link: string, locale: MailLocale): MailContent {
+  if (locale === 'en') {
+    return {
+      subject: 'Confirm your e-mail address',
+      text: [
+        'Welcome to Fondamental Plugin!',
+        '',
+        'To activate your account, please confirm your e-mail address (link valid for 24 hours):',
+        link,
+        '',
+        "If you didn't create this account, you can safely ignore this message.",
+      ].join('\n'),
+    };
+  }
   return {
     subject: 'Confirmez votre adresse e-mail',
     text: [
@@ -20,7 +36,20 @@ export function verificationEmail(link: string): MailContent {
   };
 }
 
-export function accountExistsEmail(resetLink: string): MailContent {
+export function accountExistsEmail(resetLink: string, locale: MailLocale): MailContent {
+  if (locale === 'en') {
+    return {
+      subject: 'You already have an account',
+      text: [
+        'Someone just tried to create a Fondamental Plugin account with this address, which is already registered.',
+        '',
+        'If this was you, sign in with your password, or choose a new one here:',
+        resetLink,
+        '',
+        "If it wasn't you, you can ignore this message: your account has not been changed.",
+      ].join('\n'),
+    };
+  }
   return {
     subject: 'Vous avez déjà un compte',
     text: [
@@ -34,7 +63,18 @@ export function accountExistsEmail(resetLink: string): MailContent {
   };
 }
 
-export function passwordResetEmail(link: string): MailContent {
+export function passwordResetEmail(link: string, locale: MailLocale): MailContent {
+  if (locale === 'en') {
+    return {
+      subject: 'Reset your password',
+      text: [
+        'You asked to reset your password (link valid for 30 minutes, single use):',
+        link,
+        '',
+        "If you didn't make this request, ignore this message: your password stays unchanged.",
+      ].join('\n'),
+    };
+  }
   return {
     subject: 'Réinitialisation de votre mot de passe',
     text: [
@@ -46,7 +86,19 @@ export function passwordResetEmail(link: string): MailContent {
   };
 }
 
-export function accountDeletedEmail(): MailContent {
+export function accountDeletedEmail(locale: MailLocale): MailContent {
+  if (locale === 'en') {
+    return {
+      subject: 'Your account has been deleted',
+      text: [
+        'Your Fondamental Plugin account has just been deleted, along with the personal data attached to it.',
+        '',
+        'License keys you already purchased stay valid in your plugins. Billing data is kept without any link to your identity, as required by law.',
+        '',
+        "If you didn't request this deletion, reply to this message right away.",
+      ].join('\n'),
+    };
+  }
   return {
     subject: 'Votre compte a été supprimé',
     text: [
@@ -59,7 +111,18 @@ export function accountDeletedEmail(): MailContent {
   };
 }
 
-export function passwordChangedEmail(): MailContent {
+export function passwordChangedEmail(locale: MailLocale): MailContent {
+  if (locale === 'en') {
+    return {
+      subject: 'Your password has been changed',
+      text: [
+        'The password of your Fondamental Plugin account has just been changed.',
+        '',
+        'If this was you, no action is needed.',
+        'Otherwise, reset it immediately with "Forgot password": all your sessions have been closed.',
+      ].join('\n'),
+    };
+  }
   return {
     subject: 'Votre mot de passe a été modifié',
     text: [
