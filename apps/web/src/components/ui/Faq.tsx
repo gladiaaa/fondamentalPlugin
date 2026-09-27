@@ -14,7 +14,7 @@ export function Faq({ entries }: { entries: FaqEntry[] }) {
         <details key={i} className="group rounded-card border border-line bg-surface">
           <summary className="flex list-none cursor-pointer items-center justify-between gap-3 px-5 py-4 font-semibold [&::-webkit-details-marker]:hidden">
             <span>{entry.question}</span>
-            <span className="text-accent transition-transform duration-200 group-open:rotate-45">
+            <span className="text-accent-text transition-transform duration-200 group-open:rotate-45">
               <PlusIcon />
             </span>
           </summary>

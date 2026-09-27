@@ -9,7 +9,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   warning: "bg-[color-mix(in_srgb,var(--color-warning)_18%,transparent)] text-warning",
   error: "bg-[color-mix(in_srgb,var(--color-error)_16%,transparent)] text-error",
   info: "bg-[color-mix(in_srgb,var(--color-info)_16%,transparent)] text-info",
-  accent: "bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-accent",
+  accent: "bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-accent-text",
 };
 
 /** Étiquette en police mono (`.bd` de la maquette) : statut de licence, édition, plateforme... */

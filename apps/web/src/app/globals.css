@@ -2,15 +2,25 @@
 @import "../styles/fondamental-jetons.css";
 
 /*
- * Correctif : `fondamental-jetons.css` (charte, à ne pas modifier — voir
- * docs/front/charte/jetons/) ne bascule le thème clair que via
- * `@media (prefers-color-scheme: light)`, gardé par `:not([data-theme="dark"])`.
- * Ça couvre la préférence système, mais pas un bouton clair/sombre qui force
- * un thème contraire à celle-ci (ex. système sombre, utilisateur choisit clair).
- * next-themes pose `data-theme="light"` ou `"dark"` sur <html> : on répète ici
- * les mêmes valeurs, sans condition sur la préférence système, pour que le
- * choix explicite gagne toujours.
+ * Correctifs à `fondamental-jetons.css` (charte, à ne pas modifier — voir
+ * docs/front/charte/jetons/) :
+ *
+ * 1. Il ne bascule le thème clair que via `@media (prefers-color-scheme:
+ *    light)`, gardé par `:not([data-theme="dark"])`. Ça couvre la préférence
+ *    système, mais pas un bouton clair/sombre qui force un thème contraire à
+ *    celle-ci (ex. système sombre, utilisateur choisit clair). next-themes
+ *    pose `data-theme="light"` ou `"dark"` sur <html> : on répète ici les
+ *    mêmes valeurs, sans condition sur la préférence système, pour que le
+ *    choix explicite gagne toujours.
+ * 2. `--color-accent-text` (texte, liens, onglet actif — brief §7, distinct
+ *    de `--color-accent` qui reste #B7A0FF partout et ne sert qu'aux fonds
+ *    de bouton) n'a de valeur que dans le bloc clair du fichier source,
+ *    jamais en sombre : on lui donne ici sa valeur par défaut (identique à
+ *    `--color-accent` en sombre) en plus de l'override clair.
  */
+:root {
+  --color-accent-text: #B7A0FF;
+}
 :root[data-theme="light"] {
   color-scheme: light;
   --color-bg: #F3F0FA;
@@ -50,6 +60,7 @@
   --color-text: var(--color-text);
   --color-muted: var(--color-muted);
   --color-accent: var(--color-accent);
+  --color-accent-text: var(--color-accent-text);
   --color-accent-2: var(--color-accent-2);
   --color-accent-3: var(--color-accent-3);
   --color-on-accent: var(--color-on-accent);

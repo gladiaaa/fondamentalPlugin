@@ -15,7 +15,7 @@ export function EmptyState({
   return (
     <div className="grid justify-items-center gap-3 py-[clamp(28px,5cqi,48px)] text-center">
       {icon && (
-        <span className="grid size-[68px] place-items-center rounded-card-lg bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-accent">
+        <span className="grid size-[68px] place-items-center rounded-card-lg bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-accent-text">
           {icon}
         </span>
       )}
