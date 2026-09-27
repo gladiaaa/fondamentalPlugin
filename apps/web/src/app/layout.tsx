@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Sora, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { MockingProvider } from "@/mocks/MockingProvider";
 import { Toaster } from "@/components/ui/Toaster";
 import "./globals.css";
@@ -41,7 +43,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <MockingProvider>{children}</MockingProvider>
+          <MockingProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </MockingProvider>
           <Toaster />
         </ThemeProvider>
       </body>

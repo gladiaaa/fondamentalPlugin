@@ -30,6 +30,11 @@ export { default as OeilIcon } from "./interface/oeil.svg";
 export { default as OeilFermeIcon } from "./interface/oeil-ferme.svg";
 export { default as CopieIcon } from "./interface/copie.svg";
 export { default as PlusIcon } from "./interface/plus.svg";
+export { default as DeconnexionIcon } from "./interface/deconnexion.svg";
+export { default as ChevronBasIcon } from "./interface/chevron-bas.svg";
+export { default as MenuIcon } from "./interface/menu.svg";
+export { default as FermerIcon } from "./interface/fermer.svg";
+export { default as ImageIcon } from "./interface/image.svg";
 
 export { default as BedwarsPastilleIcon } from "./plugins/fondamental-bedwars-pastille.svg";
 export { default as BedwarsContourIcon } from "./plugins/fondamental-bedwars-contour.svg";
