@@ -42,7 +42,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `releases` | Versions et jars : liste par version de Minecraft, téléchargement public, publication par la CI (`/api/admin/releases`) | fait |
 | `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests) | fait, modèles soignés : #26 |
 | `prisma` | Accès à la base | fait |
-| `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs | fait |
+| `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs, erreurs inattendues remontées à Sentry | fait |
 | `licenses` | Client du serveur de licences ; « mes licences » | #22, #25 |
 | `orders` | Stripe Checkout et webhook | #23, #24 |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |

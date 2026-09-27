@@ -47,6 +47,8 @@ export const envSchema = z
       (value) => (value === '' ? undefined : value),
       z.coerce.number().int().min(1).max(200).default(50),
     ),
+    /** Sans elle, l'API tourne normalement, simplement sans remontée d'erreurs vers Sentry (#33). */
+    SENTRY_DSN: optional(z.url()),
   })
   .transform((env) => ({
     ...env,
