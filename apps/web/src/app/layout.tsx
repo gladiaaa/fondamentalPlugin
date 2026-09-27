@@ -1,29 +1,48 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Sora, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { MockingProvider } from "@/mocks/MockingProvider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sora = Sora({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["300", "400", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const instrumentSans = Instrument_Sans({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "Fondamental Plugin",
-  description: "Plugins Minecraft premium : FondamentalBedwars, FondamentalTag, FondamentalCrate.",
+  title: "Fondamental Plugins",
+  description:
+    "Plugins Minecraft premium : FondamentalBedwars, FondamentalTag, FondamentalCrate, FondamentalPass.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // next-themes lit/écrit data-theme après l'hydratation : la balise ne
+      // correspond alors plus tout à fait au rendu serveur, sans que ça soit
+      // une erreur (voir la doc next-themes).
+      suppressHydrationWarning
+      className={`${sora.variable} ${instrumentSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider>
+          <MockingProvider>{children}</MockingProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
