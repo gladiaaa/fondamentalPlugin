@@ -2,6 +2,8 @@
 
 Adapté du brief de conception original du 26/09/2026. Pour le contrat API exact (routes disponibles ou prévues, corps, erreurs), voir [`docs/api-front.md`](../api-front.md), qui fait foi et est tenu à jour à chaque PR sur l'API — **pas ce document**. Ce fichier couvre la partie visuelle, le contenu et le ton.
 
+**Le back avance en parallèle du front.** Toute mention ci-dessous d'une route « disponible » ou « prévue » (issue #21, #27…) est une photographie prise à l'écriture de ce fichier et peut être dépassée. Avant de commencer une phase, relire `docs/api-front.md` §4 (disponible) et §7 (prévu) dans la version **actuelle** de `dev`, et vérifier l'état de l'issue correspondante (`gh issue view <n°>`) plutôt que de se fier au texte figé de ce brief.
+
 Ce fichier accompagne trois autres dossiers, tous dans `docs/front/` : [`maquette/maquettes-boutique.html`](maquette/maquettes-boutique.html) (les écrans), [`charte/`](charte/) (logos, icônes, jetons de design) et [`rapport-plugins/`](rapport-plugins/) (analyse du code de chaque plugin).
 
 ## 1. Le projet

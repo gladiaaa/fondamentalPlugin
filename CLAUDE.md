@@ -30,6 +30,7 @@ Site de vente des plugins Minecraft Fondamental (FondamentalBedwars, Fondamental
 ## Site (`apps/web`)
 
 - **Références** : [`docs/front/`](docs/front/README.md) (brief, maquette `maquettes-boutique.html`, charte graphique, rapport d'analyse des 4 plugins) pour le visuel et le contenu ; [`docs/api-front.md`](docs/api-front.md) pour le contrat API (fait foi sur les routes). Feuille de route par phase : issue [#58](https://github.com/gladiaaa/fondamentalPlugin/issues/58).
+- **Le back avance en parallèle** : `docs/api-front.md` change de PR en PR (une PR qui ajoute ou change une route le met à jour, cf. section API ci-dessus). Avant de commencer une phase front qui dépend de l'API, `git pull` sur `dev` et relire `docs/api-front.md` **à ce moment-là** — ne jamais coder contre une copie mentale ou un extrait d'une conversation précédente. `docs/front/brief.md` porte le même avertissement pour ses mentions « disponible »/« prévue ».
 - **Style** : Tailwind 4, jetons de la charte importés dans `globals.css` (`@theme`), thème sombre par défaut avec variante claire (`next-themes`, sans flash au chargement). Ne pas utiliser de couleur ou d'espacement hors jetons.
 - **Comportement accessible** : primitives Radix (Tabs, Switch, Accordion, Dialog…), stylées à la main avec les classes Tailwind du projet — jamais leur propre CSS.
 - **Toasts** : `sonner`, pour les retours brefs uniquement (« Clé copiée »…). Les confirmations d'action (libérer une installation, supprimer le compte) restent **dans la page**, jamais `alert`/`confirm`.
