@@ -16,7 +16,12 @@ const nextConfig: NextConfig = {
     // composants React : import Icone from "@/../public/icones/x.svg".
     rules: {
       "*.svg": {
-        loaders: ["@svgr/webpack"],
+        // `icon: true` : remplace le width/height du SVG source (16 à 256
+        // selon les fichiers, voir docs/front/charte/icones/) par `1em`,
+        // pour que l'icône hérite la taille du texte autour d'elle par
+        // défaut. Un composant qui a besoin d'une taille précise passe
+        // toujours `width`/`height` explicitement (ex. PluginCard).
+        loaders: [{ loader: "@svgr/webpack", options: { icon: true } }],
         as: "*.js",
       },
     },
