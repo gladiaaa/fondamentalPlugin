@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module.js';
 import { OriginGuard } from './auth/origin.guard.js';
 import { CatalogModule } from './catalog/catalog.module.js';
+import { SentryExceptionsFilter } from './common/sentry-exceptions.filter.js';
 import { type Env, validateEnv } from './config/env.js';
 import { LOG_REDACT } from './config/logging.js';
 import { HealthController } from './health/health.controller.js';
@@ -48,6 +49,8 @@ import { ReleasesModule } from './releases/releases.module.js';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     // Anti-CSRF : toute requête qui modifie des données doit venir de notre site.
     { provide: APP_GUARD, useClass: OriginGuard },
+    // Remonte les erreurs inattendues à Sentry (rien sans SENTRY_DSN configuré, voir config/sentry.ts).
+    { provide: APP_FILTER, useClass: SentryExceptionsFilter },
   ],
 })
 export class AppModule {}

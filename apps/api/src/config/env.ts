@@ -53,6 +53,8 @@ export const envSchema = z
      */
     LICENSE_SERVER_URL: optional(z.url()),
     LICENSE_ADMIN_TOKEN: optional(z.string().min(1)),
+    /** Sans elle, l'API tourne normalement, simplement sans remontée d'erreurs vers Sentry (#33). */
+    SENTRY_DSN: optional(z.url()),
   })
   .transform((env) => ({
     ...env,

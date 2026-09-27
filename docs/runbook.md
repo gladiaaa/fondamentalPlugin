@@ -79,7 +79,7 @@ Les secrets ne sont **jamais dans le dépôt** : ils sont dans des fichiers lisi
 | Secret | Où | Comment |
 |---|---|---|
 | `POSTGRES_PASSWORD` | `/opt/fondamentalplugin/<env>/secrets.env` | voir ci-dessous (change aussi le mot de passe dans la base) |
-| `RESEND_API_KEY`, `RELEASES_TOKEN`, futurs `STRIPE_*`, `LICENSE_*` | `/opt/fondamentalplugin/<env>/api.env` | modifier le fichier, puis redémarrer l'API |
+| `RESEND_API_KEY`, `RELEASES_TOKEN`, `SENTRY_DSN`, futurs `STRIPE_*`, `LICENSE_*` | `/opt/fondamentalplugin/<env>/api.env` | modifier le fichier, puis redémarrer l'API |
 | `RELEASES_TOKEN` (suite) | secret du dépôt de **chaque plugin** (GitHub) | le remplacer aussi, sinon la CI ne peut plus publier |
 | `DEPLOY_SSH_KEY` | secret GitHub + `authorized_keys` du compte `deploy` | générer une nouvelle paire, remplacer les deux, supprimer l'ancienne clé |
 
