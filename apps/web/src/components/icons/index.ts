@@ -24,6 +24,12 @@ export { default as ServeurIcon } from "./interface/serveur.svg";
 export { default as SupportIcon } from "./interface/support.svg";
 export { default as TelechargerIcon } from "./interface/telecharger.svg";
 export { default as ValiderIcon } from "./interface/valider.svg";
+// Propositions de la maquette, pas encore dans la charte officielle
+// (brief §6) : nécessaires au composant PasswordField.
+export { default as OeilIcon } from "./interface/oeil.svg";
+export { default as OeilFermeIcon } from "./interface/oeil-ferme.svg";
+export { default as CopieIcon } from "./interface/copie.svg";
+export { default as PlusIcon } from "./interface/plus.svg";
 
 export { default as BedwarsPastilleIcon } from "./plugins/fondamental-bedwars-pastille.svg";
 export { default as BedwarsContourIcon } from "./plugins/fondamental-bedwars-contour.svg";

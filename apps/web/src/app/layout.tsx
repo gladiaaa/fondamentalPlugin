@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Sora, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { MockingProvider } from "@/mocks/MockingProvider";
+import { Toaster } from "@/components/ui/Toaster";
 import "./globals.css";
 
 const sora = Sora({
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <MockingProvider>{children}</MockingProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

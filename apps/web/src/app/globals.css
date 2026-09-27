@@ -66,6 +66,15 @@
   --radius-card: var(--radius-card);
   --radius-card-lg: var(--radius-card-lg);
   --radius-pill: var(--radius-pill);
+
+  /* Effet de chargement des Skeleton (`.sk` de la maquette). */
+  --animate-shimmer: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
 }
 
 body {
@@ -75,11 +84,12 @@ body {
 }
 
 /* Le rapport 4 px / 35 % d'améthyste de la charte, appliqué globalement.
-   `next-themes` ajoute déjà `disableTransitionOnChange` : pas de flash. */
+   Pas de border-radius ici : box-shadow suit déjà le rayon propre de
+   l'élément (rounded-pill, rounded-field...) sans qu'on ait à le répéter,
+   et un rayon fixe déformerait l'anneau sur un bouton en pilule. */
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-  border-radius: var(--radius-field);
 }
 
 @media (prefers-reduced-motion: reduce) {
