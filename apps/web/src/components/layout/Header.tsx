@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
+import { useSession } from "@/lib/session/SessionContext";
 import {
   MenuIcon,
   FermerIcon,
@@ -22,26 +23,19 @@ const NAV_ITEMS = [
   { href: "/support", label: "Support" },
 ];
 
-export interface HeaderSession {
-  /** Initiale affichée dans l'avatar, en attendant un vrai profil. */
-  initial: string;
-}
-
-export interface HeaderProps {
-  /**
-   * `null` : visiteur (par défaut). Un objet : connecté. Pas de session
-   * réelle pour l'instant (voir la phase Authentification) : le composant
-   * ne fait qu'afficher l'état qu'on lui donne.
-   */
-  session?: HeaderSession | null;
-  onLogout?: () => void;
-}
-
-/** En-tête du site (`.hd` de la maquette). */
-export function Header({ session = null, onLogout }: HeaderProps) {
+/** En-tête du site (`.hd` de la maquette). Lit la session réelle (`SessionProvider`, layout.tsx). */
+export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, status, logout } = useSession();
+  const session = status === "authenticated" && user ? { initial: user.email[0]?.toUpperCase() ?? "?" } : null;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeDrawer = () => setDrawerOpen(false);
+
+  async function handleLogout() {
+    await logout();
+    router.push("/");
+  }
 
   return (
     <header className="relative flex items-center gap-[18px] border-b border-line bg-bg px-4 py-3.5 sm:px-8">
@@ -100,7 +94,7 @@ export function Header({ session = null, onLogout }: HeaderProps) {
                   </Link>
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
-                  onSelect={onLogout}
+                  onSelect={handleLogout}
                   className="flex items-center gap-2.5 rounded-field px-3 py-2.5 text-[.9rem] outline-none hover:bg-surface-2 data-[highlighted]:bg-surface-2 cursor-pointer"
                 >
                   <DeconnexionIcon /> Déconnexion

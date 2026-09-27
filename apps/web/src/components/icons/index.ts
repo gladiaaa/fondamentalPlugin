@@ -37,6 +37,8 @@ export { default as FermerIcon } from "./interface/fermer.svg";
 export { default as ImageIcon } from "./interface/image.svg";
 // Nécessaire à la fiche plugin (repère « Java » dans les métadonnées).
 export { default as EclairIcon } from "./interface/eclair.svg";
+// Nécessaire aux écrans d'authentification (e-mail envoyé/à confirmer).
+export { default as EnveloppeIcon } from "./interface/enveloppe.svg";
 
 export { default as BedwarsPastilleIcon } from "./plugins/fondamental-bedwars-pastille.svg";
 export { default as BedwarsContourIcon } from "./plugins/fondamental-bedwars-contour.svg";
