@@ -60,6 +60,8 @@ interface RequestOptions {
   origin?: string | null;
   /** En-tête X-CSRF-Token. */
   csrf?: string;
+  /** En-tête Accept-Language (langue des e-mails à l'inscription). */
+  acceptLanguage?: string;
 }
 
 /**
@@ -72,10 +74,11 @@ export function newBrowser(app: INestApplication) {
   const ip = `203.0.113.${(nextIp % 250) + 1}`;
   const agent = request.agent(app.getHttpServer());
 
-  const prepare = (req: request.Test, { origin = ORIGIN, csrf }: RequestOptions) => {
+  const prepare = (req: request.Test, { origin = ORIGIN, csrf, acceptLanguage }: RequestOptions) => {
     req.set('X-Forwarded-For', ip);
     if (origin) req.set('Origin', origin);
     if (csrf) req.set('X-CSRF-Token', csrf);
+    if (acceptLanguage) req.set('Accept-Language', acceptLanguage);
     return req;
   };
 

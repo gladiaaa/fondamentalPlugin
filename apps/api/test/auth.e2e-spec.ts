@@ -76,6 +76,28 @@ describe('Comptes : e-mail et mot de passe (e2e)', () => {
       expect(mails[0].text).toContain(`${ORIGIN}/verifier-email?token=`);
     });
 
+    it("choisit la langue des e-mails à l'inscription (Accept-Language) et s'en souvient ensuite", async () => {
+      const b = newBrowser(app);
+      await b.post('/api/auth/register', { email: EMAIL, password: STRONG_PASSWORD }, { acceptLanguage: 'en-US,en;q=0.9' }).expect(202);
+
+      const [welcome] = mailer.to(EMAIL);
+      expect(welcome.subject).toBe('Confirm your e-mail address');
+      expect((await userInDb()).locale).toBe('EN');
+
+      // La langue est mémorisée : les e-mails suivants restent en anglais même sans l'en-tête.
+      await b.post('/api/auth/verify-email', { token: mailer.lastToken(EMAIL) }).expect(200);
+      mailer.clear();
+      await b.post('/api/auth/forgot-password', { email: EMAIL }).expect(202);
+      expect(mailer.to(EMAIL)[0].subject).toBe('Reset your password');
+    });
+
+    it('sans Accept-Language (ou avec une langue non gérée), les e-mails restent en français', async () => {
+      const b = newBrowser(app);
+      await b.post('/api/auth/register', { email: EMAIL, password: STRONG_PASSWORD }, { acceptLanguage: 'de-DE,de;q=0.9' }).expect(202);
+      expect(mailer.to(EMAIL)[0].subject).toBe('Confirmez votre adresse e-mail');
+      expect((await userInDb()).locale).toBe('FR');
+    });
+
     it("ne stocke jamais le mot de passe ni le jeton en clair", async () => {
       await register(newBrowser(app)).expect(202);
       const user = await userInDb();
