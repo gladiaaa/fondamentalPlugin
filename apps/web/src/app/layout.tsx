@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MockingProvider } from "@/mocks/MockingProvider";
+import { SessionProvider } from "@/lib/session/SessionContext";
 import { Toaster } from "@/components/ui/Toaster";
 import "./globals.css";
 
@@ -44,9 +45,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <MockingProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <SessionProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </SessionProvider>
           </MockingProvider>
           <Toaster />
         </ThemeProvider>

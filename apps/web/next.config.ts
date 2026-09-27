@@ -30,6 +30,23 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@fondamental/shared"],
   // Pas de fichier AGENTS.md généré automatiquement : CLAUDE.md est maintenu à la main.
   agentRules: false,
+  async headers() {
+    // Referrer-Policy: no-referrer sur les deux pages qui portent un jeton
+    // dans l'URL (vérification d'e-mail, réinitialisation de mot de passe) :
+    // évite qu'il fuite dans l'en-tête Referer d'une requête sortante (une
+    // icône ou un lien externe sur la page) avant que le composant ait pu le
+    // retirer de l'URL avec history.replaceState.
+    return [
+      {
+        source: "/verifier-email",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+      {
+        source: "/reinitialiser-mot-de-passe",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+    ];
+  },
   async rewrites() {
     // En dev, le site (3000) et l'API (4000) sont sur deux ports distincts ;
     // en dev/prod déployés, nginx envoie déjà /api/* à l'API avant même
