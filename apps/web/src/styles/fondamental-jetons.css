@@ -1,0 +1,43 @@
+/* Fondamental Plugins · jetons de design · charte 1.0 */
+:root {
+  color-scheme: dark;
+  --color-bg: #120F1A;
+  --color-surface: #1A1625;
+  --color-surface-2: #231D33;
+  --color-line: #2A2338;
+  --color-text: #F0ECF8;
+  --color-muted: #9A90B3;
+  --color-accent: #B7A0FF;
+  --color-accent-2: #9280CC;
+  --color-accent-3: #6A5D94;
+  --color-on-accent: #170F2A;
+  --color-success: #7ED6A0;
+  --color-warning: #F0C36A;
+  --color-error: #F07A7A;
+  --color-info: #8FB8FF;
+
+  --font-display: 'Sora', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  --radius-field: 12px;
+  --radius-card: 20px;
+  --radius-card-lg: 24px;
+  --radius-pill: 999px;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  --space-6: 32px; --space-7: 48px; --space-8: 64px; --space-9: 96px;
+
+  --motion-fast: 120ms; --motion-base: 200ms; --motion-slow: 320ms;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --focus-ring: 0 0 0 4px rgba(183, 160, 255, .35);
+}
+/* Thème clair */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --color-bg: #F3F0FA; --color-surface: #FFFFFF; --color-surface-2: #EAE5F6; --color-line: #DDD6EE;
+    --color-text: #170F2A; --color-muted: #5E5673; --color-accent-text: #6A4FD0;
+    --color-success: #1F8A55; --color-warning: #9A6A00; --color-error: #C23B3B; --color-info: #2F63C9;
+  }
+}
