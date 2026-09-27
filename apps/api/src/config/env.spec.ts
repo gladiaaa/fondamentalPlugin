@@ -62,4 +62,26 @@ describe('validateEnv', () => {
       expect(env.MAIL_FROM).toBe('Fondamental <noreply@fondamentalplugin.fr>');
     });
   });
+
+  describe('téléchargements', () => {
+    it('le dossier des fichiers a une valeur par défaut, et nginx est facultatif', () => {
+      const env = validateEnv({ DATABASE_URL });
+      expect(env.RELEASES_DIR).toBe('./data/releases');
+      expect(env.DOWNLOADS_ACCEL_PREFIX).toBeUndefined();
+    });
+
+    it('accepte un préfixe nginx sûr', () => {
+      expect(validateEnv({ DATABASE_URL, DOWNLOADS_ACCEL_PREFIX: '/protected-releases' }).DOWNLOADS_ACCEL_PREFIX).toBe(
+        '/protected-releases',
+      );
+    });
+
+    it.each(['protected', '/', '/a b', '/x/../y', '/x?y=1', '/protected/', 'http://exemple.test/x'])(
+      'refuse le préfixe nginx %j',
+      (prefix) => {
+        // Le préfixe finit dans un en-tête de réponse : seuls lettres, chiffres, « _ », « - » et « / » sont admis.
+        expect(() => validateEnv({ DATABASE_URL, DOWNLOADS_ACCEL_PREFIX: prefix })).toThrow(/DOWNLOADS_ACCEL_PREFIX/);
+      },
+    );
+  });
 });

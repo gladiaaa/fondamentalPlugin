@@ -29,6 +29,14 @@ export const envSchema = z
     RESEND_API_KEY: optional(z.string().min(1)),
     /** Expéditeur des e-mails. Le domaine doit être vérifié chez Resend (voir #26). */
     MAIL_FROM: optional(z.string().min(3)).default('Fondamental <noreply@fondamentalplugin.fr>'),
+    /** Dossier des jars publiés (un sous-dossier par plugin et par version). Chemin relatif au dossier de lancement, ou absolu. */
+    RELEASES_DIR: optional(z.string().min(1)).default('./data/releases'),
+    /**
+     * Préfixe d'une location nginx `internal` qui pointe sur RELEASES_DIR (ex. `/protected-releases`).
+     * Si présent, l'API répond aux téléchargements par `X-Accel-Redirect` et nginx sert le fichier.
+     * Sinon l'API envoie elle-même le fichier.
+     */
+    DOWNLOADS_ACCEL_PREFIX: optional(z.string().regex(/^\/[A-Za-z0-9_\-/]*[A-Za-z0-9_-]$/)),
   })
   .transform((env) => ({
     ...env,

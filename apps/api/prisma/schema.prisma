@@ -107,5 +107,84 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  releases Release[]
+
   @@map("products")
+}
+
+// ─── Fichiers ───────────────────────────────────────────────────
+
+/// Versions de Minecraft proposées dans le sélecteur du site.
+model MinecraftVersion {
+  id String @id @default(uuid()) @db.Uuid
+  /// `1.21.4`
+  version String @unique
+  /// Plus grand = plus récent : sert à trier du plus récent au plus ancien.
+  sortOrder Int @map("sort_order")
+
+  files ReleaseFile[]
+
+  @@map("minecraft_versions")
+}
+
+enum ReleaseChannel {
+  RELEASE
+  BETA
+
+  @@map("release_channel")
+}
+
+/// Une version d'un plugin (ex. FondamentalTag 2.2.0).
+model Release {
+  id String @id @default(uuid()) @db.Uuid
+  productId String @map("product_id") @db.Uuid
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// Texte libre : toutes les versions ne sont pas de la forme 1.2.3 (`1.0-SNAPSHOT`).
+  version String
+  channel ReleaseChannel @default(RELEASE)
+  changelog String @default("")
+  releasedAt DateTime @default(now()) @map("released_at")
+
+  files ReleaseFile[]
+
+  @@unique([productId, version])
+  @@map("releases")
+}
+
+enum ReleaseEdition {
+  /// Un seul jar : la clé de licence décide de l'édition.
+  UNIVERSAL
+  FREE
+  PREMIUM
+
+  @@map("release_edition")
+}
+
+enum ReleasePlatform {
+  PAPER
+
+  @@map("release_platform")
+}
+
+/// Un jar téléchargeable. Les téléchargements sont publics : la licence, pas le fichier, débloque le premium.
+model ReleaseFile {
+  id String @id @default(uuid()) @db.Uuid
+  releaseId String @map("release_id") @db.Uuid
+  release Release @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  edition ReleaseEdition
+  platform ReleasePlatform @default(PAPER)
+  /// Nom proposé au téléchargement (`fondamentaltag-premium-2.2.0-obf.jar`).
+  fileName String @map("file_name")
+  sizeBytes Int @map("size_bytes")
+  /// Empreinte SHA-256 en hexadécimal, affichée pour que le client vérifie son fichier.
+  sha256 String
+  /// Chemin relatif au dossier des fichiers (`RELEASES_DIR`), jamais absolu.
+  storagePath String @map("storage_path")
+  downloadCount Int @default(0) @map("download_count")
+  createdAt DateTime @default(now()) @map("created_at")
+  minecraftVersions MinecraftVersion[]
+
+  @@unique([releaseId, fileName])
+  @@index([releaseId])
+  @@map("release_files")
 }
