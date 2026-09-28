@@ -59,6 +59,8 @@ export const envSchema = z
      */
     STRIPE_SECRET_KEY: optional(z.string().min(1)),
     STRIPE_WEBHOOK_SECRET: optional(z.string().min(1)),
+    /** Destinataire du formulaire de contact (`POST /api/support`, #81). À vérifier/changer avec l'équipe. */
+    SUPPORT_EMAIL: optional(z.string().min(3)).default('support@fondamentalplugin.fr'),
     /** Sans elle, l'API tourne normalement, simplement sans remontée d'erreurs vers Sentry (#33). */
     SENTRY_DSN: optional(z.url()),
   })

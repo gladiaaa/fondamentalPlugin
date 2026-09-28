@@ -14,6 +14,7 @@ import { LicensesModule } from './licenses/licenses.module.js';
 import { OrdersModule } from './orders/orders.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ReleasesModule } from './releases/releases.module.js';
+import { SupportModule } from './support/support.module.js';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ReleasesModule } from './releases/releases.module.js';
     ReleasesModule,
     LicensesModule,
     OrdersModule,
+    SupportModule,
   ],
   controllers: [HealthController],
   providers: [

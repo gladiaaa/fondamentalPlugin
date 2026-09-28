@@ -45,6 +45,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs, erreurs inattendues remontées à Sentry | fait |
 | `licenses` | Client du serveur de licences (`LicenseServerClient` : `get`, `create`, `revoke`, `releaseActivation`) ; rattacher une clé existante, statut détaillé et installations | fait (#22, #45, #25) |
 | `orders` | `POST /api/checkout` (session Stripe Checkout), `GET /api/orders/by-session/:id`, `POST /api/stripe/webhook` (licence créée une seule fois, remboursement → révocation) | code et tests faits (#23, #24) ; **pas encore utilisable en ligne** : il manque les clés Stripe et les prix des produits (`stripe_price_id`), voir [runbook.md](runbook.md) |
+| `support` | `POST /api/support` : formulaire de contact, e-mail transmis à l'équipe (`SUPPORT_EMAIL`, à confirmer) | fait (#81) |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |
 | back-office | Commandes, licences, produits, versions | #32 |
