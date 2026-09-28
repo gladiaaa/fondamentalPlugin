@@ -43,7 +43,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests), bilingues FR/EN (langue choisie à l'inscription) | fait ; modèles React Email soignés et e-mails de commande (reçu, remboursement) : suite de #26 |
 | `prisma` | Accès à la base | fait |
 | `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs, erreurs inattendues remontées à Sentry | fait |
-| `licenses` | Client du serveur de licences (`LicenseServerClient` : `get`, `create`, `revoke`, `releaseActivation`) ; rattacher une clé existante au compte | fait (#22, #45) ; statut détaillé et installations : #25 |
+| `licenses` | Client du serveur de licences (`LicenseServerClient` : `get`, `create`, `revoke`, `releaseActivation`) ; rattacher une clé existante, statut détaillé et installations | fait (#22, #45, #25) |
 | `orders` | `POST /api/checkout` (session Stripe Checkout), `GET /api/orders/by-session/:id`, `POST /api/stripe/webhook` (licence créée une seule fois, remboursement → révocation) | code et tests faits (#23, #24) ; **pas encore utilisable en ligne** : il manque les clés Stripe et les prix des produits (`stripe_price_id`), voir [runbook.md](runbook.md) |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |

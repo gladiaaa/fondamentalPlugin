@@ -1,12 +1,12 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Param, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import type { OwnedLicenseResponse } from '@fondamental/shared';
+import type { LicenseDetailResponse, OwnedLicenseResponse } from '@fondamental/shared';
 import { ApiErrors, ApiSession } from '../common/api-docs.js';
 import { Auth, type AuthContext } from '../auth/auth.decorators.js';
 import { SessionGuard } from '../auth/session.guard.js';
 import { ClaimLicenseDto } from './licenses.dto.js';
-import { OwnedLicenseApiResponse } from './licenses.responses.js';
+import { LicenseDetailApiResponse, OwnedLicenseApiResponse } from './licenses.responses.js';
 import { LicensesService } from './licenses.service.js';
 import { THROTTLE } from './licenses.constants.js';
 
@@ -19,12 +19,42 @@ export class LicensesController {
   @Get()
   @ApiOperation({
     summary: 'Mes licences',
-    description: 'Les clés rattachées au compte. Statut détaillé et installations : à venir avec #25.',
+    description: 'Les clés rattachées au compte. Statut détaillé et installations : `GET /me/licenses/:key`.',
   })
   @ApiSession()
   @ApiResponse({ status: 200, type: [OwnedLicenseApiResponse] })
   list(@Auth() auth: AuthContext): Promise<OwnedLicenseResponse[]> {
     return this.licenses.list(auth.user.id);
+  }
+
+  @Get(':key')
+  @ApiOperation({
+    summary: "Statut d'une licence",
+    description:
+      'Édition, révocation et installations actives. Une clé qui ne vous appartient pas répond la ' +
+      '**même erreur** (404) qu\'une clé inconnue.',
+  })
+  @ApiSession()
+  @ApiErrors(404, 503)
+  @ApiResponse({ status: 200, type: LicenseDetailApiResponse })
+  getDetail(@Auth() auth: AuthContext, @Param('key') key: string): Promise<LicenseDetailResponse> {
+    return this.licenses.getDetail(auth.user.id, key);
+  }
+
+  @Delete(':key/activations/:installationId')
+  @HttpCode(204)
+  @ApiOperation({
+    summary: 'Libérer une installation',
+    description: 'Après une réinstallation de serveur, pour libérer un emplacement d’activation.',
+  })
+  @ApiSession()
+  @ApiErrors(404, 503)
+  async releaseActivation(
+    @Auth() auth: AuthContext,
+    @Param('key') key: string,
+    @Param('installationId') installationId: string,
+  ): Promise<void> {
+    await this.licenses.releaseActivation(auth.user.id, key, installationId);
   }
 
   @Post('claim')

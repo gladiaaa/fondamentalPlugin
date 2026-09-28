@@ -18,6 +18,10 @@ const ERROR_CODES = [
   'SAME_PASSWORD',
   'LICENSE_CLAIM_INVALID',
   'LICENSE_SERVER_UNAVAILABLE',
+  'LICENSE_NOT_FOUND',
+  'PRODUCT_NOT_PURCHASABLE',
+  'PAYMENT_UNAVAILABLE',
+  'ORDER_NOT_FOUND',
 ] as const satisfies readonly NonNullable<ApiError['code']>[];
 
 /** Corps de toutes les erreurs de l'API (voir `ApiError` dans `@fondamental/shared`). */

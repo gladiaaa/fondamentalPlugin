@@ -8,4 +8,6 @@ export const THROTTLE = {
 export const MESSAGES = {
   claimInvalid: 'Clé invalide ou déjà utilisée.',
   serverUnavailable: 'Serveur de licences momentanément indisponible.',
+  // Même message qu'une clé qui n'existe pas pour ce compte : ne révèle jamais qu'elle appartient à un autre.
+  licenseNotFound: 'Licence introuvable.',
 } as const;
