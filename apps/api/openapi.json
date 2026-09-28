@@ -1188,6 +1188,157 @@
           "licences"
         ]
       }
+    },
+    "/api/checkout": {
+      "post": {
+        "description": "Crée la commande et une session Stripe Checkout. Le client doit être redirigé vers `url`.",
+        "operationId": "OrdersController_checkout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Acheter un plugin",
+        "tags": [
+          "commandes"
+        ]
+      }
+    },
+    "/api/orders/by-session/{sessionId}": {
+      "get": {
+        "description": "Pour la page /merci, jusqu'à ce que la clé soit prête (le webhook Stripe est asynchrone).",
+        "operationId": "OrdersController_bySessionId",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Statut d'une commande",
+        "tags": [
+          "commandes"
+        ]
+      }
     }
   },
   "info": {
@@ -1790,6 +1941,56 @@
         },
         "required": [
           "key"
+        ]
+      },
+      "CheckoutDto": {
+        "type": "object",
+        "properties": {
+          "productSlug": {
+            "type": "string",
+            "description": "Identifiant du plugin dans les adresses du site (`bedwars`, `tag`…)."
+          }
+        },
+        "required": [
+          "productSlug"
+        ]
+      },
+      "CheckoutApiResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Adresse Stripe Checkout à laquelle rediriger le client."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "OrderApiResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PAID",
+              "LICENSED",
+              "REFUNDED"
+            ]
+          },
+          "productSlug": {
+            "type": "string"
+          },
+          "licenseKey": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "status",
+          "productSlug",
+          "licenseKey"
         ]
       }
     }

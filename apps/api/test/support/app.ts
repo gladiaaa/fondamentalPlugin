@@ -6,6 +6,7 @@ import { configureApp } from '../../src/app.setup.js';
 import { PwnedPasswordsService } from '../../src/auth/pwned-passwords.service.js';
 import { LicenseServerClient } from '../../src/licenses/license-server-client.js';
 import { type MailMessage, Mailer } from '../../src/mail/mailer.js';
+import { StripeClient } from '../../src/orders/stripe-client.js';
 
 /** Origine du site en local : la seule que l'API accepte pour les requêtes qui modifient des données. */
 export const ORIGIN = 'http://localhost:3000';
@@ -41,15 +42,21 @@ export class InMemoryMailer extends Mailer {
   }
 }
 
-export async function createTestApp(mailer: Mailer, licenseServer?: unknown): Promise<INestApplication> {
+export async function createTestApp(
+  mailer: Mailer,
+  licenseServer?: unknown,
+  stripe?: unknown,
+): Promise<INestApplication> {
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(Mailer)
     .useValue(mailer)
     .overrideProvider(PwnedPasswordsService)
     .useValue({ isPwned: async (password: string) => password === COMPROMISED_PASSWORD });
   if (licenseServer) builder = builder.overrideProvider(LicenseServerClient).useValue(licenseServer);
+  if (stripe) builder = builder.overrideProvider(StripeClient).useValue(stripe);
   const moduleRef = await builder.compile();
-  const app = moduleRef.createNestApplication({ bufferLogs: true });
+  // rawBody : le webhook Stripe (#24) a besoin du corps brut pour vérifier la signature.
+  const app = moduleRef.createNestApplication({ bufferLogs: true, rawBody: true });
   configureApp(app);
   await app.init();
   return app;

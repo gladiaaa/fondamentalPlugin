@@ -11,6 +11,7 @@ import { type Env, validateEnv } from './config/env.js';
 import { LOG_REDACT } from './config/logging.js';
 import { HealthController } from './health/health.controller.js';
 import { LicensesModule } from './licenses/licenses.module.js';
+import { OrdersModule } from './orders/orders.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ReleasesModule } from './releases/releases.module.js';
 
@@ -43,6 +44,7 @@ import { ReleasesModule } from './releases/releases.module.js';
     CatalogModule,
     ReleasesModule,
     LicensesModule,
+    OrdersModule,
   ],
   controllers: [HealthController],
   providers: [
