@@ -110,7 +110,7 @@ Effets d'un changement : `RELEASES_TOKEN` : publications refusées tant que les 
 
 **Quand** : un paiement a réussi chez Stripe mais le client n'a pas reçu sa clé (webhook en échec, serveur de licences indisponible pendant le paiement).
 
-1. Dashboard Stripe → *Développeurs → Webhooks* → le point de terminaison → l'événement `checkout.session.completed` concerné → **Renvoyer**.
+1. Dashboard Stripe → *Développeurs → Webhooks* → le point de terminaison → l'événement `checkout.session.completed` concerné (ou `checkout.session.async_payment_succeeded` pour un paiement différé : SEPA, virement) → **Renvoyer**.
 2. Le traitement est **idempotent** : `stripe_checkout_session_id` est unique. Si la commande est déjà « licensed », l'API répond `200` sans rien faire ; sinon elle crée la licence et passe la commande en « licensed » (l'e-mail avec la clé n'est pas encore envoyé : suite de #26).
 3. En dev, avec la CLI : `stripe events resend <evt_…>`.
 
@@ -119,6 +119,14 @@ Effets d'un changement : `RELEASES_TOKEN` : publications refusées tant que les 
 Stripe réessaie tout seul plusieurs jours quand l'API répond `500` : ne rejouer à la main qu'après avoir corrigé la cause.
 
 **Pas encore utilisable en ligne** : `POST /api/checkout` répond `503` (`PAYMENT_UNAVAILABLE`) tant que `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` ne sont pas configurées et que les produits n'ont pas de `stripe_price_id` (voir #23/#24).
+
+**Mettre Stripe en place** (une fois en mode test pour dev, une fois en mode live pour prod) :
+
+1. *Produits* : un produit par plugin, un prix unique en EUR ; reporter le `price_…` dans `products.stripe_price_id`.
+2. *Développeurs → Clés API → Clé restreinte* : Checkout Sessions et Refunds en écriture. Elle va dans `STRIPE_SECRET_KEY` de l'`api.env` de l'environnement, jamais ailleurs.
+3. *Développeurs → Webhooks* : point de terminaison `https://<domaine>/api/stripe/webhook`, événements `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `charge.refunded`. Son secret `whsec_…` va dans `STRIPE_WEBHOOK_SECRET`.
+4. *Paramètres → Factures* : pied de facture par défaut avec le nom suivi de « EI », le SIRET et « TVA non applicable, art. 293 B du CGI » (micro-entreprise en franchise de TVA : pas de Stripe Tax).
+5. Recréer le conteneur `api` pour qu'il lise l'`api.env` (voir `deploy/README.md`).
 
 ## 6. Révoquer, recréer une licence ou rembourser une commande
 

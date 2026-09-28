@@ -9,6 +9,12 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { MESSAGES } from './orders.constants.js';
 import { StripeClient } from './stripe-client.js';
 
+/** Erreur Prisma « valeur déjà utilisée » (contrainte d'unicité). */
+const UNIQUE_VIOLATION = 'P2002';
+
+/** Ne montre jamais la clé en entier dans un log : seuls ses 4 derniers caractères. */
+const redact = (key: string) => `…${key.slice(-4)}`;
+
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -79,12 +85,17 @@ export class OrdersService {
   }
 
   /**
-   * `checkout.session.completed`, payé. Idempotent : rejouer le même événement ne crée jamais une
-   * deuxième licence (voir #24). Si le serveur de licences est en panne, l'appelant doit répondre 500
-   * pour que Stripe réessaie ; la commande reste `paid`, prête à reprendre sans avoir déjà encaissé deux fois.
+   * `checkout.session.completed` ou `checkout.session.async_payment_succeeded` (#96). Idempotent :
+   * rejouer le même événement ne crée jamais une deuxième licence (voir #24). Si le serveur de licences
+   * est en panne, l'appelant doit répondre 500 pour que Stripe réessaie ; la commande reste `paid`,
+   * prête à reprendre sans avoir déjà encaissé deux fois.
+   *
+   * Livre dès que la session n'est plus `unpaid` : `paid`, ou `no_payment_required` (code promo à
+   * 100 %). Un paiement différé (SEPA, virement) arrive d'abord `unpaid` dans `completed`, puis
+   * `paid` dans `async_payment_succeeded`.
    */
   async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
-    if (session.payment_status !== 'paid') return;
+    if (session.payment_status === 'unpaid') return;
     const orderId = session.client_reference_id;
     if (!orderId) {
       this.logger.warn(`checkout.session.completed sans client_reference_id (session ${session.id})`);
@@ -113,10 +124,19 @@ export class OrdersService {
       customer: `${session.customer_email ?? 'inconnu'} (${order.userId})`,
       maxActivations: order.product.maxActivations,
     });
-    await this.prisma.$transaction([
-      this.prisma.license.create({ data: { userId: order.userId, licenseKey: created.key, orderId: order.id } }),
-      this.prisma.order.update({ where: { id: order.id }, data: { status: 'LICENSED' } }),
-    ]);
+    try {
+      await this.prisma.$transaction([
+        this.prisma.license.create({ data: { userId: order.userId, licenseKey: created.key, orderId: order.id } }),
+        this.prisma.order.update({ where: { id: order.id }, data: { status: 'LICENSED' } }),
+      ]);
+    } catch (error) {
+      if ((error as { code?: string }).code !== UNIQUE_VIOLATION) throw error;
+      // Deux livraisons simultanées du même événement : l'autre a déjà rattaché sa clé à la commande
+      // (`licenses.order_id` est unique). Celle-ci n'appartient à personne : on la révoque.
+      await this.licenseServer.revoke(created.key);
+      this.logger.warn(`Clé en double révoquée pour la commande ${order.id} (clé ${redact(created.key)})`);
+      return;
+    }
     this.logger.log(`Licence créée pour la commande ${order.id}`);
   }
 

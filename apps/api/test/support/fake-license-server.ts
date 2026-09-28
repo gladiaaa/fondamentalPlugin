@@ -20,6 +20,8 @@ export class FakeLicenseServer
   readonly revoked: string[] = [];
   /** `(clé, installationId)` libérés par `releaseActivation`, dans l'ordre d'appel. */
   readonly releasedActivations: Array<{ key: string; installationId: string }> = [];
+  /** Appelé au début de `create` : simule ce qui se passe ailleurs pendant l'appel (livraison concurrente). */
+  beforeCreate?: () => Promise<void>;
 
   /** Déclare une clé existante sur le faux serveur (par défaut : valide, non révoquée). */
   set(key: string, status: Partial<LicenseStatus> = {}): void {
@@ -37,6 +39,7 @@ export class FakeLicenseServer
     this.keys.clear();
     this.revoked.length = 0;
     this.releasedActivations.length = 0;
+    this.beforeCreate = undefined;
   }
 
   async get(key: string): Promise<LicenseStatus> {
@@ -46,6 +49,7 @@ export class FakeLicenseServer
   }
 
   async create(input: CreateLicenseInput): Promise<CreatedLicense> {
+    await this.beforeCreate?.();
     const key = `FAKE-${randomUUID()}`;
     this.set(key, { product: input.product, edition: input.edition });
     return { key };

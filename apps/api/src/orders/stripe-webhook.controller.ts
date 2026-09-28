@@ -49,11 +49,23 @@ export class StripeWebhookController {
     }
 
     switch (event.type) {
+      // Paiement différé (SEPA, virement) : `completed` arrive `unpaid`, le paiement réel arrive ensuite
+      // dans `async_payment_succeeded` (#96). Le service ne livre que si la session n'est plus `unpaid`.
       case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded':
         await this.orders.handleCheckoutCompleted(event.data.object);
+        break;
+      case 'checkout.session.async_payment_failed':
+        // Rien n'a été livré : la commande reste `pending`, le client peut racheter.
+        this.logger.warn(`Paiement différé échoué (session ${event.data.object.id})`);
         break;
       case 'charge.refunded': {
         const charge = event.data.object;
+        // Remboursement partiel (geste commercial) : la licence reste valide (#96).
+        if (!charge.refunded) {
+          this.logger.log(`Remboursement partiel, licence conservée (paiement ${charge.id})`);
+          break;
+        }
         const paymentIntentId =
           typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
         if (paymentIntentId) await this.orders.handleChargeRefunded(paymentIntentId);

@@ -39,6 +39,9 @@ export class StripeClient {
   /**
    * Session Stripe Checkout pour un achat unique, avec la case de renonciation au droit de
    * rétractation (contenu numérique livré immédiatement, art. L221-28 13° du code de la consommation).
+   * Stripe crée et envoie la facture après le paiement (`invoice_creation`) ; ses mentions légales
+   * (SIRET, « TVA non applicable, art. 293 B du CGI ») viennent du pied de facture par défaut du
+   * Dashboard Stripe, pas du code.
    */
   async createCheckoutSession(input: CreateCheckoutSessionInput): Promise<Stripe.Checkout.Session> {
     if (!this.stripe) throw new Error('Stripe non configuré.');
@@ -50,6 +53,7 @@ export class StripeClient {
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
       allow_promotion_codes: true,
+      invoice_creation: { enabled: true, invoice_data: { metadata: { orderId: input.clientReferenceId } } },
       consent_collection: { terms_of_service: 'required' },
       custom_text: {
         terms_of_service_acceptance: {
