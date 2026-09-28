@@ -34,7 +34,7 @@ describe('Commandes : achat Stripe (e2e)', () => {
     await prisma.license.deleteMany();
     await prisma.user.deleteMany();
     await prisma.product.deleteMany({ where: { slug: { startsWith: 'e2e-' } } });
-    licenseServer.isConfigured = true;
+    licenseServer.reset();
     stripe.isConfigured = true;
     stripe.createsSession = true;
   });
@@ -72,6 +72,37 @@ describe('Commandes : achat Stripe (e2e)', () => {
   function sendWebhook(app: INestApplication, event: unknown, withSignature: string | false = VALID_SIGNATURE) {
     const req = request(app.getHttpServer()).post('/api/stripe/webhook').type('json').send(JSON.stringify(event));
     return withSignature ? req.set('stripe-signature', withSignature) : req;
+  }
+
+  /** Événement Checkout (`completed`, `async_payment_succeeded`…) pour une session créée par le test. */
+  function checkoutEvent(
+    type: string,
+    session: { id: string; client_reference_id: string | null },
+    paymentStatus: 'paid' | 'unpaid' | 'no_payment_required',
+    paymentIntent: string | null,
+  ) {
+    return {
+      type,
+      data: {
+        object: {
+          id: session.id,
+          client_reference_id: session.client_reference_id,
+          payment_status: paymentStatus,
+          payment_intent: paymentIntent,
+          customer_email: EMAIL,
+        },
+      },
+    };
+  }
+
+  /** Achat complet et payé : commande `licensed` avec sa licence. */
+  async function paidOrder(paymentIntent: string) {
+    await createProduct();
+    const { b, csrf } = await loggedInUser();
+    await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+    const session = stripe.lastSession!;
+    await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'paid', paymentIntent)).expect(200);
+    return { b, session };
   }
 
   describe('POST /api/checkout', () => {
@@ -262,12 +293,96 @@ describe('Commandes : achat Stripe (e2e)', () => {
 
       await sendWebhook(app, {
         type: 'charge.refunded',
-        data: { object: { payment_intent: 'pi_test_refund' } },
+        data: { object: { id: 'ch_test_refund', payment_intent: 'pi_test_refund', refunded: true } },
       }).expect(200);
 
       expect(licenseServer.revoked).toContain(license?.licenseKey);
       expect(await prisma.license.findUnique({ where: { id: license!.id } })).toBeNull();
       expect((await prisma.order.findUnique({ where: { id: order!.id } }))?.status).toBe('REFUNDED');
+    });
+
+    it('charge.refunded partiel : la licence reste valide, la commande reste licensed', async () => {
+      const { session } = await paidOrder('pi_test_partiel');
+      const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+
+      await sendWebhook(app, {
+        type: 'charge.refunded',
+        data: { object: { id: 'ch_test_partiel', payment_intent: 'pi_test_partiel', refunded: false } },
+      }).expect(200);
+
+      expect(licenseServer.revoked).toHaveLength(0);
+      expect(await prisma.license.count({ where: { orderId: order!.id } })).toBe(1);
+      expect((await prisma.order.findUnique({ where: { id: order!.id } }))?.status).toBe('LICENSED');
+    });
+
+    it('paiement différé : rien à la complétion (unpaid), licence à async_payment_succeeded', async () => {
+      await createProduct();
+      const { b, csrf } = await loggedInUser();
+      await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+      const session = stripe.lastSession!;
+
+      await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'unpaid', 'pi_test_sepa')).expect(200);
+      let order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+      expect(order?.status).toBe('PENDING');
+      expect(await prisma.license.count({ where: { orderId: order!.id } })).toBe(0);
+
+      await sendWebhook(
+        app,
+        checkoutEvent('checkout.session.async_payment_succeeded', session, 'paid', 'pi_test_sepa'),
+      ).expect(200);
+      order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+      expect(order?.status).toBe('LICENSED');
+      expect(order?.stripePaymentIntentId).toBe('pi_test_sepa');
+      expect(await prisma.license.count({ where: { orderId: order!.id } })).toBe(1);
+    });
+
+    it('paiement différé échoué : accusé de réception, commande laissée pending, aucune licence', async () => {
+      await createProduct();
+      const { b, csrf } = await loggedInUser();
+      await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+      const session = stripe.lastSession!;
+
+      await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'unpaid', 'pi_test_ko')).expect(200);
+      await sendWebhook(app, checkoutEvent('checkout.session.async_payment_failed', session, 'unpaid', 'pi_test_ko')).expect(
+        200,
+      );
+
+      const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+      expect(order?.status).toBe('PENDING');
+      expect(await prisma.license.count({ where: { orderId: order!.id } })).toBe(0);
+    });
+
+    it('code promo à 100 % (no_payment_required) : licence créée, sans paiement Stripe', async () => {
+      await createProduct();
+      const { b, csrf } = await loggedInUser();
+      await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+      const session = stripe.lastSession!;
+
+      await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'no_payment_required', null)).expect(200);
+
+      const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+      expect(order?.status).toBe('LICENSED');
+      expect(order?.stripePaymentIntentId).toBeNull();
+      expect(await prisma.license.count({ where: { orderId: order!.id } })).toBe(1);
+    });
+
+    it('livraison simultanée du même événement : la clé en trop est révoquée, une seule licence', async () => {
+      await createProduct();
+      const { b, csrf } = await loggedInUser();
+      await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+      const session = stripe.lastSession!;
+      const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+
+      // Pendant l'appel au serveur de licences, l'autre livraison rattache sa clé à la commande.
+      licenseServer.beforeCreate = async () => {
+        await prisma.license.create({ data: { userId: order!.userId, licenseKey: 'CLE-AUTRE-LIVRAISON', orderId: order!.id } });
+      };
+      await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'paid', 'pi_test_double')).expect(200);
+
+      const licenses = await prisma.license.findMany({ where: { orderId: order!.id } });
+      expect(licenses.map((l) => l.licenseKey)).toEqual(['CLE-AUTRE-LIVRAISON']);
+      expect(licenseServer.revoked).toHaveLength(1);
+      expect(licenseServer.revoked[0]).not.toBe('CLE-AUTRE-LIVRAISON');
     });
 
     it('événement non géré : accusé de réception (200), rien à faire', async () => {

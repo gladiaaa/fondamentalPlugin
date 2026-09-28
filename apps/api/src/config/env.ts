@@ -54,8 +54,9 @@ export const envSchema = z
     LICENSE_SERVER_URL: optional(z.url()),
     LICENSE_ADMIN_TOKEN: optional(z.string().min(1)),
     /**
-     * Stripe (achat, #23/#24). Clé **secrète** (`sk_test_…`/`sk_live_…`) et secret du point de
-     * terminaison webhook (`whsec_…`, propre à chaque environnement). Sans elles, l'achat répond 503.
+     * Stripe (achat, #23/#24). De préférence une clé **restreinte** (`rk_test_…`/`rk_live_…`, #96) avec
+     * seulement Checkout Sessions et Refunds en écriture, sinon la clé secrète (`sk_…`). Et le secret du
+     * point de terminaison webhook (`whsec_…`, propre à chaque environnement). Sans elles, l'achat répond 503.
      */
     STRIPE_SECRET_KEY: optional(z.string().min(1)),
     STRIPE_WEBHOOK_SECRET: optional(z.string().min(1)),

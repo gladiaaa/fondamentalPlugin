@@ -88,12 +88,17 @@ Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiqueme
 2. L'API crée la commande (pending) et la session Stripe Checkout, renvoie l'URL Stripe
 3. Le client paie chez Stripe (case de renonciation au droit de rétractation)
 4. Stripe appelle          POST /api/stripe/webhook   (signature vérifiée, corps brut)
-5. checkout.session.completed, payment_status = paid :
+5. checkout.session.completed ou async_payment_succeeded, payment_status ≠ unpaid
+   (paid, ou no_payment_required avec un code promo à 100 %) :
      commande → paid (déjà « licensed » : on répond 200 sans rien faire)
      POST /api/v1/admin/licenses sur le serveur de licences → clé
      commande → licensed (l'e-mail avec la clé viendra avec la suite de #26)
    serveur de licences indisponible : réponse 500, Stripe réessaie, aucune clé en double
-6. charge.refunded : la clé est révoquée, commande → refunded
+   paiement différé (SEPA, virement) : completed arrive unpaid (rien n'est livré),
+     puis async_payment_succeeded livre ; async_payment_failed : commande laissée pending
+   Stripe crée et envoie la facture (invoice_creation) ; mentions légales dans le Dashboard
+6. charge.refunded, remboursement total : la clé est révoquée, commande → refunded
+   (remboursement partiel : licence conservée)
 7. La page /merci lit GET /api/orders/by-session/:id jusqu'à ce que la clé soit prête
 ```
 
