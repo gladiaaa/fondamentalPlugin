@@ -38,7 +38,7 @@ En cas de retour automatique à la version précédente, **les migrations déjà
 │   ├── compose.yml        # copie de deploy/compose.yml
 │   ├── .env               # APP_ENV=dev, HOST_PORT=3101, API_PORT=4101
 │   ├── secrets.env        # POSTGRES_PASSWORD (root:deploy, 640) : jamais dans le dépôt
-│   ├── app.env            # secrets du site (root:deploy, 640)
+│   ├── app.env            # variables du site (root:deploy, 640) ; doit contenir API_INTERNAL_URL=http://api:4000/api
 │   ├── api.env            # secrets de l'API : Stripe, licences… (root:deploy, 640)
 │   ├── deploy.env         # IMAGE_TAG, écrit par deploy.sh
 │   └── current, previous  # versions en ligne et précédente
