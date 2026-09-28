@@ -25,10 +25,10 @@ export class SessionService {
     return { token, csrfToken, expiresAt };
   }
 
-  /** La session (avec son compte) si le jeton est valide et non expiré. */
+  /** La session (avec son compte) si le jeton est valide, non expiré, et le compte non bloqué (#105). */
   find(token: string) {
     return this.prisma.session.findFirst({
-      where: { tokenHash: hashToken(token), expiresAt: { gt: new Date() } },
+      where: { tokenHash: hashToken(token), expiresAt: { gt: new Date() }, user: { blockedAt: null } },
       include: { user: true },
     });
   }

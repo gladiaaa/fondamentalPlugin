@@ -19,7 +19,7 @@ export class ReleasesService {
   async minecraftVersions(slug: string): Promise<string[]> {
     const product = await this.requireActiveProduct(slug);
     const versions = await this.prisma.minecraftVersion.findMany({
-      where: { files: { some: { release: { productId: product.id } } } },
+      where: { files: { some: { release: { productId: product.id, hiddenAt: null } } } },
       orderBy: { sortOrder: 'desc' },
     });
     return versions.map((v) => v.version);
@@ -30,7 +30,7 @@ export class ReleasesService {
     const product = await this.requireActiveProduct(slug);
     return this.prisma.releaseFile.findMany({
       where: {
-        release: { productId: product.id },
+        release: { productId: product.id, hiddenAt: null },
         ...(minecraft ? { minecraftVersions: { some: { version: minecraft } } } : {}),
       },
       include: WITH_RELATIONS,
@@ -38,10 +38,10 @@ export class ReleasesService {
     });
   }
 
-  /** Un fichier à télécharger ; 404 s'il n'existe pas ou si son plugin n'est plus en vente. */
+  /** Un fichier à télécharger ; 404 s'il n'existe pas, si son plugin n'est plus en vente ou si sa version est masquée. */
   async fileForDownload(id: string) {
     const file = await this.prisma.releaseFile.findFirst({
-      where: { id, release: { product: { active: true } } },
+      where: { id, release: { hiddenAt: null, product: { active: true } } },
     });
     if (!file) throw new NotFoundException('Fichier introuvable.');
     return file;

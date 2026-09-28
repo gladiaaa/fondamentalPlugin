@@ -145,6 +145,10 @@ export class AuthService {
     if (!user.emailVerifiedAt) {
       throw new ForbiddenException({ code: 'EMAIL_NOT_VERIFIED', message: MESSAGES.emailNotVerified });
     }
+    // Compte bloqué par un admin (#105) : dit seulement à qui connaît déjà le mot de passe.
+    if (user.blockedAt) {
+      throw new ForbiddenException({ code: 'ACCOUNT_BLOCKED', message: MESSAGES.accountBlocked });
+    }
 
     if (user.failedLogins > 0 || user.lastFailedLoginAt || user.lockedUntil) {
       await this.prisma.user.update({

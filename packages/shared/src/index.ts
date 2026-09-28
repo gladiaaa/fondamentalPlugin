@@ -59,7 +59,11 @@ export interface ApiError {
     | "ORDER_NOT_FOUND"
     | "ORDER_NOT_PAID"
     | "TWO_FACTOR_REQUIRED"
-    | "TOTP_INVALID_CODE";
+    | "TOTP_INVALID_CODE"
+    | "ACCOUNT_BLOCKED"
+    | "CANNOT_MODIFY_SELF"
+    | "USER_NOT_FOUND"
+    | "RELEASE_NOT_FOUND";
 }
 
 /** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
@@ -275,4 +279,82 @@ export interface AdminProductResponse {
   currency: string;
   stripePriceId: string | null;
   active: boolean;
+}
+
+/** Un compte dans `GET /api/admin/users` (#105). */
+export interface AdminUserSummary {
+  id: string;
+  email: string;
+  role: "CUSTOMER" | "ADMIN";
+  emailVerifiedAt: string | null;
+  /** Non nul : compte bloqué (connexion refusée). */
+  blockedAt: string | null;
+  twoFactorEnabled: boolean;
+  createdAt: string;
+  ordersCount: number;
+  licensesCount: number;
+}
+
+/** Une licence rattachée au compte, dans `GET /api/admin/users/:id`. */
+export interface AdminUserLicense {
+  key: string;
+  /** Plugin de la commande d'origine ; `null` pour une clé rattachée à la main (sans commande). */
+  productSlug: string | null;
+  orderId: string | null;
+  claimedAt: string;
+}
+
+/** `GET`/`PATCH /api/admin/users/:id` : le compte, ses commandes et ses licences. */
+export interface AdminUserDetail extends AdminUserSummary {
+  orders: AdminOrderSummary[];
+  licenses: AdminUserLicense[];
+}
+
+/** Un fichier d'une version, vu du back-office. */
+export interface AdminReleaseFile {
+  id: string;
+  fileName: string;
+  edition: "UNIVERSAL" | "FREE" | "PREMIUM";
+  sizeBytes: number;
+  sha256: string;
+  downloadCount: number;
+  minecraftVersions: string[];
+}
+
+/** Une version publiée dans `GET /api/admin/releases` et `PATCH /api/admin/releases/:id` (#105). */
+export interface AdminReleaseResponse {
+  id: string;
+  productSlug: string;
+  version: string;
+  channel: "RELEASE" | "BETA";
+  changelog: string;
+  releasedAt: string;
+  /** Non nul : masquée du site public (fichiers non téléchargeables). */
+  hiddenAt: string | null;
+  files: AdminReleaseFile[];
+}
+
+/** Une entrée du journal des actions admin (`GET /api/admin/actions`). */
+export interface AdminActionEntry {
+  id: string;
+  adminEmail: string;
+  /** `order.refund`, `license.revoke`, `user.block`, `release.update`… */
+  action: string;
+  targetType: string;
+  targetId: string;
+  metadata: unknown;
+  createdAt: string;
+}
+
+/** `GET /api/admin/stats` : chiffres du tableau de bord (#105). Montants en centimes. */
+export interface AdminStatsResponse {
+  /** Commandes payées ou livrées (hors remboursées), par devise. */
+  revenue: Array<{ currency: string; totalCents: number; last30DaysCents: number }>;
+  orders: { licensed: number; paid: number; pending: number; refunded: number };
+  /** Par plugin : ventes (hors remboursées) et téléchargements (toutes versions). */
+  products: Array<{ slug: string; name: string; sales: number; revenueCents: number; downloads: number }>;
+  /** Un point par jour sur les 30 derniers jours (UTC), du plus ancien au plus récent. */
+  salesLast30Days: Array<{ date: string; sales: number; revenueCents: number }>;
+  users: { total: number; verified: number; admins: number; blocked: number };
+  recentActions: AdminActionEntry[];
 }

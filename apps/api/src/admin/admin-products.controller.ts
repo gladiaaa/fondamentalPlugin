@@ -13,6 +13,12 @@ import { AdminProductsService } from './admin-products.service.js';
 export class AdminProductsController {
   constructor(private readonly products: AdminProductsService) {}
 
+  /** Tous les produits, y compris ceux retirés de la vente, dans l'ordre du catalogue (#105). */
+  @Get()
+  list(): Promise<AdminProductResponse[]> {
+    return this.products.list();
+  }
+
   @Get(':slug')
   get(@Param('slug') slug: string): Promise<AdminProductResponse> {
     return this.products.get(slug);

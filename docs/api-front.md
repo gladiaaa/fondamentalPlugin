@@ -155,7 +155,7 @@ Corps : `{ statusCode, message: string | string[], error?, code? }`. `message` e
 |---|---|---|
 | 400 | Validation, lien invalide, mot de passe refusé, clé de licence invalide | `INVALID_LINK`, `PASSWORD_COMPROMISED`, `CURRENT_PASSWORD_INVALID`, `NO_PASSWORD`, `SAME_PASSWORD`, `LICENSE_CLAIM_INVALID` |
 | 401 | Pas de session, ou e-mail / mot de passe incorrect (message volontairement générique) | – |
-| 403 | Origin refusée, jeton CSRF absent ou faux, adresse non confirmée | `EMAIL_NOT_VERIFIED` pour ce dernier cas |
+| 403 | Origin refusée, jeton CSRF absent ou faux, adresse non confirmée, compte bloqué | `EMAIL_NOT_VERIFIED`, `ACCOUNT_BLOCKED` pour ces deux derniers cas |
 | 404 | Plugin inconnu ou retiré de la vente (et, plus tard, ressource qui n'appartient pas au compte) | – |
 | 429 | Trop de requêtes | – |
 | 503 | E-mails indisponibles, base en panne (`/health`), ou serveur de licences indisponible | `LICENSE_SERVER_UNAVAILABLE` pour ce dernier cas |
@@ -188,8 +188,32 @@ Achat (#23, #24) et espace client détaillé (#25) : maintenant dans la section 
 ### Connexion OAuth (#18)
 - `GET /auth/oauth/:provider` (`microsoft`, `discord`, `google`) : redirection vers le fournisseur ; retour sur `GET /auth/oauth/:provider/callback` qui ouvre la session et redirige vers le site. Boutons « Continuer avec … » à prévoir, en plus du formulaire e-mail.
 
-### Administration (#32)
-Back-office (commandes, licences, produits, versions). Routes pas encore définies. À la suppression d'un compte, les commandes seront **anonymisées et conservées** (obligation comptable) et les licences resteront valides : ce sera ajouté avec #23.
+### Administration (#32, #105)
+Back-office, réservé au rôle `ADMIN` **avec la 2FA validée pour la session** : sinon `403` (`TWO_FACTOR_REQUIRED` si seule la 2FA manque). Hors `openapi.json`. Toute modification est journalisée (`admin_actions`). Types dans `@fondamental/shared` (`Admin…`).
+
+| Route | Corps / paramètres | Réponse |
+|---|---|---|
+| `POST /admin/2fa/setup` | – | `201 { secret, otpauthUrl }` : QR code (`otpauthUrl`) ou saisie manuelle. Rôle admin seul exigé |
+| `POST /admin/2fa/verify` | `{ code }` | `204` ; à refaire à chaque nouvelle session. `400 TOTP_INVALID_CODE` |
+| `GET /admin/stats` | – | `AdminStatsResponse` : chiffre d'affaires (total, 30 jours), commandes par statut, ventes et téléchargements par plugin, ventes par jour sur 30 jours, comptes, 10 dernières actions |
+| `GET /admin/actions` | `?targetType=&targetId=&limit=` (1–200, défaut 50) | `AdminActionEntry[]` |
+| `GET /admin/orders` | `?status=&email=` | `AdminOrderSummary[]` (100 max) |
+| `GET /admin/orders/:id` | – | `AdminOrderDetail` (avec la clé) |
+| `POST /admin/orders/:id/refund` | – | `204` : remboursé chez Stripe, clé révoquée |
+| `POST /admin/orders/:id/resend-email` | – | `202` |
+| `GET /admin/licenses/:key` | – | `AdminLicenseResponse` |
+| `POST /admin/licenses/:key/revoke` · `/recreate` | – | `204` · `{ key }` |
+| `GET /admin/products` · `GET /admin/products/:slug` | – | `AdminProductResponse[]` · `AdminProductResponse` (produits retirés compris) |
+| `PATCH /admin/products/:slug` | `{ description?, priceCents?, stripePriceId?, active? }` | `AdminProductResponse` |
+| `GET /admin/users` | `?q=` (morceau d'e-mail) | `AdminUserSummary[]` (100 max) |
+| `GET /admin/users/:id` | – | `AdminUserDetail` (commandes, licences) ; `404 USER_NOT_FOUND` |
+| `PATCH /admin/users/:id` | `{ role?: "CUSTOMER" | "ADMIN", blocked?: boolean }` | `AdminUserDetail`. Bloquer ferme ses sessions et refuse sa connexion (`403 ACCOUNT_BLOCKED`). Repasser client ferme ses sessions. Soi-même : `400 CANNOT_MODIFY_SELF` |
+| `GET /admin/releases` | `?product=<slug>` | `AdminReleaseResponse[]` (versions masquées comprises, avec fichiers et téléchargements) |
+| `PATCH /admin/releases/:id` | `{ hidden?, channel?: "RELEASE" | "BETA", changelog? }` | `AdminReleaseResponse`. Masquée : absente de la page publique, fichiers non téléchargeables. `404 RELEASE_NOT_FOUND` |
+
+Pages : les clés de licence ne vont jamais dans l'URL du site (la route API `/admin/licenses/:key` est appelée depuis le navigateur, pas affichée). Nommer le premier admin : `UPDATE users SET role = 'ADMIN' WHERE email = '…'` dans la base de l'environnement ; les suivants depuis le panel.
+
+À la suppression d'un compte, les commandes seront **anonymisées et conservées** (obligation comptable) et les licences resteront valides.
 
 ## 8. Piège : appeler l'API depuis le serveur Next.js
 

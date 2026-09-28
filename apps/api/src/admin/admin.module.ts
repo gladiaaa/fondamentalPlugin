@@ -14,10 +14,24 @@ import { AdminOrdersController } from './admin-orders.controller.js';
 import { AdminOrdersService } from './admin-orders.service.js';
 import { AdminProductsController } from './admin-products.controller.js';
 import { AdminProductsService } from './admin-products.service.js';
+import { AdminReleaseListController } from './admin-release-list.controller.js';
+import { AdminReleaseListService } from './admin-release-list.service.js';
+import { AdminStatsController } from './admin-stats.controller.js';
+import { AdminStatsService } from './admin-stats.service.js';
+import { AdminUsersController } from './admin-users.controller.js';
+import { AdminUsersService } from './admin-users.service.js';
 
 @Module({
   imports: [AuthModule, LicensesModule, OrdersModule, MailModule],
-  controllers: [AdminTwoFactorController, AdminOrdersController, AdminLicensesController, AdminProductsController],
+  controllers: [
+    AdminTwoFactorController,
+    AdminOrdersController,
+    AdminLicensesController,
+    AdminProductsController,
+    AdminUsersController,
+    AdminReleaseListController,
+    AdminStatsController,
+  ],
   providers: [
     AdminActionLogService,
     AdminRoleGuard,
@@ -26,6 +40,9 @@ import { AdminProductsService } from './admin-products.service.js';
     AdminOrdersService,
     AdminLicensesService,
     AdminProductsService,
+    AdminUsersService,
+    AdminReleaseListService,
+    AdminStatsService,
   ],
 })
 export class AdminModule {}
