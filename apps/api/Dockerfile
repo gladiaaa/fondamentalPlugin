@@ -52,6 +52,9 @@ ENV APP_VERSION=$APP_VERSION
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/apps/api/package.json ./apps/api/
 COPY --from=build --chown=node:node /app/apps/api/dist ./apps/api/dist
+# Dossier des jars publiés (RELEASES_DIR par défaut), monté en volume en ligne (deploy/compose.yml) :
+# un volume nommé vide reprend ce propriétaire, sinon l'API (non root, disque en lecture seule) ne peut pas écrire.
+RUN mkdir -p ./apps/api/data/releases && chown -R node:node ./apps/api/data
 
 WORKDIR /app/apps/api
 USER node
