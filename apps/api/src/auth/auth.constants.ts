@@ -35,6 +35,7 @@ export const THROTTLE = {
 
 export const MESSAGES = {
   invalidCredentials: 'E-mail ou mot de passe incorrect.',
+  accountBlocked: 'Ce compte a été bloqué. Contactez le support si vous pensez que c’est une erreur.',
   invalidLink: 'Ce lien est invalide ou a expiré.',
   emailNotVerified: "Confirmez votre adresse e-mail avant de vous connecter : un lien vous a été envoyé à l'inscription.",
   passwordCompromised:

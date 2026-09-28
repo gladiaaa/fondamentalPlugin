@@ -24,6 +24,11 @@ export class AdminProductsService {
     private readonly auditLog: AdminActionLogService,
   ) {}
 
+  async list(): Promise<AdminProductResponse[]> {
+    const products = await this.prisma.product.findMany({ orderBy: { sortOrder: 'asc' } });
+    return products.map(toResponse);
+  }
+
   async get(slug: string): Promise<AdminProductResponse> {
     const product = await this.prisma.product.findUnique({ where: { slug } });
     if (!product) throw new NotFoundException('Produit introuvable.');

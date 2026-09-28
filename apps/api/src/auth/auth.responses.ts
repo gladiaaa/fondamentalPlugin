@@ -19,6 +19,12 @@ export class AuthUserResponse implements AuthUser {
 
   @ApiProperty({ type: String, format: 'date-time' })
   createdAt!: string;
+
+  @ApiProperty({
+    enum: ['CUSTOMER', 'ADMIN'],
+    description: '`ADMIN` : accès au back-office (/admin), après validation de la 2FA.',
+  })
+  role!: 'CUSTOMER' | 'ADMIN';
 }
 
 export class SessionApiResponse implements SessionResponse {

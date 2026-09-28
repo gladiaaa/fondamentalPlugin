@@ -25,6 +25,8 @@ describe('Back-office admin (e2e)', () => {
   });
 
   afterAll(async () => {
+    // Le journal (`admin_actions`) empêcherait les autres fichiers de tests de supprimer les comptes admin.
+    await prisma.adminAction.deleteMany();
     await app.close();
   });
 

@@ -17,4 +17,8 @@ export const MESSAGES = {
   licenseNoOrder: "Cette licence n'est pas liée à une commande : impossible de la recréer.",
   mailUnavailable: 'Envoi des e-mails momentanément indisponible. Réessayez plus tard.',
   noLicenseYet: "Cette commande n'a pas encore de licence.",
+  productNotFound: 'Produit introuvable.',
+  userNotFound: 'Compte introuvable.',
+  cannotModifySelf: 'Vous ne pouvez ni bloquer votre propre compte ni changer votre propre rôle.',
+  releaseNotFound: 'Version introuvable.',
 } as const;

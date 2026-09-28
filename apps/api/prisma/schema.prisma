@@ -49,6 +49,8 @@ model User {
   totpSecret String? @map("totp_secret")
   /// Posé au premier code validé après `/admin/2fa/setup`. Sans lui, aucune route admin n'est accessible.
   totpEnabledAt DateTime? @map("totp_enabled_at")
+  /// Posé par un admin (#105) : connexion refusée et sessions fermées tant qu'il est renseigné.
+  blockedAt DateTime? @map("blocked_at")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -247,6 +249,8 @@ model Release {
   channel ReleaseChannel @default(RELEASE)
   changelog String @default("")
   releasedAt DateTime @default(now()) @map("released_at")
+  /// Posé par un admin (#105) : la version disparaît de la page publique et ne se télécharge plus.
+  hiddenAt DateTime? @map("hidden_at")
 
   files ReleaseFile[]
 

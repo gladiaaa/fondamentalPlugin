@@ -48,7 +48,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `support` | `POST /api/support` : formulaire de contact, e-mail transmis à l'équipe (`SUPPORT_EMAIL`, à confirmer) | fait (#81) |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |
-| `admin` | Back-office : 2FA (TOTP) obligatoire, commandes (recherche, détail, remboursement, renvoi d'e-mail), licences (statut, révocation, recréation), produits (voir/modifier prix, description, disponibilité). Toutes les actions sont journalisées (`admin_actions`). Hors `openapi.json` public | fait pour commandes/licences/produits (#32) ; **restent à faire** : versions (`GET`/`PATCH /api/admin/releases`), le front du back-office (issue à part) |
+| `admin` | Back-office : 2FA (TOTP) obligatoire, commandes (recherche, détail, remboursement, renvoi d'e-mail), licences (statut, révocation, recréation), produits (liste, prix, description, disponibilité), utilisateurs (recherche, détail, blocage, rôle), versions publiées (masquer, canal, changelog), tableau de bord (`/admin/stats`) et journal (`/admin/actions`). Toutes les actions sont journalisées (`admin_actions`). Hors `openapi.json` public | API faite (#32, #105) ; pages `/admin` : #106 |
 
 Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées validées strictement (`whitelist` + `forbidNonWhitelisted`), aucune entité de base renvoyée telle quelle, aucun secret dans les logs, une route protégée = un test « accès refusé », chaque route documentée dans `apps/api/openapi.json`.
 
@@ -56,7 +56,7 @@ Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées valid�
 
 | Table | Contenu |
 |---|---|
-| `users` | Adresse (unique), date de confirmation, empreinte argon2id du mot de passe (vide pour un compte OAuth), compteur d'échecs et blocage, rôle (`customer`/`admin`, attribué à la main en base), secret TOTP et date d'activation de la 2FA |
+| `users` | Adresse (unique), date de confirmation, empreinte argon2id du mot de passe (vide pour un compte OAuth), compteur d'échecs et blocage, rôle (`customer`/`admin` ; le premier admin en base, les suivants depuis le panel), date de blocage (#105), secret TOTP et date d'activation de la 2FA |
 | `sessions` | Jeton **haché**, jeton anti-CSRF, expiration (30 jours) : révocable ; date de validation de la 2FA pour cette session (`admin`, #32) |
 | `email_tokens` | Liens de confirmation et de réinitialisation : jeton **haché**, usage unique, expiration |
 | `products` | Les plugins : slug, description, prérequis, prix (nul tant que non fixé), nom côté serveur de licences |
