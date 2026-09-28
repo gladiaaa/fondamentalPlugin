@@ -34,6 +34,8 @@ En cas de retour automatique à la version précédente, **les migrations déjà
 ├── deploy.sh              # copie de deploy/deploy.sh
 ├── backup.sh              # copie de deploy/backup.sh (sauvegarde des bases, lancée par cron)
 ├── restore-test.sh        # copie de deploy/restore-test.sh (vérifie une sauvegarde)
+├── offsite.sh             # copie de deploy/offsite.sh (copie chiffrée hors du VPS, lancée par cron)
+├── offsite/               # clé publique GPG, clé de déploiement et dépôt local des copies (root, 700)
 ├── dev/
 │   ├── compose.yml        # copie de deploy/compose.yml
 │   ├── .env               # APP_ENV=dev, HOST_PORT=3101, API_PORT=4101
@@ -47,7 +49,7 @@ En cas de retour automatique à la version précédente, **les migrations déjà
 
 Données de la base : volumes Docker `fondamentalplugin-db-dev` et `fondamentalplugin-db-prod`. Jars publiés par la CI des plugins : volumes `fondamentalplugin-releases-dev` et `fondamentalplugin-releases-prod` (pas encore dans les sauvegardes : ils se republient depuis les tags des plugins). Sauvegardes : `/var/backups/fondamentalplugin/<env>/`.
 
-⚠️ `deploy.sh`, `backup.sh`, `restore-test.sh`, `compose.yml` et `cron` ne sont **pas** copiés automatiquement : après une modification dans le dépôt, il faut les recopier sur le VPS (voir ci-dessous).
+⚠️ `deploy.sh`, `backup.sh`, `restore-test.sh`, `offsite.sh`, `compose.yml` et `cron` ne sont **pas** copiés automatiquement : après une modification dans le dépôt, il faut les recopier sur le VPS (voir ci-dessous).
 
 ## Mise en place de l'API (une seule fois par environnement)
 
@@ -61,6 +63,7 @@ SRC=https://raw.githubusercontent.com/gladiaaa/fondamentalPlugin/dev/deploy
 curl -fsSL "$SRC/deploy.sh"       -o deploy.sh.new       && install -m 755 deploy.sh.new deploy.sh             && rm deploy.sh.new
 curl -fsSL "$SRC/backup.sh"       -o backup.sh           && chmod 755 backup.sh
 curl -fsSL "$SRC/restore-test.sh" -o restore-test.sh     && chmod 755 restore-test.sh
+curl -fsSL "$SRC/offsite.sh"      -o offsite.sh          && chmod 755 offsite.sh
 curl -fsSL "$SRC/cron"            -o /etc/cron.d/fondamentalplugin && chmod 644 /etc/cron.d/fondamentalplugin
 ```
 
@@ -117,7 +120,35 @@ Mêmes étapes 2 et 3 avec `prod`, `API_PORT=4100` et `api-prod.conf` (bloc `ser
 
 - Chaque nuit à 3 h 30 (`/etc/cron.d/fondamentalplugin`), `backup.sh` sauvegarde les bases prod et dev dans `/var/backups/fondamentalplugin/<env>/` (lisibles par root seul), relit chaque fichier et efface ceux de plus de 14 jours. Journal : `/var/log/fondamentalplugin-backup.log`.
 - **Une fois par mois**, vérifier qu'une sauvegarde se restaure : `restore-test.sh` (dernière sauvegarde de prod par défaut) la charge dans une base jetable et affiche le contenu des tables, sans toucher aux bases en service.
-- ⚠️ Les sauvegardes restent **sur le VPS** : une panne du serveur les emporterait avec la base. La copie externe est suivie dans une issue dédiée.
+- À 3 h 50, `offsite.sh` **chiffre** la dernière sauvegarde de chaque environnement (GPG, clé « Sauvegardes Fondamental » : la clé privée n'est pas sur le VPS, rien ne peut y déchiffrer) et la pousse dans le dépôt privé [`gladiaaa/fondamentalplugin-backups`](https://github.com/gladiaaa/fondamentalplugin-backups) (`<env>/<env>-AAAAMMJJ-HHMM.dump.gpg`). Les 30 dernières restent dans l'arborescence, l'historique Git garde toutes les autres. Pas d'alerte en cas d'échec pour l'instant (#33) : vérifier de temps en temps la date du dernier commit du dépôt.
+
+### Copie hors du VPS : installation (une seule fois)
+
+Même clé GPG que les sauvegardes du serveur de licences (`/opt/license-backup`), clé de déploiement propre à ce dépôt :
+
+```bash
+O=/opt/fondamentalplugin/offsite
+install -d -m 700 $O $O/gnupg
+gpg --homedir /opt/license-backup/gnupg --export "$(cat /opt/license-backup/recipient)" | gpg --homedir $O/gnupg --batch --import
+cp /opt/license-backup/recipient $O/recipient
+ssh-keygen -q -t ed25519 -N "" -C "fondamentalplugin-backup@letterbot" -f $O/deploy_key
+git init -q -b main $O/repo && git -C $O/repo remote add origin git@github.com:gladiaaa/fondamentalplugin-backups.git
+git -C $O/repo config user.name "Sauvegarde VPS" && git -C $O/repo config user.email "backup@fondamentalplugin.fr"
+cat $O/deploy_key.pub   # à ajouter au dépôt : Settings → Deploy keys, « Allow write access »
+```
+
+Puis recopier `offsite.sh` et `cron` (§ 1) et lancer une première copie : `/opt/fondamentalplugin/offsite.sh`.
+
+### Tester une restauration depuis la copie externe
+
+Une fois par mois, depuis le PC qui a la clé privée (Git Bash) : récupérer la dernière copie de prod, la déchiffrer et la restaurer dans la base jetable de `restore-test.sh` sur le VPS.
+
+```bash
+gh repo clone gladiaaa/fondamentalplugin-backups /tmp/fp-backups -- -q --depth 1
+F=$(ls -1 /tmp/fp-backups/prod/*.gpg | sort | tail -1)
+gpg -d "$F" | ssh -i ~/.ssh/id_ed25519_letterbot root@46.202.128.132 'T=$(mktemp) && cat > $T && /opt/fondamentalplugin/restore-test.sh $T; rm -f $T'
+rm -rf /tmp/fp-backups
+```
 
 ### Restaurer une base (incident)
 
