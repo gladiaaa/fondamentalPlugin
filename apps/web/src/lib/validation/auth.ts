@@ -1,17 +1,9 @@
 import { z } from "zod";
+import { emailRule as email, passwordRule as password } from "./shared";
 
-// Règles de docs/api-front.md §4 (« Règles utiles pour les formulaires ») :
-// e-mail 254 caractères max, mot de passe 10 à 128. L'API met déjà l'e-mail
-// en minuscules et retire les espaces ; on le fait aussi ici pour que le
-// champ affiche la valeur telle qu'elle sera envoyée.
-const email = z.email("Adresse e-mail invalide.").max(254).trim().toLowerCase();
-
-// À la connexion, aucune règle de mot de passe n'est révélée (§4) : juste
-// « requis ». Aux autres formulaires, la vraie contrainte de l'API.
-const password = z
-  .string()
-  .min(10, "10 caractères minimum.")
-  .max(128, "128 caractères maximum.");
+// À la connexion, aucune règle de mot de passe n'est révélée (docs/api-front.md
+// §4) : juste « requis ». Aux autres formulaires, la vraie contrainte de l'API
+// (voir lib/validation/shared.ts).
 
 export const loginSchema = z.object({
   email,
