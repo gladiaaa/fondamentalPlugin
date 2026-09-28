@@ -44,6 +44,9 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    # Jars publiés par la CI des plugins (RELEASES_DIR) : seul dossier accessible en écriture.
+    volumes:
+      - releases:/app/apps/api/data/releases
     security_opt:
       - no-new-privileges:true
     mem_limit: 512m
@@ -93,3 +96,5 @@ networks:
 volumes:
   db-data:
     name: fondamentalplugin-db-${APP_ENV:?APP_ENV manquant}
+  releases:
+    name: fondamentalplugin-releases-${APP_ENV:?APP_ENV manquant}

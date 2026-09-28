@@ -45,7 +45,7 @@ En cas de retour automatique à la version précédente, **les migrations déjà
 └── prod/                  # idem, APP_ENV=prod, HOST_PORT=3100, API_PORT=4100
 ```
 
-Données de la base : volumes Docker `fondamentalplugin-db-dev` et `fondamentalplugin-db-prod`. Sauvegardes : `/var/backups/fondamentalplugin/<env>/`.
+Données de la base : volumes Docker `fondamentalplugin-db-dev` et `fondamentalplugin-db-prod`. Jars publiés par la CI des plugins : volumes `fondamentalplugin-releases-dev` et `fondamentalplugin-releases-prod` (pas encore dans les sauvegardes : ils se republient depuis les tags des plugins). Sauvegardes : `/var/backups/fondamentalplugin/<env>/`.
 
 ⚠️ `deploy.sh`, `backup.sh`, `restore-test.sh`, `compose.yml` et `cron` ne sont **pas** copiés automatiquement : après une modification dans le dépôt, il faut les recopier sur le VPS (voir ci-dessous).
 
