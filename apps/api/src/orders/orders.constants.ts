@@ -9,4 +9,5 @@ export const MESSAGES = {
   paymentUnavailable: 'Paiement momentanément indisponible.',
   productNotPurchasable: "Ce produit n'est pas disponible à l'achat.",
   orderNotFound: 'Commande introuvable.',
+  orderNotPaid: "Cette commande n'a pas encore été payée.",
 } as const;

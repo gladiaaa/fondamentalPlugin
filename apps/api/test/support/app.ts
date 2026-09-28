@@ -96,6 +96,8 @@ export function newBrowser(app: INestApplication) {
     get: (url: string, options: RequestOptions = {}) => prepare(agent.get(url), options),
     post: (url: string, body: object = {}, options: RequestOptions = {}) =>
       prepare(agent.post(url), options).send(body),
+    patch: (url: string, body: object = {}, options: RequestOptions = {}) =>
+      prepare(agent.patch(url), options).send(body),
     delete: (url: string, body: object = {}, options: RequestOptions = {}) =>
       prepare(agent.delete(url), options).send(body),
   };

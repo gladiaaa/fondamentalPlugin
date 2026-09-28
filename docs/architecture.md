@@ -48,7 +48,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `support` | `POST /api/support` : formulaire de contact, e-mail transmis à l'équipe (`SUPPORT_EMAIL`, à confirmer) | fait (#81) |
 | `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |
-| back-office | Commandes, licences, produits, versions | #32 |
+| `admin` | Back-office : 2FA (TOTP) obligatoire, commandes (recherche, détail, remboursement, renvoi d'e-mail), licences (statut, révocation, recréation), produits (voir/modifier prix, description, disponibilité). Toutes les actions sont journalisées (`admin_actions`). Hors `openapi.json` public | fait pour commandes/licences/produits (#32) ; **restent à faire** : versions (`GET`/`PATCH /api/admin/releases`), le front du back-office (issue à part) |
 
 Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées validées strictement (`whitelist` + `forbidNonWhitelisted`), aucune entité de base renvoyée telle quelle, aucun secret dans les logs, une route protégée = un test « accès refusé », chaque route documentée dans `apps/api/openapi.json`.
 
@@ -56,14 +56,15 @@ Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées valid�
 
 | Table | Contenu |
 |---|---|
-| `users` | Adresse (unique), date de confirmation, empreinte argon2id du mot de passe (vide pour un compte OAuth), compteur d'échecs et blocage |
-| `sessions` | Jeton **haché**, jeton anti-CSRF, expiration (30 jours) : révocable |
+| `users` | Adresse (unique), date de confirmation, empreinte argon2id du mot de passe (vide pour un compte OAuth), compteur d'échecs et blocage, rôle (`customer`/`admin`, attribué à la main en base), secret TOTP et date d'activation de la 2FA |
+| `sessions` | Jeton **haché**, jeton anti-CSRF, expiration (30 jours) : révocable ; date de validation de la 2FA pour cette session (`admin`, #32) |
 | `email_tokens` | Liens de confirmation et de réinitialisation : jeton **haché**, usage unique, expiration |
 | `products` | Les plugins : slug, description, prérequis, prix (nul tant que non fixé), nom côté serveur de licences |
 | `minecraft_versions` | Versions de Minecraft, avec un rang de tri calculé depuis le numéro |
 | `releases`, `release_files` | Versions d'un plugin et leurs jars (édition, taille, SHA-256, versions de Minecraft couvertes, compteur de téléchargements) |
 | `licenses` | Clés rattachées à un compte (une seule ligne par clé, jamais deux comptes) ; `order_id` présent pour une clé créée par un achat |
 | `orders` | Commandes Stripe : statut (`pending` → `paid` → `licensed`/`refunded`), montant et devise au moment de l'achat |
+| `admin_actions` | Journal des actions sensibles du back-office (qui, quoi, quand) : remboursement, révocation, changement de prix… (#32) |
 | `saved_configs`, `oauth_accounts` | Configurations enregistrées (#30) et comptes tiers (#18) (à venir) |
 
 Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiquement au déploiement. Elles doivent rester **compatibles avec la version précédente** de l'API (retour arrière automatique). Le catalogue est semé **dans une migration** : l'image de déploiement n'exécute que les migrations.

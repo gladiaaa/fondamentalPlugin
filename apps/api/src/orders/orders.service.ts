@@ -141,6 +141,24 @@ export class OrdersService {
     await this.prisma.order.update({ where: { id: order.id }, data: { status: 'REFUNDED' } });
   }
 
+  /**
+   * Rembourse une commande depuis le back-office (#32) : rembourse chez Stripe, puis applique
+   * immédiatement l'effet (révocation, commande → `refunded`) au lieu d'attendre le webhook — un admin
+   * veut un résultat tout de suite. Si le webhook `charge.refunded` arrive quand même ensuite,
+   * `handleChargeRefunded` le retrouve déjà `refunded` et ne fait rien (idempotent).
+   */
+  async refund(orderId: string): Promise<void> {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: MESSAGES.orderNotFound });
+    if (order.status === 'REFUNDED') return; // déjà remboursée
+    if (!order.stripePaymentIntentId) {
+      throw new BadRequestException({ code: 'ORDER_NOT_PAID', message: MESSAGES.orderNotPaid });
+    }
+    if (!this.stripe.isConfigured) this.paymentUnavailable();
+    await this.stripe.refund(order.stripePaymentIntentId);
+    await this.handleChargeRefunded(order.stripePaymentIntentId);
+  }
+
   private paymentUnavailable(): never {
     throw new ServiceUnavailableException({ code: 'PAYMENT_UNAVAILABLE', message: MESSAGES.paymentUnavailable });
   }

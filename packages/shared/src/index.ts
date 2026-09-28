@@ -56,7 +56,10 @@ export interface ApiError {
     | "LICENSE_NOT_FOUND"
     | "PRODUCT_NOT_PURCHASABLE"
     | "PAYMENT_UNAVAILABLE"
-    | "ORDER_NOT_FOUND";
+    | "ORDER_NOT_FOUND"
+    | "ORDER_NOT_PAID"
+    | "TWO_FACTOR_REQUIRED"
+    | "TOTP_INVALID_CODE";
 }
 
 /** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
@@ -218,4 +221,58 @@ export interface OrderResponse {
 /** Réponse de `POST /api/checkout` : l'adresse à laquelle rediriger le client (Stripe Checkout). */
 export interface CheckoutResponse {
   url: string;
+}
+
+// ─── Back-office (admin, #32) ────────────────────────────────────
+
+/** Réponse de `POST /api/admin/2fa/setup` : à afficher en QR code (`otpauthUrl`) ou en saisie manuelle (`secret`). */
+export interface TwoFactorSetupResponse {
+  secret: string;
+  otpauthUrl: string;
+}
+
+/** Une commande dans `GET /api/admin/orders`. */
+export interface AdminOrderSummary {
+  id: string;
+  status: OrderStatus;
+  productSlug: string;
+  userEmail: string;
+  amountCents: number;
+  currency: string;
+  createdAt: string;
+}
+
+/** `GET /api/admin/orders/:id` : le détail d'une commande. */
+export interface AdminOrderDetail extends AdminOrderSummary {
+  userId: string;
+  stripeCheckoutSessionId: string;
+  stripePaymentIntentId: string | null;
+  licenseKey: string | null;
+}
+
+/** `GET /api/admin/licenses/:key` : vue admin, sans filtre par compte (contrairement à `/me/licenses/:key`). */
+export interface AdminLicenseResponse {
+  key: string;
+  edition: string;
+  revoked: boolean;
+  activations: LicenseActivation[];
+  /** Compte auquel la clé est rattachée dans notre base, s'il y en a un. */
+  ownerUserId: string | null;
+  claimedAt: string | null;
+}
+
+/** `POST /api/admin/licenses/:key/recreate` : la nouvelle clé qui remplace l'ancienne (révoquée). */
+export interface RecreatedLicenseResponse {
+  key: string;
+}
+
+/** `GET`/`PATCH /api/admin/products/:slug` : les champs modifiables depuis le back-office. */
+export interface AdminProductResponse {
+  slug: string;
+  name: string;
+  description: string;
+  priceCents: number | null;
+  currency: string;
+  stripePriceId: string | null;
+  active: boolean;
 }

@@ -7,6 +7,8 @@ export interface AuthContext {
   user: User;
   sessionId: string;
   csrfToken: string;
+  /** Posé par `POST /admin/2fa/verify` pour **cette** session. `null` : 2FA pas (encore) validée ici (#32). */
+  twoFactorVerifiedAt: Date | null;
 }
 export type AuthenticatedRequest = Request & { auth: AuthContext };
 

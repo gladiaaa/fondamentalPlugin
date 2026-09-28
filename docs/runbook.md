@@ -120,11 +120,21 @@ Stripe réessaie tout seul plusieurs jours quand l'API répond `500` : ne rejoue
 
 **Pas encore utilisable en ligne** : `POST /api/checkout` répond `503` (`PAYMENT_UNAVAILABLE`) tant que `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` ne sont pas configurées et que les produits n'ont pas de `stripe_price_id` (voir #23/#24).
 
-## 6. Révoquer ou recréer une licence à la main
+## 6. Révoquer, recréer une licence ou rembourser une commande
 
-**Quand** : un remboursement est manqué par le webhook (`charge.refunded` non reçu), clé fuitée, litige. D'ordinaire, un remboursement Stripe révoque la licence et passe la commande en « refunded » tout seul (voir section 5).
+**Quand** : un remboursement est manqué par le webhook (`charge.refunded` non reçu), clé fuitée, litige, ou tout simplement un remboursement à faire depuis le support (Discord, e-mail).
 
-Les appels manuels passent par l'API d'administration du serveur de licences, via `LicenseServerClient` (`get`/`create`/`revoke`/`releaseActivation`, #22) ou directement :
+**Passer par le back-office** (#32, préféré) : compte `admin` (attribué à la main, voir section 9) avec la 2FA validée pour la session.
+
+| Action | Route |
+|---|---|
+| Rembourser une commande (Stripe + révocation + commande → `refunded`, journalisé) | `POST /api/admin/orders/:id/refund` |
+| Renvoyer l'e-mail avec la clé | `POST /api/admin/orders/:id/resend-email` |
+| Statut d'une licence (n'importe quel compte) | `GET /api/admin/licenses/:key` |
+| Révoquer sans remboursement (clé fuitée, litige) | `POST /api/admin/licenses/:key/revoke` |
+| Recréer une clé pour la même commande (ancienne révoquée) | `POST /api/admin/licenses/:key/recreate` |
+
+**Si l'API elle-même est en panne**, appel direct au serveur de licences (sans passer par l'admin ni journaliser) :
 
 ```bash
 # Depuis le VPS (les valeurs sont dans api.env : ne jamais les coller dans une issue ou un message)
@@ -132,7 +142,9 @@ curl -sS -X POST "$LICENSE_SERVER_URL/api/v1/admin/licenses/<CLE>/revoke" \
   -H "Authorization: Bearer $LICENSE_ADMIN_TOKEN"
 ```
 
-Ensuite, passer la commande en « refunded » en base (le back-office admin, #32, remplacera cette étape manuelle). Libérer une installation : `DELETE …/licenses/<CLE>/activations/<installationId>`.
+Il faut alors mettre à jour la commande (`orders.status`) et la licence en base à la main. Libérer une installation : `DELETE …/licenses/<CLE>/activations/<installationId>`.
+
+**Pas encore fait** : gérer les versions publiées (masquer un fichier) depuis le back-office — encore manuel en base pour l'instant.
 
 ## 7. Supprimer un compte à la demande (RGPD)
 
@@ -143,9 +155,25 @@ docker exec -it fondamentalplugin-db-prod psql -U fondamental -d fondamental \
   -c "DELETE FROM users WHERE email = 'client@exemple.fr'"   # supprime aussi sessions et liens (cascade)
 ```
 
-Quand les commandes existeront (#23), elles devront être **anonymisées et conservées** (obligation comptable), pas supprimées : cette procédure sera alors mise à jour.
+⚠️ **Ne fonctionne plus si le compte a passé au moins une commande** (`orders.user_id` est `ON DELETE RESTRICT`, volontairement : une commande ne doit jamais disparaître, obligation comptable) : la suppression échoue avec une erreur de contrainte. Ce cas n'est **pas encore géré** : il faudra anonymiser les commandes (retirer `user_id`, garder le reste) avant de pouvoir supprimer le compte. À faire avant que de vrais achats existent.
 
-## 8. Après l'incident
+## 8. Donner ou retirer le rôle admin (back-office, #32)
+
+**Aucune route ne fait ça** (choix volontaire, #32) : uniquement en base, à la main.
+
+```bash
+docker exec -it fondamentalplugin-db-<env> psql -U fondamental -d fondamental \
+  -c "UPDATE users SET role = 'ADMIN' WHERE email = 'personne@exemple.fr'"
+```
+
+Ensuite, la personne doit se connecter normalement puis activer la 2FA (obligatoire, aucune route admin n'est accessible sans elle) :
+
+1. `POST /api/admin/2fa/setup` (avec sa session) : renvoie `{ secret, otpauthUrl }`. Scanner `otpauthUrl` avec une application d'authentification (Aegis, Google Authenticator, 1Password…), ou entrer `secret` à la main.
+2. `POST /api/admin/2fa/verify` `{ code }` avec le code à 6 chiffres affiché par l'application : valide la 2FA pour la session courante.
+
+La 2FA se revalide à **chaque nouvelle session** (reconnexion) : ce n'est pas une case cochée une fois pour toutes. Pour retirer le rôle, remettre `role = 'CUSTOMER'` (la 2FA déjà configurée n'est pas effacée, mais devient sans effet).
+
+## 9. Après l'incident
 
 - Noter dans une issue : ce qui s'est passé, la cause, ce qui a été fait.
 - Si une procédure de ce document s'est révélée fausse ou incomplète, **la corriger dans la même journée**.

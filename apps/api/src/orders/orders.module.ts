@@ -10,5 +10,7 @@ import { StripeWebhookController } from './stripe-webhook.controller.js';
   imports: [AuthModule, LicensesModule],
   controllers: [OrdersController, StripeWebhookController],
   providers: [OrdersService, StripeClient],
+  // `OrdersService` : réutilisé par le back-office (#32) pour le remboursement admin.
+  exports: [OrdersService],
 })
 export class OrdersModule {}
