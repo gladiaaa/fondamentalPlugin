@@ -10,6 +10,8 @@ export const MESSAGES = {
   twoFactorRequired: 'Validez votre code à deux facteurs pour continuer (POST /admin/2fa/verify).',
   totpSetupRequired: "Aucune configuration 2FA en attente : appelez d'abord POST /admin/2fa/setup.",
   totpInvalidCode: 'Code invalide.',
+  totpAlreadyEnabled:
+    "La double authentification est déjà activée : saisissez d'abord un code de votre application pour la reconfigurer.",
   orderNotFound: 'Commande introuvable.',
   orderNotPaid: "Cette commande n'a pas encore été payée.",
   licenseNotFound: 'Licence introuvable.',

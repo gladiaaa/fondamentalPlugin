@@ -193,7 +193,8 @@ Back-office, réservé au rôle `ADMIN` **avec la 2FA validée pour la session**
 
 | Route | Corps / paramètres | Réponse |
 |---|---|---|
-| `POST /admin/2fa/setup` | – | `201 { secret, otpauthUrl }` : QR code (`otpauthUrl`) ou saisie manuelle. Rôle admin seul exigé |
+| `GET /admin/2fa` | – | `{ enabled, verifiedForSession }` : mise en place à faire, ou code à saisir pour cette session. Rôle admin seul exigé |
+| `POST /admin/2fa/setup` | – | `201 { secret, otpauthUrl }` : QR code (`otpauthUrl`) ou saisie manuelle. Rôle admin seul exigé. **2FA déjà activée : seulement depuis une session où elle a été validée** (`403 TWO_FACTOR_ALREADY_ENABLED` sinon : un mot de passe volé ne suffit pas à remplacer le secret) |
 | `POST /admin/2fa/verify` | `{ code }` | `204` ; à refaire à chaque nouvelle session. `400 TOTP_INVALID_CODE` |
 | `GET /admin/stats` | – | `AdminStatsResponse` : chiffre d'affaires (total, 30 jours), commandes par statut, ventes et téléchargements par plugin, ventes par jour sur 30 jours, comptes, 10 dernières actions |
 | `GET /admin/actions` | `?targetType=&targetId=&limit=` (1–200, défaut 50) | `AdminActionEntry[]` |

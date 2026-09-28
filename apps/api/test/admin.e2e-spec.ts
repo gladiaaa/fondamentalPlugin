@@ -150,6 +150,46 @@ describe('Back-office admin (e2e)', () => {
     });
   });
 
+  describe('2FA : état et reconfiguration (#106)', () => {
+    it('GET /admin/2fa : à mettre en place, puis activée et validée pour la session', async () => {
+      const { b, csrf, userId } = await loggedInUser(ADMIN_EMAIL);
+      await prisma.user.update({ where: { id: userId }, data: { role: 'ADMIN' } });
+      expect((await b.get('/api/admin/2fa').expect(200)).body).toEqual({ enabled: false, verifiedForSession: false });
+
+      const setup = await b.post('/api/admin/2fa/setup', {}, { csrf }).expect(201);
+      await b.post('/api/admin/2fa/verify', { code: currentTotpCode(setup.body.secret as string) }, { csrf }).expect(204);
+      expect((await b.get('/api/admin/2fa').expect(200)).body).toEqual({ enabled: true, verifiedForSession: true });
+
+      // Nouvelle session : activée, mais pas encore validée.
+      const b2 = newBrowser(app);
+      await b2.post('/api/auth/login', { email: ADMIN_EMAIL, password: STRONG_PASSWORD }).expect(200);
+      expect((await b2.get('/api/admin/2fa').expect(200)).body).toEqual({ enabled: true, verifiedForSession: false });
+    });
+
+    it('GET /admin/2fa : refusé à un client', async () => {
+      const { b } = await loggedInUser(CUSTOMER_EMAIL);
+      await b.get('/api/admin/2fa').expect(403);
+    });
+
+    it('2FA activée : setup refusé sans code validé dans la session (un mot de passe volé ne remplace pas le secret)', async () => {
+      const admin = await loggedInAdmin();
+      const secretBefore = (await prisma.user.findUniqueOrThrow({ where: { id: admin.userId } })).totpSecret;
+
+      const b2 = newBrowser(app);
+      const login = await b2.post('/api/auth/login', { email: ADMIN_EMAIL, password: STRONG_PASSWORD }).expect(200);
+      const res = await b2.post('/api/admin/2fa/setup', {}, { csrf: login.body.csrfToken }).expect(403);
+      expect(res.body.code).toBe('TWO_FACTOR_ALREADY_ENABLED');
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: admin.userId } })).totpSecret).toBe(secretBefore);
+      await b2.get('/api/admin/orders').expect(403);
+    });
+
+    it('2FA activée et validée dans la session : reconfiguration possible (nouveau secret)', async () => {
+      const admin = await loggedInAdmin();
+      const setup = await admin.b.post('/api/admin/2fa/setup', {}, { csrf: admin.csrf }).expect(201);
+      expect(setup.body.secret).not.toBe(admin.secret);
+    });
+  });
+
   describe('AdminGuard : refusé sans rôle admin ni 2FA (critère de fin de #32)', () => {
     it.each([
       ['sans session', () => newBrowser(app), 401],

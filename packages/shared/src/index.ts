@@ -65,7 +65,8 @@ export interface ApiError {
     | "ACCOUNT_BLOCKED"
     | "CANNOT_MODIFY_SELF"
     | "USER_NOT_FOUND"
-    | "RELEASE_NOT_FOUND";
+    | "RELEASE_NOT_FOUND"
+    | "TWO_FACTOR_ALREADY_ENABLED";
 }
 
 /** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
@@ -235,6 +236,12 @@ export interface CheckoutResponse {
 export interface TwoFactorSetupResponse {
   secret: string;
   otpauthUrl: string;
+}
+
+/** `GET /api/admin/2fa` : mise en place à faire (`enabled: false`) ou code à saisir pour cette session. */
+export interface TwoFactorStatusResponse {
+  enabled: boolean;
+  verifiedForSession: boolean;
 }
 
 /** Une commande dans `GET /api/admin/orders`. */
