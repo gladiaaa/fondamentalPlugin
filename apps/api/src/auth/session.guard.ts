@@ -43,7 +43,12 @@ export class SessionGuard implements CanActivate {
       }
     }
 
-    request.auth = { user: session.user, sessionId: session.id, csrfToken: session.csrfToken };
+    request.auth = {
+      user: session.user,
+      sessionId: session.id,
+      csrfToken: session.csrfToken,
+      twoFactorVerifiedAt: session.twoFactorVerifiedAt,
+    };
     return true;
   }
 }

@@ -1,6 +1,7 @@
 import {
   accountDeletedEmail,
   accountExistsEmail,
+  licenseKeyEmail,
   passwordChangedEmail,
   passwordResetEmail,
   verificationEmail,
@@ -13,6 +14,7 @@ describe('modèles d’e-mails', () => {
     ['passwordResetEmail', (l) => passwordResetEmail('https://x/lien', l)],
     ['accountDeletedEmail', (l) => accountDeletedEmail(l)],
     ['passwordChangedEmail', (l) => passwordChangedEmail(l)],
+    ['licenseKeyEmail', (l) => licenseKeyEmail('FondamentalTag', 'CLE-TEST', l)],
   ];
 
   it.each(cases)('%s : un sujet et un texte non vides dans les deux langues', (_nom, build) => {
@@ -33,5 +35,10 @@ describe('modèles d’e-mails', () => {
   it('verificationEmail : le lien apparaît tel quel, dans les deux langues', () => {
     expect(verificationEmail('https://x/lien-test', 'fr').text).toContain('https://x/lien-test');
     expect(verificationEmail('https://x/lien-test', 'en').text).toContain('https://x/lien-test');
+  });
+
+  it('licenseKeyEmail : la clé apparaît telle quelle, dans les deux langues', () => {
+    expect(licenseKeyEmail('FondamentalTag', 'CLE-TEST-123', 'fr').text).toContain('CLE-TEST-123');
+    expect(licenseKeyEmail('FondamentalTag', 'CLE-TEST-123', 'en').text).toContain('CLE-TEST-123');
   });
 });

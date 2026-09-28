@@ -133,3 +133,32 @@ export function passwordChangedEmail(locale: MailLocale): MailContent {
     ].join('\n'),
   };
 }
+
+/**
+ * Version minimale, en attendant le modèle soigné de #26 : juste la clé, en texte brut. Utilisée par
+ * le renvoi manuel du back-office (#32) ; branchée à la création de la licence quand #26 sera fait.
+ */
+export function licenseKeyEmail(productName: string, licenseKey: string, locale: MailLocale): MailContent {
+  if (locale === 'en') {
+    return {
+      subject: `Your license key for ${productName}`,
+      text: [
+        `Thanks for your purchase! Here is your ${productName} license key:`,
+        '',
+        licenseKey,
+        '',
+        'Paste it into the config.yml of the plugin on your Minecraft server to unlock the premium edition.',
+      ].join('\n'),
+    };
+  }
+  return {
+    subject: `Votre clé de licence pour ${productName}`,
+    text: [
+      `Merci pour votre achat ! Voici votre clé de licence ${productName} :`,
+      '',
+      licenseKey,
+      '',
+      "Collez-la dans le config.yml du plugin sur votre serveur Minecraft pour débloquer l'édition premium.",
+    ].join('\n'),
+  };
+}

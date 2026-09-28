@@ -60,6 +60,12 @@ export class StripeClient {
     });
   }
 
+  /** Rembourse un paiement (back-office, #32). Stripe envoie ensuite `charge.refunded` (webhook, #24). */
+  async refund(paymentIntentId: string): Promise<Stripe.Refund> {
+    if (!this.stripe) throw new Error('Stripe non configuré.');
+    return this.stripe.refunds.create({ payment_intent: paymentIntentId });
+  }
+
   /** @throws StripeWebhookSignatureError si la signature ou le corps ne correspondent pas au secret configuré. */
   constructWebhookEvent(rawBody: Buffer, signature: string): Stripe.Event {
     if (!this.stripe || !this.webhookSecret) throw new Error('Stripe non configuré.');
