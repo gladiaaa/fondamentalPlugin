@@ -14,6 +14,7 @@ import {
   ChevronBasIcon,
   CompteIcon,
   LicenceIcon,
+  ParametresIcon,
   DeconnexionIcon,
 } from "@/components/icons";
 
@@ -99,6 +100,13 @@ export function Header() {
                     <LicenceIcon /> Mes licences
                   </Link>
                 </DropdownMenu.Item>
+                {user?.role === "ADMIN" && (
+                  <DropdownMenu.Item asChild>
+                    <Link href="/admin" className="flex items-center gap-2.5 rounded-field px-3 py-2.5 text-[.9rem] outline-none hover:bg-surface-2 data-[highlighted]:bg-surface-2">
+                      <ParametresIcon /> Administration
+                    </Link>
+                  </DropdownMenu.Item>
+                )}
                 <DropdownMenu.Item
                   onSelect={handleLogout}
                   className="flex items-center gap-2.5 rounded-field px-3 py-2.5 text-[.9rem] outline-none hover:bg-surface-2 data-[highlighted]:bg-surface-2 cursor-pointer"

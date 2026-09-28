@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import type { TwoFactorSetupResponse } from '@fondamental/shared';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import type { TwoFactorSetupResponse, TwoFactorStatusResponse } from '@fondamental/shared';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MESSAGES } from './admin.constants.js';
 import { generateTotpSecret, totpUri, verifyTotp } from './totp.js';
@@ -8,11 +8,22 @@ import { generateTotpSecret, totpUri, verifyTotp } from './totp.js';
 export class AdminTwoFactorService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Ce que le panel doit afficher : mise en place (première fois) ou simple code (chaque session). */
+  async status(userId: string, twoFactorVerifiedAt: Date | null): Promise<TwoFactorStatusResponse> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    return { enabled: Boolean(user.totpEnabledAt), verifiedForSession: Boolean(twoFactorVerifiedAt) };
+  }
+
   /**
    * Génère un nouveau secret (en attente : `totpEnabledAt` ne change qu'au premier code validé).
-   * Rappelable : un nouvel appel remplace simplement le secret en attente.
+   * Rappelable tant que la 2FA n'est pas activée. Une fois activée, seulement depuis une session où elle
+   * a été validée : sinon un mot de passe volé suffirait à remplacer le secret, donc à contourner la 2FA.
    */
-  async setup(userId: string, email: string): Promise<TwoFactorSetupResponse> {
+  async setup(userId: string, email: string, twoFactorVerifiedAt: Date | null): Promise<TwoFactorSetupResponse> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.totpEnabledAt && !twoFactorVerifiedAt) {
+      throw new ForbiddenException({ code: 'TWO_FACTOR_ALREADY_ENABLED', message: MESSAGES.totpAlreadyEnabled });
+    }
     const secret = generateTotpSecret();
     await this.prisma.user.update({ where: { id: userId }, data: { totpSecret: secret } });
     return { secret, otpauthUrl: totpUri(secret, email) };

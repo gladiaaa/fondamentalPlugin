@@ -1,7 +1,7 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import type { TwoFactorSetupResponse } from '@fondamental/shared';
+import type { TwoFactorSetupResponse, TwoFactorStatusResponse } from '@fondamental/shared';
 import { Auth, type AuthContext } from '../auth/auth.decorators.js';
 import { SessionGuard } from '../auth/session.guard.js';
 import { AdminRoleGuard } from './admin-role.guard.js';
@@ -19,9 +19,14 @@ import { THROTTLE } from './admin.constants.js';
 export class AdminTwoFactorController {
   constructor(private readonly twoFactor: AdminTwoFactorService) {}
 
+  @Get()
+  status(@Auth() auth: AuthContext): Promise<TwoFactorStatusResponse> {
+    return this.twoFactor.status(auth.user.id, auth.twoFactorVerifiedAt);
+  }
+
   @Post('setup')
   async setup(@Auth() auth: AuthContext): Promise<TwoFactorSetupResponse> {
-    return this.twoFactor.setup(auth.user.id, auth.user.email);
+    return this.twoFactor.setup(auth.user.id, auth.user.email, auth.twoFactorVerifiedAt);
   }
 
   @Post('verify')
