@@ -137,7 +137,7 @@ Objet `user` : `{ id: string, email: string, createdAt: string (ISO 8601) }`. Il
 
 Le paiement est confirmé par un webhook côté serveur (`/api/stripe/webhook`, jamais appelé par le site) : le site ne déclenche jamais la licence lui-même. Sur `/merci`, **interroger `GET /orders/by-session/:sessionId` toutes les 2 s** tant que `status` n'est pas `LICENSED` (ou `REFUNDED`, en cas de remboursement immédiat). Adresse e-mail confirmée obligatoire pour acheter. Une case de renonciation au droit de rétractation est affichée par Stripe.
 
-⚠️ **Pas encore utilisable en ligne** : `POST /checkout` répond `503 PAYMENT_UNAVAILABLE` tant que les clés Stripe et les prix des produits ne sont pas configurés. Le front peut déjà être branché contre ce contrat, l'achat réel viendra une fois la configuration faite côté back.
+**Utilisable sur dev** (Stripe en mode test, carte `4242 4242 4242 4242`) depuis #101 : bouton `features/checkout/BuyButton`, page `/merci`. **Pas encore en prod** : `POST /checkout` y répond `503 PAYMENT_UNAVAILABLE` tant que les clés Stripe live et les prix ne sont pas configurés.
 
 ### Contact : `/support` (#81)
 

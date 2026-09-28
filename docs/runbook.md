@@ -118,7 +118,9 @@ Effets d'un changement : `RELEASES_TOKEN` : publications refusées tant que les 
 
 Stripe réessaie tout seul plusieurs jours quand l'API répond `500` : ne rejouer à la main qu'après avoir corrigé la cause.
 
-**Pas encore utilisable en ligne** : `POST /api/checkout` répond `503` (`PAYMENT_UNAVAILABLE`) tant que `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` ne sont pas configurées et que les produits n'ont pas de `stripe_price_id` (voir #23/#24).
+**État au 28/09/2026** : en service sur **dev** (Stripe en mode test, compte sandbox, 4 produits à 9,99 € provisoires, webhook de dev avec les 4 événements ci-dessous, prix renseignés dans la base de dev). **Prod** : rien de configuré, `POST /api/checkout` y répond `503` (`PAYMENT_UNAVAILABLE`).
+
+**Serveur de licences de dev** : dev n'utilise **jamais** le serveur de licences de prod. Il parle à une instance de test sur le VPS (`/opt/license-server-test`, service `license-server-test`, base MySQL `licenses_test`, clé de signature Ed25519 propre : une clé de test ne débloque aucun vrai plugin). Elle écoute sur le port 8093, ouvert seulement aux réseaux Docker ; dans `dev/api.env` : `LICENSE_SERVER_URL=http://172.18.0.1:8093` (passerelle du réseau `dev_default`) et son jeton admin. Pour tester un plugin avec une clé de test, il faut la clé publique de cette instance, pas celle de la prod.
 
 **Mettre Stripe en place** (une fois en mode test pour dev, une fois en mode live pour prod) :
 
