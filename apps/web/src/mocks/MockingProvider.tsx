@@ -15,9 +15,11 @@ export function MockingProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_API_MOCKING !== "enabled") return;
-    import("./browser").then(({ worker }) =>
-      worker.start({ onUnhandledRequest: "bypass" }).then(() => setReady(true)),
-    );
+    // React (mode strict, développement) appelle cet effet deux fois : sans
+    // garde-fou, le second `worker.start()` tombe sur un worker déjà démarré
+    // et lève "cannot configure an already enabled network". `startWorker()`
+    // met en cache la même promesse pour tout appel suivant.
+    import("./browser").then(({ startWorker }) => startWorker().then(() => setReady(true)));
   }, []);
 
   if (!ready) return null;
