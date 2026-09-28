@@ -22,6 +22,8 @@ export interface AuthUser {
   email: string;
   /** Date ISO 8601. */
   createdAt: string;
+  /** `ADMIN` : accès au back-office (#106), après la 2FA. */
+  role: "CUSTOMER" | "ADMIN";
 }
 
 /**

@@ -22,7 +22,7 @@ import {
 import { SessionGuard } from './session.guard.js';
 
 function publicUser(user: User): AuthUser {
-  return { id: user.id, email: user.email, createdAt: user.createdAt.toISOString() };
+  return { id: user.id, email: user.email, createdAt: user.createdAt.toISOString(), role: user.role };
 }
 
 @ApiTags('auth')

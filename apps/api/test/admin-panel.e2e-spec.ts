@@ -21,17 +21,26 @@ describe('Panel admin : utilisateurs, versions, tableau de bord (e2e)', () => {
     prisma = app.get(PrismaService);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
-  beforeEach(async () => {
-    mailer.clear();
+  /**
+   * Repart d'une base sans comptes. Aussi appelé à la fin : le journal (`admin_actions`) empêche de supprimer
+   * un admin qu'il cite, et les autres fichiers de tests suppriment les comptes sans le vider.
+   */
+  async function cleanDatabase() {
     await prisma.adminAction.deleteMany();
     await prisma.order.deleteMany();
     await prisma.license.deleteMany();
     await prisma.user.deleteMany();
     await prisma.product.deleteMany({ where: { slug: { startsWith: 'e2e-' } } });
+  }
+
+  afterAll(async () => {
+    await cleanDatabase();
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    mailer.clear();
+    await cleanDatabase();
   });
 
   async function loggedInUser(email: string, password = STRONG_PASSWORD) {

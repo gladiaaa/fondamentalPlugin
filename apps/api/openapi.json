@@ -1779,12 +1779,21 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "ADMIN"
+            ],
+            "description": "`ADMIN` : accès au back-office (/admin), après validation de la 2FA."
           }
         },
         "required": [
           "id",
           "email",
-          "createdAt"
+          "createdAt",
+          "role"
         ]
       },
       "SessionApiResponse": {
