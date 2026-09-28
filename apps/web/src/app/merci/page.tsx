@@ -8,7 +8,9 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
 import { CodeBlock } from "@/components/ui/CodeBlock";
 import { LicenseKey } from "@/features/account/LicenseKey";
-import { getOrderBySession, type OrderStatus } from "@/lib/api/orders";
+import type { OrderResponse } from "@fondamental/shared";
+import { getOrderBySession } from "@/lib/api/orders";
+import { getProduct } from "@/lib/api/products";
 import { RapideIcon } from "@/components/icons";
 
 // docs/api-front.md §7 : interroger toutes les 2 s tant que la licence n'est
@@ -34,8 +36,12 @@ export default function MerciPage() {
 function MerciContent() {
   const searchParams = useSearchParams();
   const [sessionId] = useState(() => searchParams.get("session_id"));
-  const [order, setOrder] = useState<OrderStatus | null>(null);
+  const [order, setOrder] = useState<OrderResponse | null>(null);
+  // Nom affiché du plugin : l'API de commande ne renvoie que son slug.
+  const [productName, setProductName] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
+  // Incrémenté par « Actualiser » : relance l'interrogation après un abandon.
+  const [attempt, setAttempt] = useState(0);
   const startedAt = useRef<number | null>(null);
 
   useEffect(() => {
@@ -48,7 +54,7 @@ function MerciContent() {
         const result = await getOrderBySession(sessionId!);
         if (cancelled) return;
         setOrder(result);
-        if (result.status === "licensed" || result.status === "refunded") return;
+        if (result.status === "LICENSED" || result.status === "REFUNDED") return;
         if (Date.now() - (startedAt.current ?? Date.now()) > GIVE_UP_AFTER_MS) {
           setTimedOut(true);
           return;
@@ -63,7 +69,23 @@ function MerciContent() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, attempt]);
+
+  const productSlug = order?.productSlug;
+  useEffect(() => {
+    if (!productSlug) return;
+    let cancelled = false;
+    getProduct(productSlug)
+      .then((product) => {
+        if (!cancelled && product) setProductName(product.name);
+      })
+      .catch(() => {
+        // Le slug suffit à l'affichage si le catalogue ne répond pas.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productSlug]);
 
   if (!sessionId) {
     return (
@@ -80,7 +102,7 @@ function MerciContent() {
     );
   }
 
-  if (timedOut && (!order || order.status !== "licensed")) {
+  if (timedOut && (!order || order.status !== "LICENSED")) {
     return (
       <section className="px-4 py-[clamp(28px,5vw,56px)] sm:px-8">
         <div className="mx-auto grid max-w-[480px] gap-4 rounded-card-lg border border-line bg-surface p-8 text-center">
@@ -96,7 +118,7 @@ function MerciContent() {
             <Button
               onClick={() => {
                 setTimedOut(false);
-                startedAt.current = Date.now();
+                setAttempt((n) => n + 1);
               }}
             >
               <RapideIcon width={18} height={18} /> Actualiser
@@ -110,14 +132,30 @@ function MerciContent() {
     );
   }
 
-  if (order?.status === "licensed" && order.licenseKey) {
-    const configExample = `# plugins/${order.product.name}/config.yml\nlicense:\n  key: "${order.licenseKey}"`;
+  if (order?.status === "REFUNDED") {
+    return (
+      <section className="px-4 py-[clamp(28px,5vw,56px)] sm:px-8">
+        <div className="mx-auto grid max-w-[480px] gap-4 rounded-card-lg border border-line bg-surface p-8 text-center">
+          <Alert variant="warning" title="Commande remboursée">
+            Cette commande a été remboursée : la licence associée n&apos;est plus valide.
+          </Alert>
+          <Button variant="secondary" asChild>
+            <Link href="/support">Contacter le support</Link>
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  if (order?.status === "LICENSED" && order.licenseKey) {
+    const name = productName ?? order.productSlug;
+    const configExample = `# plugins/${name}/config.yml\nlicense:\n  key: "${order.licenseKey}"`;
     return (
       <section className="px-4 py-[clamp(28px,5vw,56px)] sm:px-8">
         <div className="mx-auto grid max-w-[520px] gap-4 rounded-card-lg border border-line bg-surface p-8">
           <Alert variant="success">Paiement confirmé</Alert>
           <h1 className="font-display text-[1.4rem] font-semibold tracking-[-.03em]">
-            Votre licence {order.product.name} est prête
+            Votre licence {name} est prête
           </h1>
           <div className="grid gap-1.5">
             <small className="font-mono text-[.7rem] uppercase tracking-[.08em] text-muted">Votre clé de licence</small>
@@ -129,13 +167,13 @@ function MerciContent() {
           </div>
           <div className="flex flex-wrap gap-2.5">
             <Button asChild>
-              <Link href={`/plugins/${order.product.slug}`}>Télécharger le plugin</Link>
+              <Link href={`/plugins/${order.productSlug}`}>Télécharger le plugin</Link>
             </Button>
             <Button variant="secondary" disabled>
               Générer mon config.yml (bientôt disponible)
             </Button>
           </div>
-          <p className="text-[.85rem] text-muted">Un e-mail avec votre clé vous a aussi été envoyé.</p>
+          <p className="text-[.85rem] text-muted">Elle reste disponible à tout moment dans « Mes licences ».</p>
         </div>
       </section>
     );

@@ -13,31 +13,9 @@ import { http, HttpResponse } from "msw";
  * contrat assez stable à simuler ; à ajouter avec l'issue correspondante.
  */
 
-// Achat (#23, #24)
-// Compte les appels par session pour simuler la vraie séquence que
-// /merci interroge toutes les 2 s (docs/api-front.md §7) : payé, puis
-// licence prête après quelques tours. Un id qui contient "retard" ne passe
-// jamais à "licensed", pour tester l'état d'attente prolongée.
-const orderPollCounts = new Map<string, number>();
-const checkoutHandlers = [
-  http.post("/api/checkout", () =>
-    HttpResponse.json({ url: "https://checkout.stripe.com/test/mock-session" }),
-  ),
-  http.get("/api/orders/by-session/:sessionId", ({ params }) => {
-    const sessionId = String(params.sessionId);
-    const count = (orderPollCounts.get(sessionId) ?? 0) + 1;
-    orderPollCounts.set(sessionId, count);
-
-    const product = { slug: "bedwars", name: "FondamentalBedwars" };
-    if (sessionId.includes("retard")) {
-      return HttpResponse.json({ status: "paid", product, licenseKey: null });
-    }
-    if (count < 3) {
-      return HttpResponse.json({ status: "paid", product, licenseKey: null });
-    }
-    return HttpResponse.json({ status: "licensed", product, licenseKey: "FBW-7K2Q-M9XD-4LTP" });
-  }),
-];
+// Achat (`POST /checkout`, `GET /orders/by-session/:id`) : livré par #84/#88,
+// plus simulé ici (#99). En local, tester avec les clés Stripe de test et
+// `stripe listen --forward-to localhost:4000/api/stripe/webhook`.
 
 // Détail d'une licence et libération d'installation : toujours « prévues »
 // (#25 complet). `GET /me/licenses` (liste) et `POST /me/licenses/claim`
@@ -66,4 +44,4 @@ const licenseHandlers = [
   ),
 ];
 
-export const handlers = [...checkoutHandlers, ...licenseHandlers];
+export const handlers = [...licenseHandlers];

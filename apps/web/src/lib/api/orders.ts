@@ -1,18 +1,16 @@
+import type { CheckoutResponse, OrderResponse } from "@fondamental/shared";
 import { apiFetch } from "./client";
 
 /**
- * Achat (#23, #24) : route « prévue » (docs/api-front.md §7), simulée par
- * MSW (src/mocks/handlers.ts) tant qu'elle n'est pas livrée. Type local, pas
- * de `@fondamental/shared` : le contrat n'est qu'indicatif, pas encore figé.
+ * Achat (#23, #24, docs/api-front.md §4) : crée la commande et la session
+ * Stripe Checkout. Rediriger ensuite le navigateur vers `url`. Appelée depuis
+ * le navigateur : dépend de la session et du jeton anti-CSRF (§8).
  */
-export interface OrderStatus {
-  status: "pending" | "paid" | "licensed" | "refunded";
-  product: { slug: string; name: string };
-  /** `null` tant que la licence n'est pas encore créée. */
-  licenseKey: string | null;
+export function checkout(productSlug: string, csrfToken: string): Promise<CheckoutResponse> {
+  return apiFetch<CheckoutResponse>("/checkout", { method: "POST", body: { productSlug }, csrfToken });
 }
 
-/** Appelée depuis le navigateur : dépend de la session (docs/api-front.md §8). */
-export function getOrderBySession(sessionId: string): Promise<OrderStatus> {
-  return apiFetch<OrderStatus>(`/orders/by-session/${encodeURIComponent(sessionId)}`);
+/** Statut de la commande, interrogé par /merci jusqu'à `LICENSED` (§4). Dépend de la session. */
+export function getOrderBySession(sessionId: string): Promise<OrderResponse> {
+  return apiFetch<OrderResponse>(`/orders/by-session/${encodeURIComponent(sessionId)}`);
 }

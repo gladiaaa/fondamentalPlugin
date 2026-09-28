@@ -11,6 +11,7 @@ import { Table } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate, formatFileSize, formatPriceCents } from "@/lib/format";
 import { PLUGIN_ICONS } from "@/features/plugins/icons";
+import { BuyButton } from "@/features/checkout/BuyButton";
 import {
   ServeurIcon,
   EclairIcon,
@@ -258,18 +259,11 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
             </div>
 
             {product.purchasable ? (
-              <Button asChild fullWidth size="lg">
-                <Link href="/connexion">
-                  <PanierIcon width={18} height={18} /> Acheter la licence
-                </Link>
-              </Button>
+              <BuyButton productSlug={product.slug} />
             ) : (
               <Button fullWidth size="lg" disabled>
                 <PanierIcon width={18} height={18} /> Achat bientôt disponible
               </Button>
-            )}
-            {product.purchasable && (
-              <p className="text-[.85rem] text-muted">Vous serez invité à vous connecter avant le paiement.</p>
             )}
 
             <Button fullWidth variant="secondary" onClick={() => setTab("dl")}>
