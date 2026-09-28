@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Field, Input } from "@/components/ui/Field";
@@ -15,9 +15,21 @@ import { useSession } from "@/lib/session/SessionContext";
 import { loginSchema, type LoginValues } from "@/lib/validation/auth";
 import { login, resendVerification } from "@/lib/api/auth";
 import { ApiRequestError } from "@/lib/api/client";
+import { safeReturnPath } from "@/lib/return-path";
 
 export default function ConnexionPage() {
+  // `useSearchParams` impose une frontière Suspense (sinon le build échoue sur le rendu statique).
+  return (
+    <Suspense>
+      <ConnexionContent />
+    </Suspense>
+  );
+}
+
+function ConnexionContent() {
   const router = useRouter();
+  // `?retour=/plugins/tag` : revenir sur la fiche après la connexion (achat, #99).
+  const returnPath = safeReturnPath(useSearchParams().get("retour"));
   const { setSession } = useSession();
   const [formError, setFormError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
@@ -35,7 +47,7 @@ export default function ConnexionPage() {
     try {
       const { user, csrfToken } = await login(values.email, values.password);
       setSession(user, csrfToken);
-      router.push("/");
+      router.push(returnPath);
     } catch (error) {
       if (error instanceof ApiRequestError && error.code === "EMAIL_NOT_VERIFIED") {
         setUnverifiedEmail(values.email);

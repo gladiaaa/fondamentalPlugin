@@ -1,3 +1,3 @@
 # `features/checkout`
 
-Achat : `/merci` (interrogation toutes les 2 s de l'état de commande), `/paiement-annule`. Routes prévues (#23, #24), simulées par `src/mocks/handlers.ts`. Le site ne déclenche jamais la licence : c'est le webhook Stripe côté serveur qui le fait.
+Achat : bouton « Acheter la licence » (`BuyButton`, `POST /checkout` puis redirection vers Stripe Checkout), `/merci` (interrogation toutes les 2 s de `GET /orders/by-session/:id` jusqu'à `LICENSED`), `/paiement-annule`. Routes livrées (#23, #24), plus simulées par MSW. Le site ne déclenche jamais la licence : c'est le webhook Stripe côté serveur qui le fait.
