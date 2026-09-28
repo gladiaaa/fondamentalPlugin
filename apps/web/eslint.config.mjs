@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Généré par `npx msw init` : vendored, pas à lint.
     "public/mockServiceWorker.js",
+    // Généré par fumadocs-mdx (`source.config.ts`, wiki, #86) à chaque build.
+    ".source/**",
   ]),
 ]);
 
