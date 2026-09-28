@@ -4,18 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { useSession } from "@/lib/session/SessionContext";
-import { CompteIcon, LicenceIcon, ParametresIcon } from "@/components/icons";
+import { CompteIcon, LicenceIcon, ParametresIcon, GenerateurIcon } from "@/components/icons";
 
 const NAV_ITEMS = [
   { href: "/compte", label: "Mon compte", Icon: CompteIcon, exact: true },
   { href: "/compte/licences", label: "Mes licences", Icon: LicenceIcon, exact: false },
+  { href: "/compte/config", label: "Générateur config", Icon: GenerateurIcon, exact: false },
   { href: "/compte/parametres", label: "Paramètres", Icon: ParametresIcon, exact: false },
 ];
 
 /**
  * Navigation latérale de l'espace client (`.acc-n` de la maquette), réduite
- * aux sections que l'API livre déjà : pas de « Commandes » ni « Générateur
- * config » (aucune route, même indicative, docs/api-front.md §7).
+ * aux sections que l'API livre déjà ou dont la structure est posée en
+ * squelette (#92) : pas de « Commandes », aucune route même indicative
+ * (docs/api-front.md §7).
  */
 export function AccountNav() {
   const pathname = usePathname();

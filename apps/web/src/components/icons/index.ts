@@ -41,6 +41,8 @@ export { default as EclairIcon } from "./interface/eclair.svg";
 export { default as EnveloppeIcon } from "./interface/enveloppe.svg";
 // Nécessaire à la navigation de l'espace client (réglages du compte).
 export { default as ParametresIcon } from "./interface/parametres.svg";
+// Nécessaire à la navigation de l'espace client (générateur de config.yml, #92).
+export { default as GenerateurIcon } from "./interface/generateur.svg";
 
 export { default as BedwarsPastilleIcon } from "./plugins/fondamental-bedwars-pastille.svg";
 export { default as BedwarsContourIcon } from "./plugins/fondamental-bedwars-contour.svg";
