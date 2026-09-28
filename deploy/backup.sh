@@ -8,7 +8,7 @@
 # (format personnalisé de pg_dump, à restaurer avec pg_restore), lisible par root seul.
 # Chaque sauvegarde est relue avant d'être gardée ; au-delà de KEEP_DAYS jours, elle est effacée.
 #
-# ⚠️ Ces sauvegardes restent sur le VPS : une copie externe est prévue dans une issue à part.
+# Copie chiffrée hors du VPS : offsite.sh (#41), lancé par cron juste après.
 set -eu
 
 DEST=${FP_BACKUP_DIR:-/var/backups/fondamentalplugin}
