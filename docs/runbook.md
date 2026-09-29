@@ -111,7 +111,7 @@ Effets d'un changement : `RELEASES_TOKEN` : publications refusées tant que les 
 **Quand** : un paiement a réussi chez Stripe mais le client n'a pas reçu sa clé (webhook en échec, serveur de licences indisponible pendant le paiement).
 
 1. Dashboard Stripe → *Développeurs → Webhooks* → le point de terminaison → l'événement `checkout.session.completed` concerné (ou `checkout.session.async_payment_succeeded` pour un paiement différé : SEPA, virement) → **Renvoyer**.
-2. Le traitement est **idempotent** : `stripe_checkout_session_id` est unique. Si la commande est déjà « licensed », l'API répond `200` sans rien faire ; sinon elle crée la licence et passe la commande en « licensed » (l'e-mail avec la clé n'est pas encore envoyé : suite de #26).
+2. Le traitement est **idempotent** : `stripe_checkout_session_id` est unique. Si la commande est déjà « licensed », l'API répond `200` sans rien faire ; sinon elle crée la licence et passe la commande en « licensed » et envoie l'e-mail avec la clé. Un rejeu d'une commande déjà « licensed » ne renvoie pas l'e-mail : utiliser « Renvoyer l'e-mail » dans `/admin/commandes`.
 3. En dev, avec la CLI : `stripe events resend <evt_…>`.
 
 **Vérifier** : la commande est « licensed » (`GET /api/orders/by-session/:id`) et la clé apparaît dans « mes licences » du client.

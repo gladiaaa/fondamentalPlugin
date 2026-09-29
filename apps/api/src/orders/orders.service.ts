@@ -5,6 +5,9 @@ import type Stripe from 'stripe';
 import type { CheckoutResponse, OrderResponse } from '@fondamental/shared';
 import type { Env } from '../config/env.js';
 import { LicenseServerClient } from '../licenses/license-server-client.js';
+import type { MailLocale } from '../auth/locale.js';
+import { Mailer } from '../mail/mailer.js';
+import { type MailContent, licenseKeyEmail, refundEmail } from '../mail/templates.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MESSAGES } from './orders.constants.js';
 import { StripeClient } from './stripe-client.js';
@@ -15,6 +18,9 @@ const UNIQUE_VIOLATION = 'P2002';
 /** Ne montre jamais la clé en entier dans un log : seuls ses 4 derniers caractères. */
 const redact = (key: string) => `…${key.slice(-4)}`;
 
+/** Langue des e-mails du client (`FR`/`EN` en base). */
+const mailLocale = (locale: string): MailLocale => (locale === 'EN' ? 'en' : 'fr');
+
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
@@ -24,7 +30,26 @@ export class OrdersService {
     private readonly stripe: StripeClient,
     private readonly licenseServer: LicenseServerClient,
     private readonly config: ConfigService<Env, true>,
+    private readonly mailer: Mailer,
   ) {}
+
+  /**
+   * E-mail au client sans jamais bloquer ni faire échouer le paiement (#26) : la licence est déjà créée
+   * et visible dans le compte ; un envoi raté se rattrape depuis le back-office (« Renvoyer l'e-mail »).
+   */
+  private notify(to: string, content: MailContent): void {
+    if (!this.mailer.isConfigured) {
+      this.logger.warn('E-mail non envoyé : envoi non configuré (RESEND_API_KEY)');
+      return;
+    }
+    this.mailer.send({ to, ...content }).catch((error: Error) => {
+      this.logger.error(`Envoi d'e-mail échoué : ${error.message}`);
+    });
+  }
+
+  private link(path: string): string {
+    return `${this.config.get('SITE_URL', { infer: true })}${path}`;
+  }
 
   /** Crée la commande (`pending`) et la session Stripe Checkout, renvoie l'URL vers laquelle rediriger. */
   async checkout(userId: string, userEmail: string, productSlug: string): Promise<CheckoutResponse> {
@@ -101,7 +126,7 @@ export class OrdersService {
       this.logger.warn(`checkout.session.completed sans client_reference_id (session ${session.id})`);
       return;
     }
-    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { product: true } });
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { product: true, user: true } });
     if (!order) {
       this.logger.warn(`checkout.session.completed : commande introuvable (${orderId})`);
       return;
@@ -138,13 +163,17 @@ export class OrdersService {
       return;
     }
     this.logger.log(`Licence créée pour la commande ${order.id}`);
+    this.notify(
+      order.user.email,
+      licenseKeyEmail(order.product.name, created.key, mailLocale(order.user.locale), this.link('/compte/licences')),
+    );
   }
 
   /** `charge.refunded` : révoque la licence puis marque la commande `refunded`. */
   async handleChargeRefunded(paymentIntentId: string): Promise<void> {
     const order = await this.prisma.order.findUnique({
       where: { stripePaymentIntentId: paymentIntentId },
-      include: { license: true },
+      include: { license: true, user: true, product: true },
     });
     if (!order) {
       this.logger.warn(`charge.refunded : commande introuvable (payment_intent ${paymentIntentId})`);
@@ -159,6 +188,7 @@ export class OrdersService {
       await this.prisma.license.delete({ where: { id: order.license.id } });
     }
     await this.prisma.order.update({ where: { id: order.id }, data: { status: 'REFUNDED' } });
+    this.notify(order.user.email, refundEmail(order.product.name, mailLocale(order.user.locale), this.link('/support')));
   }
 
   /**

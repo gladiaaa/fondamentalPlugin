@@ -27,6 +27,13 @@ describe('ResendMailer', () => {
     expect(init.body).not.toContain('re_cle_secrete');
   });
 
+  it('envoie aussi la version HTML quand elle existe', async () => {
+    fetchMock.mockResolvedValue(new Response('{"id":"1"}', { status: 200 }));
+    await mailer.send({ to: 'ada@example.com', subject: 'Bonjour', text: 'Texte', html: '<p>Texte</p>' });
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({ text: 'Texte', html: '<p>Texte</p>' });
+  });
+
   it("en cas d'échec, l'erreur ne contient que le statut (ni l'adresse ni la clé)", async () => {
     fetchMock.mockResolvedValue(new Response('{"message":"adresse ada@example.com invalide"}', { status: 422 }));
     const error = await mailer.send({ to: 'ada@example.com', subject: 's', text: 't' }).catch((e: Error) => e);

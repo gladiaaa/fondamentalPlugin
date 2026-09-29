@@ -173,7 +173,7 @@ function MerciContent() {
               Générer mon config.yml (bientôt disponible)
             </Button>
           </div>
-          <p className="text-[.85rem] text-muted">Elle reste disponible à tout moment dans « Mes licences ».</p>
+          <p className="text-[.85rem] text-muted">Vous la recevez aussi par e-mail, et elle reste disponible à tout moment dans « Mes licences ».</p>
         </div>
       </section>
     );

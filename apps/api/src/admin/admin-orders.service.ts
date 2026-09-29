@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { AdminOrderDetail, AdminOrderSummary } from '@fondamental/shared';
+import type { Env } from '../config/env.js';
 import type { MailLocale } from '../auth/locale.js';
 import { Mailer } from '../mail/mailer.js';
 import { licenseKeyEmail } from '../mail/templates.js';
@@ -35,6 +37,7 @@ export class AdminOrdersService {
     private readonly orders: OrdersService,
     private readonly mailer: Mailer,
     private readonly auditLog: AdminActionLogService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   async search(status?: AdminOrderSummary['status'], email?: string): Promise<AdminOrderSummary[]> {
@@ -81,7 +84,12 @@ export class AdminOrdersService {
     const locale: MailLocale = order.user.locale === 'EN' ? 'en' : 'fr';
     await this.mailer.send({
       to: order.user.email,
-      ...licenseKeyEmail(order.product.name, order.license.licenseKey, locale),
+      ...licenseKeyEmail(
+        order.product.name,
+        order.license.licenseKey,
+        locale,
+        `${this.config.get('SITE_URL', { infer: true })}/compte/licences`,
+      ),
     });
     await this.auditLog.log(adminId, 'order.resend_email', 'order', id);
   }

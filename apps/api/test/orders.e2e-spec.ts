@@ -74,6 +74,30 @@ describe('Commandes : achat Stripe (e2e)', () => {
     return withSignature ? req.set('stripe-signature', withSignature) : req;
   }
 
+  /** Reçus d'achat (e-mail avec la clé, #26) reçus par le client. */
+  const receipts = () => mailer.to(EMAIL).filter((mail) => mail.subject.startsWith('Votre clé de licence'));
+
+  it('checkout.session.completed payé : le client reçoit un seul e-mail avec sa clé, en texte et en HTML', async () => {
+    const { session } = await paidOrder('pi_test_mail');
+    const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+    const license = await prisma.license.findUnique({ where: { orderId: order!.id } });
+
+    const mails = receipts();
+    expect(mails).toHaveLength(1);
+    expect(mails[0]?.subject).toContain('Plugin de test');
+    expect(mails[0]?.text).toContain(license!.licenseKey);
+    expect(mails[0]?.html).toContain(license!.licenseKey);
+    expect(mails[0]?.text).toContain('/compte/licences');
+  });
+
+  it('paiement différé encore unpaid : aucun e-mail de clé', async () => {
+    await createProduct();
+    const { b, csrf } = await loggedInUser();
+    await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+    await sendWebhook(app, checkoutEvent('checkout.session.completed', stripe.lastSession!, 'unpaid', 'pi_test_mail_2')).expect(200);
+    expect(receipts()).toHaveLength(0);
+  });
+
   /** Événement Checkout (`completed`, `async_payment_succeeded`…) pour une session créée par le test. */
   function checkoutEvent(
     type: string,
@@ -253,6 +277,8 @@ describe('Commandes : achat Stripe (e2e)', () => {
 
       const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
       expect(await prisma.license.count({ where: { orderId: order!.id } })).toBe(1);
+      // Un seul reçu, même si Stripe rejoue l'événement (#26).
+      expect(receipts()).toHaveLength(1);
     });
 
     it('checkout.session.completed sans commande correspondante : accusé de réception, ignoré', async () => {
@@ -299,6 +325,9 @@ describe('Commandes : achat Stripe (e2e)', () => {
       expect(licenseServer.revoked).toContain(license?.licenseKey);
       expect(await prisma.license.findUnique({ where: { id: license!.id } })).toBeNull();
       expect((await prisma.order.findUnique({ where: { id: order!.id } }))?.status).toBe('REFUNDED');
+      const refund = mailer.to(EMAIL).filter((mail) => mail.subject.startsWith('Remboursement'));
+      expect(refund).toHaveLength(1);
+      expect(refund[0]?.html).toContain('/support');
     });
 
     it('charge.refunded partiel : la licence reste valide, la commande reste licensed', async () => {

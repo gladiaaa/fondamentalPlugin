@@ -15,7 +15,13 @@ export class ResendMailer extends Mailer {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: this.from, to: [message.to], subject: message.subject, text: message.text }),
+      body: JSON.stringify({
+        from: this.from,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+        ...(message.html ? { html: message.html } : {}),
+      }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
