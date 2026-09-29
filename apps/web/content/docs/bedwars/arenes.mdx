@@ -13,7 +13,7 @@ Une arène, c'est une **carte** (sauvegardée en schematic) et des **positions**
 
 Construisez la carte dans un monde de construction, puis, **debout au centre exact** de la carte :
 
-```
+```mc
 //copy
 //schem save <nom_schematic>
 ```
@@ -22,7 +22,7 @@ Copiez le fichier `<nom_schematic>.schem` (dossier de schematics de FastAsyncWor
 
 ## 2. Créer l'arène
 
-```
+```mc
 /bw create <arène>
 /bw setmode <arène> DUOS
 /bw settemplate <arène> <nom_schematic>
@@ -46,7 +46,7 @@ Modes disponibles :
 
 Téléportez-vous dans l'arène avec `/bw tp <arène>`, puis :
 
-```
+```mc
 /bw setorigin <arène>              # au centre EXACT de la carte, comme pour //copy
 /bw setlobby <arène>               # salle d'attente
 /bw setspawn <arène> RED           # répéter pour chaque équipe
@@ -66,7 +66,7 @@ Pour corriger : `/bw removegenerator <arène> <id>`, `/bw removeteamgenerator <a
 
 ## 4. Vérifier et tester
 
-```
+```mc
 /bw status <arène>
 ```
 
