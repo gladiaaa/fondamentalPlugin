@@ -165,6 +165,8 @@ export class OrdersService {
       return;
     }
     this.logger.log(`Licence créée pour la commande ${order.id}`);
+    // Compte supprimé entre le paiement et ce webhook : la licence existe (payée), mais plus personne à prévenir.
+    if (!order.user) return;
     this.notify(
       order.user.email,
       licenseKeyEmail(order.product.name, created.key, mailLocale(order.user.locale), this.link('/compte/licences')),
@@ -190,6 +192,7 @@ export class OrdersService {
       await this.prisma.license.delete({ where: { id: order.license.id } });
     }
     await this.prisma.order.update({ where: { id: order.id }, data: { status: 'REFUNDED' } });
+    if (!order.user) return; // compte supprimé : plus personne à prévenir
     this.notify(order.user.email, refundEmail(order.product.name, mailLocale(order.user.locale), this.link('/support')));
   }
 

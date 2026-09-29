@@ -77,7 +77,7 @@ export default function AdminOrdersPage() {
                     {formatDateTime(order.createdAt)}
                   </Link>
                 </td>
-                <td className="max-w-[240px] truncate">{order.userEmail}</td>
+                <td className="max-w-[240px] truncate">{order.userEmail ?? <span className="text-muted">Compte supprimé</span>}</td>
                 <td>{order.productSlug}</td>
                 <td className="text-right tabular-nums">{formatAmount(order.amountCents, order.currency)}</td>
                 <td>

@@ -60,9 +60,13 @@ export default function AdminOrderPage({ params }: { params: Promise<{ id: strin
             </Row>
             <Row label="Date">{formatDateTime(order.createdAt)}</Row>
             <Row label="Client">
-              <Link href={`/admin/utilisateurs/${order.userId}`} className="text-accent-text hover:underline">
-                {order.userEmail}
-              </Link>
+              {order.userId ? (
+                <Link href={`/admin/utilisateurs/${order.userId}`} className="text-accent-text hover:underline">
+                  {order.userEmail}
+                </Link>
+              ) : (
+                <span className="text-muted">Compte supprimé</span>
+              )}
             </Row>
             <Row label="Plugin">{order.productSlug}</Row>
             <Row label="Montant">{formatAmount(order.amountCents, order.currency)}</Row>
@@ -77,7 +81,7 @@ export default function AdminOrderPage({ params }: { params: Promise<{ id: strin
 
           {actionError && <Alert variant="error">{actionError}</Alert>}
           <div className="flex flex-wrap items-start gap-3">
-            {order.licenseKey && (
+            {order.licenseKey && order.userEmail && (
               <ConfirmButton
                 variant="primary"
                 question={`Renvoyer la clé par e-mail à ${order.userEmail} ?`}

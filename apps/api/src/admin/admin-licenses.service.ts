@@ -62,7 +62,7 @@ export class AdminLicensesService {
     const created = await this.licenseServer.create({
       product: owned.order.product.licenseProduct,
       edition: 'PREMIUM',
-      customer: `${owned.user.email} (${owned.userId})`,
+      customer: owned.user ? `${owned.user.email} (${owned.userId})` : 'compte supprimé',
       maxActivations: owned.order.product.maxActivations,
     });
     await this.prisma.license.update({ where: { id: owned.id }, data: { licenseKey: created.key } });
