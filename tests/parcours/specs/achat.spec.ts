@@ -28,7 +28,10 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
   if (await codePostal.isVisible().catch(() => false)) await codePostal.fill("75001");
 
   // Case obligatoire : CGV et renonciation au droit de rétractation (contenu numérique).
-  await page.getByRole("checkbox", { name: /renoncez expressément|droit de rétractation/ }).check();
+  // Même principe que la radio : si la case est dessinée par Stripe, on clique sur son texte.
+  const cgv = page.getByRole("checkbox", { name: /renoncez expressément|droit de rétractation/ });
+  await cgv.check({ timeout: 5_000 }).catch(() => page.getByText(/renoncez expressément/).first().click());
+  await expect(cgv).toBeChecked();
   await page.getByRole("button", { name: /^(Payer|Pay)$/ }).click();
 }
 
