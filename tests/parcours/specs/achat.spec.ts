@@ -13,9 +13,10 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
 
   // Moyens de paiement en liste (Carte, Amazon Pay, Klarna… selon le pays) : choisir « Carte » si les
   // champs de la carte ne sont pas déjà affichés.
-  const choixCarte = page.getByRole("radio", { name: /^(Carte|Card)$/ });
-  await page.locator("#cardNumber").or(choixCarte).first().waitFor();
-  if (!(await page.locator("#cardNumber").isVisible()) && (await choixCarte.isVisible())) await choixCarte.check();
+  // La radio elle-même est invisible (Stripe dessine sa propre pastille) : on clique sur son libellé.
+  const libelleCarte = page.locator("#payment-method-label-card");
+  await page.locator("#cardNumber").or(libelleCarte).first().waitFor();
+  if (!(await page.locator("#cardNumber").isVisible())) await libelleCarte.click();
   await page.locator("#cardNumber").waitFor();
 
   await page.locator("#cardNumber").fill("4242424242424242");
