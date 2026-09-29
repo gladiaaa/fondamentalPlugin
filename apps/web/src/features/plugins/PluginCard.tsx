@@ -9,7 +9,8 @@ export interface PluginCardProps {
   name: string;
   description: string;
   /** En centimes, ou `null` tant que le prix n'est pas fixé (docs/api-front.md §4). */
-  priceCents: number | null;
+  /** `null` : prix pas encore fixé (« Bientôt disponible ») ; `undefined` : prix inconnu, non affiché. */
+  priceCents: number | null | undefined;
   freeAvailable: boolean;
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
@@ -29,12 +30,16 @@ export function PluginCard({ slug, name, description, priceCents, freeAvailable,
       </h3>
       <p className="flex-1 text-muted">{description}</p>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1.5">
-        <div className="min-w-0">
-          <small className="block font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">Premium</small>
-          <b className="block font-display text-[1.35rem] font-semibold tracking-[-.03em] tabular-nums whitespace-nowrap">
-            {priceCents === null ? "Bientôt disponible" : formatPriceCents(priceCents)}
-          </b>
-        </div>
+        {priceCents !== undefined ? (
+          <div className="min-w-0">
+            <small className="block font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">Premium</small>
+            <b className="block font-display text-[1.35rem] font-semibold tracking-[-.03em] tabular-nums whitespace-nowrap">
+              {priceCents === null ? "Bientôt disponible" : formatPriceCents(priceCents)}
+            </b>
+          </div>
+        ) : (
+          <span />
+        )}
         <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-pill py-[.62em] px-[1.05em] text-[.82rem] font-semibold shadow-[inset_0_0_0_1.5px_var(--color-line)] group-hover:shadow-[inset_0_0_0_1.5px_var(--color-accent)]">
           Voir le plugin <FlecheIcon width={16} height={16} />
         </span>
