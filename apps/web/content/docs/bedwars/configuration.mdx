@@ -1,0 +1,99 @@
+---
+title: Configuration
+description: config.yml et shop.yml de FondamentalBedwars — parties, générateurs, événements, boutique, base de données.
+---
+
+Fichiers dans `plugins/FondamentalBedwars/`. Après modification : `/fbw reload` (textes, cosmétiques, boutique) ou `/bw reload` (tout, arènes comprises, en fermant les parties en cours).
+
+## `config.yml`
+
+| Clé | Par défaut | Rôle |
+|---|---|---|
+| `license.key` | vide | Clé de licence ; vide = Free, aucun appel réseau |
+| `countdown` / `min-players` | 30 / 2 | Compte à rebours et minimum de joueurs dans la salle d'attente |
+| `matchmaking.countdown` / `matchmaking.min-players` | 30 / 2 | Idem pour les files d'attente |
+| `balance.potion-cooldown-seconds` | 30 | Délai entre deux potions du même type (0 = aucun) |
+| `game.rejoin-grace` | 120 | Secondes pour revenir après une déconnexion |
+| `max-instances-per-arena` | 5 | Parties simultanées par arène (1 en Free) |
+| `generators.iron` / `gold` / `diamond` / `emerald` | 20 / 60 / 1200 / 2400 | Ticks entre deux apparitions |
+| `events.*` | voir [le calendrier](/wiki/bedwars/jeu#calendrier-des-événements) | Moments des événements, en secondes |
+| `holograms.enabled` | true | Hologrammes des générateurs |
+| `bungee.send-to-lobby` / `lobby-server` | false / `lobby` | Renvoi au lobby du réseau en fin de partie <Premium /> |
+| `database.*` | — | MySQL : statistiques, classé, classements <Premium /> |
+| `scoreboard.footer` | — | Pied du scoreboard (codes `&`) |
+| `coins.*` | 10 / 25 / 30 / 100 / 15 | Coins par kill, kill final, lit, victoire, participation |
+| `rank-suffix.enabled` / `scope` | true / `server` | Rang en suffixe LuckPerms (voir plus bas) |
+| `npc-skins.enabled` | true | Apparence des marchands choisie par cosmétique (ProtocolLib) |
+| `resource-pack.*` | désactivé | Pack de textures, voir [le guide](/wiki/bedwars/guides#pack-de-textures) |
+| `island-collapse.*` | activé, `random` | Effondrement des îles éliminées : style (`ice`, `scorch`, `obsidian`, `crumble`, `random`), rayon, profondeur, vitesse |
+| `messages.theme` / `messages.themes` | `classic` | Thèmes des messages de jeu |
+| `colors.*` | charte | Couleurs de `messages.yml`, voir [la charte commune](/wiki/gamme#une-charte-commune) |
+
+### Base de données (Premium)
+
+```yaml
+database:
+  enabled: true
+  host: localhost
+  port: 3306
+  name: bedwars
+  username: bedwars
+  password: change-me
+```
+
+MySQL 8. Les statistiques sont écrites par incréments : plusieurs serveurs Bedwars peuvent partager la même base sans se gêner. Sans base (ou en Free), les statistiques ne sont pas conservées.
+
+### Rang en suffixe
+
+```yaml
+rank-suffix:
+  enabled: true
+  scope: server   # server = seulement sur ce serveur ; global = sur tout le réseau LuckPerms
+```
+
+Avec `scope: server`, LuckPerms doit connaître le nom du serveur : `server: "bedwars"` dans `plugins/LuckPerms/config.yml` (au lieu de `global`).
+
+## `shop.yml` : la boutique
+
+Toute la boutique des marchands (armes, blocs, potions) se règle ici, sans recompilation :
+
+```yaml
+shops:
+  weapons:
+    categories:
+      - name: "Épées"
+        icon: IRON_SWORD
+        items:
+          - { name: "Épée en pierre", material: STONE_SWORD, price: 20, currency: IRON }
+          - { name: "Épée en diamant", material: DIAMOND_SWORD, price: 4, currency: DIAMOND }
+      - name: "Arcs"
+        icon: BOW
+        items:
+          - { name: "Arc Puissance I", material: BOW, price: 6, currency: DIAMOND, enchant: { power: 1 } }
+          - { name: "Flèches x8", material: ARROW, amount: 8, price: 2, currency: GOLD }
+```
+
+| Champ d'un article | Rôle |
+|---|---|
+| `name`, `material`, `amount` | L'article |
+| `price`, `currency` | Prix ; monnaie `IRON`, `GOLD`, `DIAMOND` ou `EMERALD` |
+| `enchant` | Enchantements, ex. `{ sharpness: 1 }` |
+| `potion` | `{ type: SWIFTNESS\|STRENGTH\|INVISIBILITY\|LEAPING, level: 1 }` |
+| `special` | `dreamdefender` ou `bedbug` (remplace `material`) |
+
+**Articles à paliers** (armure, pioche) : un seul emplacement montre le prochain palier à acheter.
+
+```yaml
+          - name: "Armure permanente"
+            progression: armor        # armor | pickaxe
+            tiers:
+              - { material: CHAINMAIL_BOOTS, price: 40, currency: IRON }
+              - { material: IRON_BOOTS, price: 12, currency: GOLD }
+              - { material: DIAMOND_BOOTS, price: 6, currency: EMERALD }
+```
+
+Les pièges et les améliorations d'équipe ne sont pas dans `shop.yml` : leurs prix sont fixes (voir [Déroulement d'une partie](/wiki/bedwars/jeu#pièges)).
+
+## Textes
+
+`messages.yml` contient près de 300 textes (MiniMessage, variables `{player}`, `{arg}`…). `""` désactive un message ; une clé absente reprend le texte d'origine.

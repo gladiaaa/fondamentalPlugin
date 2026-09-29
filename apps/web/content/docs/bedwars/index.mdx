@@ -1,0 +1,86 @@
+---
+title: FondamentalBedwars
+description: Bedwars complet — matchmaking, classé Elo, 9 modes, cosmétiques, boutique configurable, mondes instanciés.
+---
+
+FondamentalBedwars est un **Bedwars clé en main** : vous construisez vos cartes, le plugin s'occupe du reste.
+
+- **Matchmaking** : files par mode, vote de carte, **parties privées** par code, **party**.
+- **Classé** : Elo et 8 rangs, affichés en chat et dans le TAB, classements en hologramme.
+- **9 modes**, de 1v1 à 8 équipes ; **mondes instanciés** : chaque partie a son propre monde, créé puis supprimé.
+- Boutique et générateurs, 5 pièges, 5 améliorations d'équipe, 7 objets spéciaux, calendrier d'événements réglable.
+- **82 cosmétiques** en 14 catégories, achetés avec des coins gagnés en jouant.
+- Reconnexion en partie, effondrement des îles éliminées, thèmes de messages de kill.
+
+## Prérequis
+
+| | |
+|---|---|
+| Serveur | Paper 1.21.4, Java 21 |
+| **Obligatoire** | **FastAsyncWorldEdit** |
+| Fortement recommandé | **LuckPerms** : coins, cosmétiques, Elo et rangs y sont enregistrés. Sans LuckPerms, ils ne fonctionnent pas. |
+| Facultatif | ProtocolLib (apparence des PNJ marchands), PlaceholderAPI, FondamentalPass |
+| Premium | MySQL 8 (statistiques, classé, classements), BungeeCord/Velocity |
+
+Le plugin crée et supprime un monde à chaque partie : un disque SSD est conseillé.
+
+## Installation
+
+<Steps>
+<Step>
+
+### Installer les dépendances
+
+Déposez **FastAsyncWorldEdit** et, de préférence, **LuckPerms** dans `plugins/`.
+
+</Step>
+<Step>
+
+### Déposer le jar
+
+Un seul jar pour les deux éditions. Démarrez : le dossier `plugins/FondamentalBedwars/` est créé.
+
+</Step>
+<Step>
+
+### Activer la licence (Premium)
+
+Clé dans `config.yml` → `license.key`, puis `/fbw license check`. Pour le classé et les statistiques, renseignez aussi la section `database` (MySQL).
+
+</Step>
+<Step>
+
+### Créer une arène
+
+Suivez le guide [Créer une arène](/wiki/bedwars/arenes).
+
+</Step>
+</Steps>
+
+## Free ou Premium
+
+| Fonction | Free | Premium |
+|---|---|---|
+| Arènes | **2** | Illimité |
+| Parties simultanées par arène | **1** | Jusqu'à `max-instances-per-arena` (5 par défaut) |
+| Modes de matchmaking | Un joueur par équipe : 1v1, 1v1v1v1, Solo 8 équipes | Tous : Duos, Trios, Squads, Doubles… |
+| Classé (Elo, rangs) | ❌ | ✅ |
+| Statistiques, `/bw top`, classements en hologramme | ❌ | ✅ (MySQL) |
+| Renvoi au lobby en fin de partie (BungeeCord) | ❌ | ✅ |
+| Cosmétiques | Seuls les cosmétiques **gratuits** de rareté inférieure à Épique | Tous |
+| Boucle de jeu, boutique, pièges, améliorations, party, parties privées, scoreboards, thèmes de messages, effondrement d'île, reconnexion, coins, éditeur d'arènes, placeholders | ✅ | ✅ |
+
+<Callout>
+  Avec le `cosmetics.yml` livré, l'édition Free ne débloque que les cosmétiques « aucun » ou « par défaut » : les cosmétiques payants sont une fonction Premium.
+</Callout>
+
+## Aller plus loin
+
+<Cards>
+  <Card title="Créer une arène" href="/wiki/bedwars/arenes" />
+  <Card title="Commandes et permissions" href="/wiki/bedwars/commandes" />
+  <Card title="Déroulement d'une partie" href="/wiki/bedwars/jeu" />
+  <Card title="Cosmétiques" href="/wiki/bedwars/cosmetiques" />
+  <Card title="Configuration" href="/wiki/bedwars/configuration" />
+  <Card title="Guides" href="/wiki/bedwars/guides" />
+</Cards>

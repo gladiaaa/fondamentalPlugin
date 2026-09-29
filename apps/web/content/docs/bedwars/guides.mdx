@@ -1,0 +1,97 @@
+---
+title: Guides
+description: Recettes pas à pas pour FondamentalBedwars.
+---
+
+## Activer le classé (Premium)
+
+1. Édition Premium (clé dans `license.key`) et MySQL renseigné dans `database`.
+2. LuckPerms installé. Si `rank-suffix.scope: server`, donnez un nom au serveur dans `plugins/LuckPerms/config.yml` (`server: "bedwars"`) ; sinon, utilisez `scope: global`.
+3. Redémarrez. Dans `/bw play`, les joueurs basculent sur **Classé**.
+
+En fin de partie classée, chaque joueur voit son gain ou sa perte d'Elo et son rang. Le rang s'affiche en suffixe dans le chat et le TAB.
+
+## Afficher un classement en hologramme (Premium)
+
+Au lobby, placez-vous à l'endroit voulu :
+
+```
+/bw lb set wins        # kills, wins, beds ou elo
+```
+
+L'hologramme se met à jour chaque minute. `/bw lb remove wins` pour le retirer.
+
+## Renvoyer au lobby du réseau (Premium)
+
+```yaml
+bungee:
+  send-to-lobby: true
+  lobby-server: lobby    # nom du serveur lobby dans votre proxy
+```
+
+Statistiques (MySQL), coins et cosmétiques (LuckPerms) sont déjà partagés entre les serveurs.
+
+## Modifier la boutique
+
+Éditez `shop.yml` (prix, monnaie, nouveaux articles) puis `/fbw reload`. Voir [Configuration](/wiki/bedwars/configuration#shopyml--la-boutique).
+
+## Vendre des cosmétiques ou des coins
+
+Sur votre boutique :
+
+```
+fbw givecosmetic {username} kill:lightning
+fbw coins add {username} 500          # joueur connecté
+```
+
+## Créer un thème de messages
+
+Dans `config.yml`, ajoutez un thème à `messages.themes` (plusieurs variantes par message, tirées au hasard) :
+
+```yaml
+messages:
+  themes:
+    pirate:
+      killed:
+        - "{killer} &7a envoyé {victim} &7par le fond"
+      void:
+        - "{victim} &7a sauté par-dessus bord"
+      death:
+        - "{victim} &7a coulé"
+      bed-broken:
+        - "&6★ {breaker} &7a sabordé le lit de {team}&7 !"
+      elimination:
+        - "&c☠ L'équipage {team} &7a sombré !"
+      final-kill-tag: "&c&lKILL FINAL"
+```
+
+Variables : `{victim}`, `{killer}`, `{breaker}`, `{team}`. Puis, au choix :
+
+- l'appliquer à tout le serveur : `messages.theme: pirate` ;
+- ou le vendre comme cosmétique : dans `cosmetics.yml`, une entrée `msgtheme` avec `data: pirate`.
+
+## Pack de textures
+
+Pour des cosmétiques qui utilisent des textures personnalisées :
+
+1. Hébergez votre `.zip` à une adresse directe et publique.
+2. Dans `config.yml` :
+
+```yaml
+resource-pack:
+  enabled: true
+  url: "https://exemple.fr/pack.zip"
+  sha1: "…"               # empreinte SHA-1 du zip (recommandé)
+  force: false
+  kick-on-decline: false
+```
+
+3. `/fbw reload`.
+
+## Utiliser FondamentalTag sur le serveur Bedwars
+
+FondamentalBedwars gère les équipes du scoreboard pendant les parties. Dans FondamentalTag, mettez `nametag.enabled: false` et affichez le tag par placeholder (`%fondamentalbedwars_rank_colored%` et `%fondamentaltag_tag_prefix%` peuvent se combiner dans votre TAB).
+
+## Des quêtes de pass pour vos joueurs Bedwars
+
+Avec FondamentalPass (édition Premium), chaque partie envoie `bedwars:play`, `bedwars:win`, `bedwars:kill`, `bedwars:final_kill` et `bedwars:bed_break`. Voir [le guide du Pass](/wiki/pass/guides#quêtes-bedwars-sur-un-réseau).

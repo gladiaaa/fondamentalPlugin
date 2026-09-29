@@ -1,0 +1,79 @@
+---
+title: Cosmétiques
+description: 82 cosmétiques en 14 catégories, cosmetics.yml et death-effects.yml.
+---
+
+Les joueurs achètent des cosmétiques avec leurs **coins** dans `/cosmetics`, puis choisissent ceux qu'ils portent. Tout est défini dans `plugins/FondamentalBedwars/cosmetics.yml` : **ajouter un cosmétique, c'est ajouter une ligne**, puis `/fbw reload`.
+
+<Callout type="warn">
+  Possession et sélection sont enregistrées dans **LuckPerms** (permissions `fbw.cosmetic.<catégorie>.<id>`) : LuckPerms est nécessaire. Avantage : tout est partagé sur le réseau, sans base supplémentaire.
+</Callout>
+
+## Les 14 catégories
+
+| Catégorie | Id | Livrés | `data` = |
+|---|---|:-:|---|
+| Effet de kill | `kill` | 3 | `lightning`, `flame`, `soul` |
+| Kill final | `finalkill` | 5 | `lightning`, `blood`, `soul`, `explosion`, `dragon` |
+| Destruction de lit | `bed` | 4 | `explosion`, `lightning`, `flames`, `firework` |
+| Son de kill | `killsnd` | 4 | nom d'un son Minecraft |
+| Son de mort | `deathsnd` | 3 | nom d'un son Minecraft |
+| Animation de mort | `deathfx` | 6 | recette de `death-effects.yml` |
+| Animation de victoire | `victory` | 7 | `fireworks`, `totem`, `stars`, `dragon`, `inferno`, `storm`, `hearts` |
+| Traînée de projectile | `trail` | 6 | nom d'une particule |
+| Glyphe (ramassage de diamant ou d'émeraude) | `glyph` | 4 | nom d'une particule |
+| Ornement d'île | `island` | 6 | bloc |
+| Figurine d'île | `figurine` | 7 | tête (bloc ou texture) |
+| Apparence des marchands | `npcskin` | 16 | type de créature (ProtocolLib requis) |
+| Thème de messages | `msgtheme` | 4 | thème de `config.yml` |
+| Badge de prestige | `prestige` | 7 | symbole affiché avant le pseudo dans le TAB |
+
+## Ajouter un cosmétique
+
+```yaml
+cosmetics:
+  kill:
+    foudre: { name: "Foudre", icon: LIGHTNING_ROD, price: 2500, rarity: RARE, data: lightning }
+```
+
+| Champ | Rôle |
+|---|---|
+| `name` | Nom affiché |
+| `icon` | Objet de l'icône |
+| `price` | Prix en coins ; `0` = gratuit, débloqué d'office |
+| `rarity` | `COMMUN`, `RARE`, `EPIQUE`, `LEGENDAIRE` ou `MYTHIQUE` |
+| `data` | Paramètre de l'effet (voir le tableau des catégories) ; par défaut, l'identifiant |
+
+Prix livrés : de 1 000 à 20 000 coins.
+
+<Callout>
+  En édition Free, seuls les cosmétiques **gratuits** (`price: 0`) de rareté Commun ou Rare sont utilisables. Tous les autres demandent l'édition Premium.
+</Callout>
+
+## Animations de mort
+
+Les recettes des animations de mort sont dans `death-effects.yml` :
+
+```yaml
+effects:
+  ma_recette:
+    particle: SOUL_FIRE_FLAME
+    count: 40                # nombre de particules
+    spread: 0.6              # dispersion, en blocs
+    speed: 0.02
+    sound: ENTITY_WITHER_SPAWN
+    shape: spiral            # burst, explosion, column, spiral, ring
+    height: 2.0              # column et spiral
+    duration: 30             # column et spiral, en ticks (20 = 1 s)
+```
+
+Puis un cosmétique `deathfx` avec `data: ma_recette`.
+
+## Thèmes de messages
+
+Les messages de kill, de mort, de lit et d'élimination changent selon le thème du joueur qui fait le kill. Thèmes livrés : `classic`, `savage`, `fun`, `ecureuil`. Pour créer le vôtre, voir [le guide](/wiki/bedwars/guides#créer-un-thème-de-messages).
+
+## Offrir des cosmétiques
+
+- Commande (boutique, votes) : `fbw givecosmetic {username} kill:foudre`. Déjà possédé : le joueur reçoit la moitié du prix en coins.
+- Depuis **FondamentalCrate** : action `{ type: cosmetic, permission: "fbw.cosmetic.kill.foudre", coins: 500 }`. Voir [Crate](/wiki/crate/guides#donner-un-cosmétique-bedwars).

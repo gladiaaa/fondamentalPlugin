@@ -1,0 +1,118 @@
+---
+title: La saison et ses paliers
+description: season.yml — dates, paliers, pistes gratuite et premium, récompenses, paliers bonus et classement.
+---
+
+Fichier : `plugins/FondamentalPass/season.yml`. Après modification : `/pass admin reload`.
+
+## La saison
+
+```yaml
+season:
+  id: "saison-1"
+  name: "<degrade>Saison 1</degrade> <discret>·</discret> <fort>Les Origines"
+  start: "2026-10-01 00:00"      # AAAA-MM-JJ HH:MM, fuseau de config.yml
+  end: "2026-12-31 23:59"
+  xp-per-tier: 1000              # XP par palier (un palier peut la changer avec xp:)
+  max-level: 30                  # 30 au maximum en Free
+  premium-permission: "fondamentalpass.premium"
+```
+
+- Hors de ses dates, la saison est « hors saison » : les quêtes n'avancent pas et les récompenses ne se récupèrent pas.
+- **Changer `id` démarre une nouvelle saison** : tout le monde repart de zéro. L'ancienne progression reste en base.
+- `premium-permission` : la permission qui ouvre la piste premium, à vendre sur votre boutique ou à donner à un grade.
+
+## Les paliers
+
+Chaque palier peut avoir une piste gratuite (`free`) et une piste premium (`premium`), toutes deux facultatives :
+
+```yaml
+tiers:
+  1:
+    free:
+      name: "<fort>100 pièces"
+      icon: GOLD_NUGGET
+      rewards:
+        - {type: money, amount: 100}
+    premium:
+      name: "<fort>Clé de crate <accent>Vote"
+      icon: TRIPWIRE_HOOK
+      rewards:
+        - {type: crate-key, crate: "vote", amount: 1}
+  10:
+    xp: 1500                     # XP pour atteindre CE palier
+    free:
+      name: "<fort>Diamants"
+      icon: DIAMOND
+      lore:
+        - "<texte>Brillant."
+      rewards:
+        - {type: item, material: DIAMOND, amount: 5}
+```
+
+Un palier sans section n'a pas de récompense, mais compte dans la progression.
+
+## Récompenses
+
+Ces types de récompenses servent partout : paliers, quêtes, calendrier, objectif commun, événements.
+
+| `type` | Paramètres | Effet | Édition |
+|---|---|---|---|
+| `money` | `amount` | Argent (Vault) | Free |
+| `item` | `material`, `amount`, `name`, `lore` | Objet ; tombe au sol si l'inventaire est plein | Free |
+| `command` | `command`, `as: console\|player` | Commande ; `{player}` et `{uuid}` sont remplacés | Free |
+| `message` | `message` | Message (MiniMessage) | Free |
+| `scroll` | `scroll` (ou `random` + `level`), `amount` | Un [parchemin de quête](/wiki/pass/parchemins) | Free |
+| `tag` | `tag`, `duration` (`7d`, `12h`… ; vide = à vie) | Un tag **FondamentalTag** | <Premium /> |
+| `crate-key` | `crate`, `amount` | Des clés **FondamentalCrate** (joueur connecté) | <Premium /> |
+
+```yaml
+rewards:
+  - {type: money, amount: 500}
+  - {type: item, material: DIAMOND, amount: 3}
+  - {type: command, command: "lp user {player} permission set kit.vip", as: console}
+  - {type: message, message: "<ok>Bravo {player} !"}
+  - {type: tag, tag: "galaxy", duration: "30d"}
+  - {type: crate-key, crate: "vote", amount: 1}
+```
+
+## Acheter le premium en jeu (Premium)
+
+En plus de la permission, les joueurs peuvent acheter la piste premium dans `/pass` (clic sur l'étoile) ou avec `/pass premium`. L'achat vaut jusqu'à la fin de la saison.
+
+```yaml
+premium-purchase:
+  enabled: false
+  price: 50000
+  currency: ""        # monnaie (config.yml > currencies) ; vide = monnaie par défaut
+  gift: true          # /pass offrir <joueur> : l'offrir à un joueur connecté
+```
+
+## Paliers bonus
+
+Une fois le dernier palier atteint, chaque tranche d'XP supplémentaire donne un palier bonus répétable, récupéré avec « Tout récupérer » :
+
+```yaml
+overflow:
+  xp: 2000            # 0 = désactivé
+  name: "<fort>Palier bonus"
+  rewards:
+    - {type: crate-key, crate: "vote", amount: 1}
+```
+
+## Récompenses de classement
+
+Distribuées **une seule fois** sur le réseau à la fin de la saison, selon le classement final, et livrées à la connexion suivante :
+
+```yaml
+ranking-rewards:
+  "1":
+    rewards:
+      - {type: money, amount: 50000}
+  "2-3":
+    rewards:
+      - {type: money, amount: 25000}
+  "4-10":
+    rewards:
+      - {type: money, amount: 10000}
+```

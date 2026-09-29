@@ -1,6 +1,6 @@
 import { defineDocs, defineConfig } from "fumadocs-mdx/config";
 
-// Squelette uniquement (#86) : contenu réel à venir dans content/docs/*.mdx.
+// Wiki des plugins (#29, #31) : une page MDX par sujet dans content/docs/<plugin>/.
 export const docs = defineDocs({
   dir: "content/docs",
 });

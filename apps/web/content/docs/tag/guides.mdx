@@ -1,0 +1,90 @@
+---
+title: Guides
+description: Recettes pas à pas pour FondamentalTag — boutique, chat, TAB, réseau, migration, API.
+---
+
+## Vendre un tag sur votre boutique
+
+Commande de livraison (Tebex, CraftingStore…) :
+
+```
+tag give {username} king          # à vie
+tag give {username} king 30d      # 30 jours (Premium)
+```
+
+Le joueur doit être venu au moins une fois sur le serveur. Un tag temporaire **expire tout seul** ; revendre le même tag **prolonge** sa durée.
+
+## Ouvrir une boutique en jeu (Premium)
+
+1. Dans `customization.yml`, choisissez la monnaie : `economy.provider: vault` (ou `internal`, `playerpoints`).
+2. Dans `tags.yml`, ajoutez `price: 250` au tag.
+3. `/tag reload`. Dans le menu, le joueur clique le tag puis **clique à nouveau dans les 5 secondes** pour confirmer.
+
+## Préparer un événement saisonnier
+
+Ajoutez un bloc `event` avec des dates, un prix et ce qu'il advient du tag après l'événement (`after: keep` ou `remove`). Voir [Créer des tags](/wiki/tag/tags#4-boutique-rareté-événement). Pendant l'événement, le tag apparaît dans le menu ; ensuite, seuls ceux qui l'ont le voient.
+
+## Brancher un plugin de chat
+
+1. Dans `config.yml` de FondamentalTag : `chat.enabled: false`.
+2. Installez **PlaceholderAPI**.
+3. Ajoutez `%fondamentaltag_tag_prefix%` devant le pseudo, dans le format de votre plugin de chat. Exemple pour EssentialsChat (`plugins/Essentials/config.yml`) :
+
+```yaml
+chat:
+  format: '%fondamentaltag_tag_prefix%{DISPLAYNAME}&7: &f{MESSAGE}'
+```
+
+Selon la version d'EssentialsChat, il faut aussi l'expansion PlaceholderAPI « Essentials » ou un plugin qui applique les placeholders au chat. LPC, ChatControl et VentureChat acceptent directement le placeholder.
+
+## Afficher le tag avec TAB (NEZNAMY)
+
+1. `nametag.enabled: false` dans FondamentalTag.
+2. Dans la configuration de TAB, mettez `%fondamentaltag_tag_prefix%` dans `tagprefix` (au-dessus de la tête) et `tabprefix` (liste des joueurs).
+
+## Réseau de serveurs (Premium)
+
+1. Sur **chaque** serveur : `database.type: mysql` avec les **mêmes** identifiants de base.
+2. Redémarrez chaque serveur.
+
+Les tags possédés, le tag porté, les points et le tag de l'Atelier suivent le joueur sur tout le réseau.
+
+## Activer le pack de ressources (Premium)
+
+1. `resource-pack.enabled: true`.
+2. Ouvrez le port `8095` (TCP) dans le pare-feu de la machine.
+3. Renseignez `resource-pack.host.public-url: "http://IP-DU-SERVEUR:8095"` (ou hébergez le zip vous-même avec `external-url`).
+4. `/tag reload`. Les joueurs reçoivent le pack à la connexion ; `/tag pack` le renvoie.
+
+## Donner un tag depuis une crate ou le pass
+
+- **FondamentalCrate** : dans `crates.yml`, une action `{ type: tag, tag: frost, duration: 7d }`. Voir [Crate](/wiki/crate/crates#récompenses).
+- **FondamentalPass** : une récompense `{type: tag, tag: "legende"}` dans un palier ou une quête. Voir [Pass](/wiki/pass/saison#récompenses).
+
+## Migrer depuis TagsCustom 1.x
+
+Rien à faire à la main. Au premier démarrage, si le dossier `plugins/TagsCustom/` existe, FondamentalTag importe :
+
+- les tags et les icônes de catégories ;
+- la base (`tags.db` ou MySQL) et les joueurs ;
+- la **clé de licence** et l'identifiant d'installation.
+
+`chat.enabled` et `nametag.enabled` passent à `false`, comme TagsCustom qui n'affichait le tag que par placeholder. Les anciens placeholders `%tags_…%` restent disponibles avec `placeholders.legacy-identifier: true`. L'ancien dossier n'est pas modifié : supprimez-le une fois la migration vérifiée.
+
+<Callout type="warn">
+  Contrairement à TagsCustom, les permissions des tags **sont vérifiées**. Un tag avec une `permission` n'est utilisable que par ceux qui l'ont, ou qui le possèdent.
+</Callout>
+
+## Pour les développeurs : l'API
+
+La classe `fr.fondamental.tag.api.FondamentalTagApi` expose des méthodes statiques, avec uniquement des types Java : vous pouvez l'appeler par réflexion, sans dépendre du jar. À appeler depuis le fil principal du serveur.
+
+| Méthode | Rôle |
+|---|---|
+| `exists(id)` | Le tag existe |
+| `tagIds()` | Identifiants de tous les tags |
+| `display(id)` | Rendu du tag |
+| `rarity(id)`, `rarityDisplay(id)`, `rarityOrder(id)` | Rareté du tag |
+| `outOfSeason(id)` | Tag saisonnier hors de ses dates |
+| `owns(uuid, id)` | Le joueur possède le tag (faux s'il est déconnecté) |
+| `give(uuid, id, durationMillis)` | Donne le tag ; `0` = à vie |

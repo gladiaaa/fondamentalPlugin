@@ -36,7 +36,15 @@ test("le jar téléchargé correspond à l'empreinte SHA-256 annoncée", async (
   expect(createHash("sha256").update(body).digest("hex")).toBe(file.sha256);
 });
 
-test("le wiki s'affiche", async ({ page }) => {
+test("le wiki s'affiche, avec une section par plugin et sa recherche", async ({ page, request }) => {
   const response = await page.goto("/wiki");
   expect(response?.status()).toBeLessThan(400);
+  for (const slug of ["bedwars", "tag", "crate", "pass"]) {
+    const pageResponse = await page.goto(`/wiki/${slug}`);
+    expect(pageResponse?.status(), `/wiki/${slug}`).toBeLessThan(400);
+    await expect(page.getByRole("heading", { level: 1, name: /^Fondamental/ })).toBeVisible();
+  }
+  // /wiki-recherche : hors de /api/*, envoyé à l'API par nginx.
+  const results = await (await request.get("/wiki-recherche?query=licence")).json();
+  expect(results.length).toBeGreaterThan(0);
 });

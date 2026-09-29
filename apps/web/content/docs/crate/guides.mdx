@@ -1,0 +1,82 @@
+---
+title: Guides
+description: Recettes pas à pas pour FondamentalCrate.
+---
+
+## Première crate en 2 minutes
+
+1. `/crate editor` → **Créer une crate** → tapez son identifiant dans le chat.
+2. Choisissez l'**animation** et le **bloc**.
+3. **Récompenses** : tenez un objet en main → « Ajouter l'objet en main ». Réglez son poids et sa rareté. Recommencez pour chaque lot.
+4. Posez le bloc, visez-le : `/crate set <identifiant>`.
+5. `/crate give <votre pseudo> <identifiant> 5`, puis clic droit sur le bloc.
+
+## Vendre des clés sur votre boutique
+
+```
+crate give {username} vote 5        # clés virtuelles
+crate givekey {username} vote 5     # clés physiques
+```
+
+Le joueur doit être **connecté** : cochez l'option correspondante dans votre boutique (Tebex, CraftingStore…). Pour offrir une clé à tout le monde : `crate giveall vote 1`.
+
+## Faire payer l'ouverture
+
+Avec Vault installé, ajoutez `cost: 500` à la crate : l'ouverture coûte 500 en plus de la clé.
+
+## Garantir un lot rare (Premium)
+
+Ajoutez une **pitié** : `pity: { threshold: 50, rarity: legendary }`. Voir [Créer des crates](/wiki/crate/crates#pitié-premium).
+
+## Limiter un lot (Premium)
+
+```yaml
+      grand_lot:
+        weight: 1
+        limit: { global: 100, per-player: 1 }
+```
+
+100 exemplaires au total, un par joueur. Épuisé, le lot sort du tirage.
+
+## Récompenser la fidélité (Premium)
+
+Un **palier** donne un lot bonus garanti toutes les N ouvertures. Voir [Paliers d'ouverture](/wiki/crate/crates#paliers-douverture-premium).
+
+## Donner un tag en récompense
+
+Avec FondamentalTag installé :
+
+```yaml
+        actions:
+          - { type: tag, tag: frost, duration: 7d }   # sans duration : à vie
+```
+
+Sans `rarity` sur le lot, la rareté du tag est reprise. Dans le nom du lot, `<tag>` affiche le vrai rendu du tag.
+
+## Donner un cosmétique Bedwars
+
+Avec FondamentalBedwars et LuckPerms installés :
+
+```yaml
+        actions:
+          - { type: cosmetic, permission: "fbw.cosmetic.kill.lightning", coins: 500 }
+```
+
+Un joueur qui possède déjà le cosmétique reçoit 500 coins Bedwars à la place.
+
+## Faire avancer les quêtes du pass
+
+Avec FondamentalPass (édition Premium), chaque ouverture envoie `crate:open` et `crate:open:<id de la crate>`. Une quête du pass peut donc demander d'ouvrir 5 crates, ou 3 crates « vote » :
+
+```yaml
+    objective: {type: custom, key: "crate:open:vote", amount: 3}
+```
+
+## Réseau de serveurs (Premium)
+
+1. Sur chaque serveur : `storage.type: mysql`, **même base**.
+2. Redémarrez (deux fois lors du tout premier démarrage de la licence, voir [Stockage](/wiki/crate/configuration#stockage)).
+
+## Afficher les statistiques sur un site web
+
+Avec MySQL, la table `cc_global_limits` contient le nombre total de clés utilisées : ligne `reward_key = '@opens:<crate>'`. En jeu, les placeholders `%fondamentalcrate_used_<crate>%` et `%fondamentalcrate_used_total%` donnent la même information.

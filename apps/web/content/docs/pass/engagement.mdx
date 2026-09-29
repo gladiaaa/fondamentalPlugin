@@ -1,0 +1,144 @@
+---
+title: Événements et bonus
+description: Pass événement, calendrier de connexion, objectif commun, boosts d'XP, série, changement de quête, classement, achat de paliers.
+---
+
+## Pass événement (Premium)
+
+Un pass événement **s'ajoute** au pass de saison pendant ses dates : ses propres paliers, sa propre XP, ses propres quêtes et son propre premium. Il apparaît dans `/pass` (bouton en haut à droite), dans `/pass evenement` et dans `/quetes` (onglet de l'événement).
+
+Chaque fichier du dossier `plugins/FondamentalPass/events/` est un événement ; un exemple `halloween.yml` est livré, **désactivé**.
+
+```yaml
+enabled: true
+
+event:
+  id: "halloween-2026"       # unique, ne pas changer pendant l'événement
+  name: "<gradient:#FF8C00:#8B00FF><bold>Halloween</bold></gradient>"
+  icon: JACK_O_LANTERN
+  start: "2026-10-25 00:00"
+  end: "2026-11-02 23:59"
+  xp-per-tier: 500
+  max-level: 10
+  premium-permission: "fondamentalpass.event.halloween.premium"
+
+premium-purchase:            # même format que season.yml
+  enabled: false
+  price: 15000
+
+tiers:                       # même format que season.yml
+  1:
+    free:
+      name: "<fort>8 tartes à la citrouille"
+      icon: PUMPKIN_PIE
+      rewards:
+        - {type: item, material: PUMPKIN_PIE, amount: 8}
+```
+
+- L'XP de l'événement vient uniquement de **ses** quêtes ; le pass de saison n'est pas touché.
+- À la fin, le pass événement disparaît : les récompenses non récupérées sont perdues.
+- Pour un nouvel événement : copiez le fichier, changez `event.id`, les dates et le contenu, puis `/pass admin reload`. `/pass admin event` liste les événements et leur état.
+
+## Calendrier de connexion
+
+Une récompense par jour de connexion, dans `/pass` → Calendrier ou `/pass calendrier`. Après le dernier jour (7 au maximum), le cycle recommence. Fichier `calendar.yml` :
+
+```yaml
+enabled: true
+reset-on-miss: false         # true = un jour manqué fait repartir du jour 1
+
+days:
+  1:
+    name: "<fort>100 pièces"
+    icon: GOLD_NUGGET
+    rewards:
+      - {type: money, amount: 100}
+  7:
+    name: "<degrade><bold>Clé de crate Mythique</bold></degrade>"
+    icon: END_CRYSTAL
+    rewards:
+      - {type: crate-key, crate: "mythic", amount: 1}
+```
+
+## Objectif commun (Premium)
+
+Tout le réseau fait avancer **le même compteur**. Cible atteinte : chaque joueur qui a contribué au moins `min-contribution` reçoit la récompense, une seule fois. Fichier `community.yml` :
+
+```yaml
+enabled: true
+
+goal:
+  id: "chantier-geant-1"     # changer l'id lance un nouvel objectif
+  name: "<degrade>Chantier géant</degrade>"
+  description:
+    - "<texte>Tout le réseau casse ensemble"
+    - "<fort>100 000</fort> <texte>blocs."
+  icon: BEACON
+  objective: {type: break-block, amount: 100000}
+  min-contribution: 100
+  xp: 1500
+  rewards:
+    - {type: crate-key, crate: "vote", amount: 2}
+  ends: ""                   # date de fin facultative (AAAA-MM-JJ HH:MM)
+```
+
+L'objectif accepte les mêmes types que les quêtes (sauf `placeholder`), par exemple `{type: custom, key: "bedwars:bed_break", amount: 5000}`.
+
+## Boosts d'XP
+
+Les boosts s'appliquent à l'XP des quêtes et se cumulent, dans la limite de `boosts.max-percent` (200 % par défaut) :
+
+- **par permission** : `fondamentalpass.boost.25` donne +25 % (idéal pour les grades VIP ; la plus haute compte) ;
+- **global** <Premium /> : `/pass admin boost 50 2h` donne +50 % à tout le réseau pendant 2 heures (`/pass admin boost stop` pour l'arrêter) ;
+- **série** : voir ci-dessous.
+
+## Série
+
+Chaque jour où toutes les quêtes du jour sont terminées prolonge la **série** : +5 % d'XP de quête par jour, jusqu'à +50 %. Un jour manqué la remet à zéro.
+
+```yaml
+streak:
+  bonus-percent-per-day: 5
+  max-bonus-percent: 50
+```
+
+## Changer de quête
+
+Dans `/quetes`, un **clic droit** remplace une quête par une autre du même pool.
+
+```yaml
+rerolls:
+  enabled: true
+  per-day: 1        # changements gratuits par jour ; fondamentalpass.rerolls.<n> pour plus
+  cost: 0           # prix par changement
+  currency: ""
+```
+
+## Suivi de quête
+
+**Shift + clic** sur une quête dans `/quetes` : sa progression s'affiche dans une barre en haut de l'écran.
+
+```yaml
+tracking:
+  enabled: true
+  color: PURPLE      # PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+```
+
+## Classement
+
+`/pass top` montre le top 10 de la saison et le rang du joueur. En réseau (MySQL), le classement couvre tous les serveurs. Les [récompenses de classement](/wiki/pass/saison#récompenses-de-classement) sont distribuées à la fin de la saison.
+
+## Acheter des paliers (Premium)
+
+```yaml
+tier-purchase:
+  enabled: false
+  price: 5000        # prix d'un palier
+  currency: ""
+```
+
+Avec `/pass acheter`, le joueur paie le palier suivant ; confirmation en deux clics.
+
+## Mode « quêtes seules »
+
+Pas besoin de pass de saison ? Dans `config.yml`, `pass.enabled: false` : plus de paliers ni d'XP de pass, `/pass` ouvre les quêtes et chaque quête donne seulement ses récompenses. Les parchemins, le calendrier et l'objectif commun restent disponibles.

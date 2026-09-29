@@ -1,0 +1,88 @@
+---
+title: FondamentalTag
+description: Tags de joueur dans le chat, au-dessus de la tête et dans le TAB, animés en Premium.
+---
+
+FondamentalTag affiche un **tag** (`[VIP]`, `[Fondateur]`…) devant le pseudo des joueurs : dans le **chat**, **au-dessus de la tête**, dans la **liste TAB** et partout où PlaceholderAPI est accepté. Les joueurs choisissent leur tag dans un menu ; vous les offrez, les vendez ou les réservez à un grade.
+
+Deux façons de proposer des tags :
+
+1. **Le catalogue** (`tags.yml`) : les tags que vous créez, classés par catégories et raretés.
+2. **L'Atelier** (`customization.yml`) : chaque joueur compose son propre tag à partir de pièces que vous proposez (titre, couleur, effet, style, badge, cadre).
+
+## Prérequis
+
+| | |
+|---|---|
+| Serveur | Paper 1.21.4 ou plus récent, Java 21 |
+| Dépendances | aucune obligatoire |
+| Facultatif | PlaceholderAPI (placeholders), Vault ou PlayerPoints (monnaie de l'Atelier et de la boutique) |
+| Réseau <Premium /> | MySQL, pour partager les tags entre serveurs |
+
+## Installation
+
+<Steps>
+<Step>
+
+### Déposer le jar
+
+Deux jars sont proposés au téléchargement : **Free** et **Premium**. Déposez-en un dans `plugins/`. Le jar Premium sans clé valide fonctionne comme le Free.
+
+</Step>
+<Step>
+
+### Démarrer une première fois
+
+Le dossier `plugins/FondamentalTag/` est créé avec `config.yml`, `tags.yml`, `customization.yml` et `messages.yml`.
+
+</Step>
+<Step>
+
+### Activer la licence (Premium)
+
+Collez votre clé dans `config.yml` → `license.key`, puis `/tag reload` et `/tag license check`. Voir [Activer ma licence](/wiki/licence).
+
+</Step>
+<Step>
+
+### Personnaliser
+
+Éditez [`tags.yml`](/wiki/tag/tags) puis `/tag reload`. Les joueurs ouvrent le menu avec `/tag`.
+
+</Step>
+</Steps>
+
+<Callout title="Vous veniez de TagsCustom 1.x ?">
+  Rien à faire : au premier démarrage, FondamentalTag reprend automatiquement les tags, la base, les joueurs et même votre clé de licence. Voir [Migrer depuis TagsCustom](/wiki/tag/guides#migrer-depuis-tagscustom-1x).
+</Callout>
+
+## Free ou Premium
+
+| Fonction | Free | Premium |
+|---|:---:|:---:|
+| Tags unis (couleurs nommées ou hexadécimales, gras, italique, souligné, barré) | ✅ | ✅ |
+| Menus, chat, tag au-dessus de la tête, TAB, PlaceholderAPI | ✅ | ✅ |
+| Permissions par tag, `/tag give` à vie, `take`, `set`, `info` | ✅ | ✅ |
+| Raretés et tags saisonniers | ✅ | ✅ |
+| Atelier : titres, couleurs unies, cadres | ✅ | ✅ |
+| Dégradés, arc-en-ciel, tout MiniMessage | ❌ | ✅ |
+| Tags animés, 12 effets générés, mouvements | ❌ | ✅ |
+| Styles de lettres Unicode, polices, ombre colorée | ❌ | ✅ |
+| Tags temporaires (`/tag give … 7d`) | ❌ | ✅ |
+| Boutique en jeu (`price`) | ❌ | ✅ |
+| Éditeur en jeu (`/tag create`, `edit`, `delete`) | ❌ | ✅ |
+| Atelier : dégradés, dégradé sur mesure, effets, styles, badges | ❌ | ✅ |
+| MySQL (tags partagés sur un réseau) | ❌ | ✅ |
+| Pack de ressources : tags animés partout, **chat compris** | ❌ | ✅ |
+
+En Free, les tags Premium restent **visibles mais grisés** dans le menu (réglage `menu.show-premium`) : vos joueurs voient ce qu'ils pourraient avoir. `/tag preview` indique si un rendu est compatible Free.
+
+## Aller plus loin
+
+<Cards>
+  <Card title="Commandes et permissions" href="/wiki/tag/commandes" />
+  <Card title="Créer des tags" href="/wiki/tag/tags" />
+  <Card title="L'Atelier" href="/wiki/tag/atelier" />
+  <Card title="Configuration" href="/wiki/tag/configuration" />
+  <Card title="Guides" href="/wiki/tag/guides" />
+</Cards>

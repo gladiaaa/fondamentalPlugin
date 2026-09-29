@@ -1,0 +1,101 @@
+---
+title: L'Atelier
+description: Chaque joueur compose son propre tag à partir des pièces que vous proposez (customization.yml).
+---
+
+Dans l'Atelier (`/tag atelier` ou le bouton du menu), le joueur assemble son tag personnel :
+
+**titre + couleur + effet + style + badge + cadre**
+
+puis affine les réglages : vitesse de l'effet, sens de défilement, couleur du badge et du cadre, position du badge. L'aperçu se met à jour en direct. Une pièce achetée est acquise à vie.
+
+Vous décidez de tout dans `plugins/FondamentalTag/customization.yml` : les pièces proposées, leur prix, leur permission. Le joueur ne peut **pas écrire de texte libre** : les titres viennent uniquement de votre liste, donc pas d'insulte possible.
+
+## Les familles de pièces
+
+| Famille | Contenu | Livré par défaut |
+|---|---|---|
+| `titles` | Le texte du tag | 28 titres, de « Joueur » (gratuit) à « Mythique » |
+| `colors` | Couleur unie, ou dégradé de 2–3 couleurs | 30 couleurs et dégradés |
+| `effects` | Animation et mouvement <Premium /> | 17 effets |
+| `styles` | Alphabet Unicode <Premium /> (sauf « Normal » et « Gras ») | 11 styles |
+| `badges` | Symbole à côté du tag <Premium /> | 21 badges |
+| `frames` | Cadre autour du titre | 14 cadres |
+
+Chaque pièce accepte :
+
+```yaml
+titles:
+  enabled: true
+  items:
+    mineur: { text: "Mineur", cost: 100 }
+    fondateur:
+      text: "Fondateur"
+      cost: 0
+      permission: "grade.fondateur"   # requise pour l'acheter et l'utiliser
+      name: "<gold>Fondateur"          # nom affiché dans le menu
+      icon: GOLDEN_HELMET
+```
+
+| Champ | Rôle |
+|---|---|
+| `cost` | Prix ; `0` = gratuit, débloqué d'office |
+| `permission` | Facultatif : réserve la pièce à un grade, ou la vend sur votre boutique web |
+| `name` | Facultatif : nom dans le menu (MiniMessage) |
+| `icon` | Facultatif : objet affiché dans le menu |
+
+Une famille entière se désactive avec `enabled: false` ; l'Atelier entier aussi (`enabled: false` en haut du fichier).
+
+## Monnaie
+
+```yaml
+economy:
+  provider: internal         # internal | vault | playerpoints
+  currency: "points"         # nom affiché (internal, playerpoints)
+  playtime-reward:           # internal uniquement
+    enabled: true
+    every-minutes: 10
+    amount: 5
+```
+
+- **`internal`** : les points du plugin. Les joueurs en gagnent en jouant (5 points toutes les 10 minutes par défaut) ; vous en donnez avec `/tag points give <joueur> <n>` (votes, boutique, événements).
+- **`vault`** : l'économie du serveur (EssentialsX, CMI…).
+- **`playerpoints`** : le plugin PlayerPoints.
+
+Cette monnaie sert aussi à la **boutique de tags** (`price` dans `tags.yml`).
+
+## Réglages proposés au joueur
+
+```yaml
+settings:
+  speed: true            # lente / normale / rapide
+  direction: true        # sens de défilement
+  badge-color: true      # couleur du badge parmi ses couleurs unies
+  badge-position: true   # badge à gauche ou à droite
+  frame-color: true      # couleur du cadre parmi ses couleurs unies
+```
+
+## Dégradé sur mesure (Premium)
+
+Le joueur assemble 2 ou 3 de ses couleurs **unies** débloquées pour créer son propre dégradé :
+
+```yaml
+custom-gradient:
+  enabled: true
+  cost: 500
+  permission: ""
+  max-colors: 3
+```
+
+## Free ou Premium, pièce par pièce
+
+Le plugin classe chaque pièce automatiquement :
+
+- **Free** : titres, couleurs unies, cadres, styles « Normal » et « Gras », effet « Aucun ».
+- **Premium** : couleurs à plusieurs teintes (dégradés), effets animés et mouvements, autres styles, badges avec symbole.
+
+En Free, les pièces Premium restent visibles mais verrouillées.
+
+## Avec le pack de ressources (Premium)
+
+Avec le [pack de ressources](/wiki/tag/configuration#pack-de-ressources-premium), toutes les combinaisons de l'Atelier s'animent aussi **dans le chat**. Limites du pack : 64 variantes d'effets et 31 couleurs distinctes. Astuce : construisez vos dégradés avec les couleurs unies de la liste, pour rester sous la limite.
