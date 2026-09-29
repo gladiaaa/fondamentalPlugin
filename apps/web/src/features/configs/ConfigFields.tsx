@@ -7,7 +7,9 @@ import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { isShown, isValues, matchingOption, optionDefault, withKey } from "./values";
-import { MiniMessagePreview } from "./MiniMessagePreview";
+import { MiniMessagePreview, Segments } from "./MiniMessagePreview";
+import { parseMiniMessage, type Segment } from "./minimessage";
+import { renderTag } from "./tag-effects";
 import { ColorListEditor } from "./ColorListEditor";
 
 /**
@@ -495,10 +497,20 @@ function ListEditor({
 }
 
 /** Nom lisible d'une entrée : son `display` ou `name` en MiniMessage, sinon rien. */
-function entryTitle(entry: ConfigValue | undefined): string | null {
+/**
+ * Aperçu du nom d'une entrée dans une liste. Un tag de FondamentalTag est rendu comme en jeu
+ * (images, sinon texte généré avec son effet et ses couleurs, sinon affichage) : son « Texte »
+ * seul n'a pas de couleur. Sinon, le `display` ou `name` en MiniMessage.
+ */
+function entryPreview(entry: ConfigValue | undefined): Segment[] | null {
   if (!isValues(entry)) return null;
-  const title = entry.display ?? entry.name ?? entry.text;
-  return typeof title === "string" && title.trim() !== "" ? title : null;
+  const isTag = (Array.isArray(entry.frames) && entry.frames.length > 0) || (typeof entry.text === "string" && entry.text !== "");
+  const segments = isTag
+    ? renderTag(entry, 0).segments
+    : typeof (entry.display ?? entry.name) === "string"
+      ? parseMiniMessage(String(entry.display ?? entry.name))
+      : [];
+  return segments.some((s) => s.text.trim() !== "") ? segments : null;
 }
 
 /**
@@ -542,7 +554,7 @@ export function MapLinks({
       ) : (
         <ul className="grid gap-1.5">
           {entries.map(([key, entry]) => {
-            const title = entryTitle(entry);
+            const preview = entryPreview(entry);
             return (
               <li key={key} className="flex items-center gap-2">
                 <button
@@ -550,9 +562,16 @@ export function MapLinks({
                   onClick={() => onOpen(key)}
                   className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-field border border-line bg-surface-2 px-3 py-2 text-left transition-colors hover:border-accent"
                 >
-                  <span className="min-w-0 truncate">
-                    <span className="font-mono text-[.85rem] text-muted">{key}</span>
-                    {title && <MiniMessagePreview value={title} className="mt-1 inline-block max-w-full bg-transparent px-0 py-0" />}
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="shrink-0 font-mono text-[.82rem] text-muted">{key}</span>
+                    {preview && (
+                      <span
+                        className="min-w-0 truncate rounded-[6px] px-2 py-0.5 font-mono text-[.9rem]"
+                        style={{ background: "rgba(16, 12, 24, 0.92)" }}
+                      >
+                        <Segments segments={preview} />
+                      </span>
+                    )}
                   </span>
                   <span aria-hidden className="text-muted">›</span>
                 </button>
