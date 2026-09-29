@@ -31,7 +31,7 @@ export default function CompteLayout({ children }: { children: React.ReactNode }
 
   return (
     <section className="px-4 py-[clamp(28px,5vw,56px)] sm:px-8">
-      <div className="mx-auto grid max-w-[1000px] gap-6 md:grid-cols-[220px_1fr]">
+      <div className="mx-auto grid max-w-[1000px] grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
         <AccountNav />
         <div className="min-w-0">{children}</div>
       </div>

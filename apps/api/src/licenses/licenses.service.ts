@@ -27,9 +27,11 @@ export class LicensesService {
     const licenses = await this.prisma.license.findMany({
       where: { userId },
       orderBy: { claimedAt: 'desc' },
+      include: { product: { select: { slug: true, name: true } } },
     });
     return licenses.map((license) => ({
       id: license.id,
+      product: license.product,
       key: license.licenseKey,
       claimedAt: license.claimedAt.toISOString(),
     }));

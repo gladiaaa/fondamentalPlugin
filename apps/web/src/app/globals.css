@@ -206,6 +206,12 @@ body {
   }
 }
 
+/* Générateur de configuration : flèche des blocs repliables, tournée seulement quand son
+   propre <details> est ouvert (group-open suivrait aussi les blocs parents). */
+details[open] > summary .config-chevron {
+  rotate: 90deg;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

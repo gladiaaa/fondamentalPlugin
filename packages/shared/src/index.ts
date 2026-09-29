@@ -194,6 +194,11 @@ export interface OwnedLicenseResponse {
    * place de la clé : une clé dans une URL finit dans l'historique, les journaux et l'en-tête Referer (#91).
    */
   id: string;
+  /**
+   * Plugin de la boutique correspondant à la clé ; `null` si inconnu (dans la liste : clé rattachée
+   * avant que le plugin ne soit enregistré ; dans le détail : aucun produit ne correspond).
+   */
+  product: { slug: string; name: string } | null;
   /** Clé de licence, propre au titulaire du compte : jamais affichée à quelqu'un d'autre. */
   key: string;
   /** Date ISO 8601 du rattachement (pas forcément celle de l'achat). */
@@ -214,8 +219,6 @@ export interface LicenseActivation {
 
 /** Statut détaillé d'une licence (`GET /api/me/licenses/:id`), #25. */
 export interface LicenseDetailResponse extends OwnedLicenseResponse {
-  /** Plugin de la boutique correspondant à la clé ; `null` si aucun produit du catalogue ne lui correspond. */
-  product: { slug: string; name: string } | null;
   edition: string;
   revoked: boolean;
   /** Date ISO 8601, ou `null` : licence sans limite de durée. */

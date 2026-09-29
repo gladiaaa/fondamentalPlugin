@@ -2938,28 +2938,6 @@
           "version"
         ]
       },
-      "OwnedLicenseApiResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "À mettre dans les URL à la place de la clé (#91)."
-          },
-          "key": {
-            "type": "string"
-          },
-          "claimedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "key",
-          "claimedAt"
-        ]
-      },
       "LicenseProductApiResponse": {
         "type": "object",
         "properties": {
@@ -2973,6 +2951,39 @@
         "required": [
           "slug",
           "name"
+        ]
+      },
+      "OwnedLicenseApiResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "À mettre dans les URL à la place de la clé (#91)."
+          },
+          "product": {
+            "nullable": true,
+            "description": "Plugin de la clé ; vide si inconnu.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LicenseProductApiResponse"
+              }
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "claimedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "product",
+          "key",
+          "claimedAt"
         ]
       },
       "LicenseActivationApiResponse": {
@@ -3006,22 +3017,22 @@
             "format": "uuid",
             "description": "À mettre dans les URL à la place de la clé (#91)."
           },
-          "key": {
-            "type": "string"
-          },
-          "claimedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
           "product": {
             "nullable": true,
-            "description": "Vide si aucun plugin du catalogue ne correspond à la clé.",
+            "description": "Plugin de la clé ; vide si inconnu.",
             "type": "object",
             "allOf": [
               {
                 "$ref": "#/components/schemas/LicenseProductApiResponse"
               }
             ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "claimedAt": {
+            "type": "string",
+            "format": "date-time"
           },
           "edition": {
             "type": "string"
@@ -3048,9 +3059,9 @@
         },
         "required": [
           "id",
+          "product",
           "key",
           "claimedAt",
-          "product",
           "edition",
           "revoked",
           "expiresAt",
