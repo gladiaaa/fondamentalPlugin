@@ -104,6 +104,41 @@ nginx -t && systemctl reload nginx
 curl -s https://dev.fondamentalplugin.fr/api/health   # doit contenir "database":"up"
 ```
 
+### Mot de passe de la préprod
+
+`dev.fondamentalplugin.fr` demande un identifiant et un mot de passe (authentification HTTP de nginx, `api-dev.conf`). Restent ouverts, parce qu'ils ont déjà leur propre protection : la publication des jars (`/api/admin/releases/`, jeton), le webhook Stripe (`/api/stripe/webhook`, signature) et `/api/health` (vérification après déploiement, supervision). La préprod est aussi marquée « ne pas indexer ».
+
+**1. Le compte**, en root sur le VPS (le mot de passe est saisi sans s'afficher, et jamais écrit en clair) :
+
+```bash
+( umask 027 && read -rp "Identifiant : " U && read -rsp "Mot de passe : " P && echo \
+  && printf '%s:%s\n' "$U" "$(printf '%s' "$P" | openssl passwd -apr1 -stdin)" > /etc/nginx/fondamentalplugin-dev.htpasswd )
+chgrp www-data /etc/nginx/fondamentalplugin-dev.htpasswd
+```
+
+Plusieurs personnes : une ligne par compte (remplacer `>` par `>>` pour en ajouter une).
+
+**2. Les parcours automatiques** (GitHub, environnement `dev`) : variable `PREPROD_USER` et secret `PREPROD_PASSWORD`, avec le même compte.
+
+```bash
+gh variable set PREPROD_USER --env dev --repo gladiaaa/fondamentalPlugin --body "<identifiant>"
+gh secret set PREPROD_PASSWORD --env dev --repo gladiaaa/fondamentalPlugin   # demande le mot de passe
+```
+
+**3. nginx**, en root sur le VPS :
+
+```bash
+cp /etc/nginx/snippets/fondamentalplugin-api-dev.conf /etc/nginx/snippets/fondamentalplugin-api-dev.conf.bak
+curl -fsSL "https://raw.githubusercontent.com/gladiaaa/fondamentalPlugin/dev/deploy/nginx/api-dev.conf" \
+  -o /etc/nginx/snippets/fondamentalplugin-api-dev.conf
+nginx -t && systemctl reload nginx
+curl -s -o /dev/null -w "%{http_code}\n" https://dev.fondamentalplugin.fr/                                # 401
+curl -s https://dev.fondamentalplugin.fr/api/health                                                       # {"ok":true,…}
+curl -s -o /dev/null -w "%{http_code}\n" -X POST https://dev.fondamentalplugin.fr/api/stripe/webhook   # 400, pas 401
+```
+
+Retirer la protection : remettre la sauvegarde (`.bak`) puis `systemctl reload nginx`.
+
 ### 4. Production
 
 Mêmes étapes 2 et 3 avec `prod`, `API_PORT=4100` et `api-prod.conf` (bloc `server_name fondamentalplugin.fr www.fondamentalplugin.fr`) :
@@ -185,7 +220,7 @@ Compte gratuit sur uptimerobot.com, puis *Integrations → Discord* avec la mêm
 
 | Nom | Type | Adresse | Condition |
 |---|---|---|---|
-| Site dev | Keyword | `https://dev.fondamentalplugin.fr/plugins` | contient `FondamentalTag` (catalogue chargé depuis l'API) |
+| Site dev | Keyword | `https://dev.fondamentalplugin.fr/plugins` | contient `FondamentalTag` (catalogue chargé depuis l'API) ; renseigner l'identifiant et le mot de passe de la préprod dans les réglages d'authentification HTTP de la sonde |
 | API dev | Keyword | `https://dev.fondamentalplugin.fr/api/health` | contient `"database":"up"` |
 | Serveur de licences | HTTP | `http://46.202.128.132:8091/healthz` | code 200 |
 | Site prod | HTTP | `https://fondamentalplugin.fr/` | code 200 (les sondes prod API/catalogue le jour de la mise en production) |

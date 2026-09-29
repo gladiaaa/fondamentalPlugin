@@ -9,6 +9,12 @@ if (baseURL.replace(/\/+$/, "") === "https://fondamentalplugin.fr") {
   throw new Error("Les parcours achètent avec une carte de test : jamais sur la prod.");
 }
 
+// Préproduction protégée par mot de passe (deploy/nginx/api-dev.conf) : identifiants envoyés
+// seulement au site testé, jamais à Stripe ni ailleurs.
+const httpCredentials = process.env.PREPROD_USER
+  ? { username: process.env.PREPROD_USER, password: process.env.PREPROD_PASSWORD ?? "", origin: new URL(baseURL).origin }
+  : undefined;
+
 export default defineConfig({
   testDir: "./specs",
   // Un seul compte de test : les parcours qui s'y connectent ne doivent pas se marcher dessus.
@@ -21,6 +27,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"]],
   use: {
     baseURL,
+    httpCredentials,
     locale: "fr-FR",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
