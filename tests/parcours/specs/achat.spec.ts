@@ -11,10 +11,12 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
   // Garde-fou : jamais une session Stripe réelle (les sessions du mode test commencent par cs_test_).
   expect(page.url(), "session Stripe en mode test uniquement").toContain("cs_test_");
 
-  // Moyens de paiement en accordéon (carte, Klarna…) : ouvrir la carte si elle n'est pas déjà dépliée.
-  await page.locator("#cardNumber").or(page.getByRole("button", { name: /Payer par carte|Pay with card/ })).first().waitFor();
-  const carte = page.getByRole("button", { name: /Payer par carte|Pay with card/ });
-  if (await carte.isVisible().catch(() => false)) await carte.click();
+  // Moyens de paiement en liste (Carte, Amazon Pay, Klarna… selon le pays) : choisir « Carte » si les
+  // champs de la carte ne sont pas déjà affichés.
+  const choixCarte = page.getByRole("radio", { name: /^(Carte|Card)$/ });
+  await page.locator("#cardNumber").or(choixCarte).first().waitFor();
+  if (!(await page.locator("#cardNumber").isVisible()) && (await choixCarte.isVisible())) await choixCarte.check();
+  await page.locator("#cardNumber").waitFor();
 
   await page.locator("#cardNumber").fill("4242424242424242");
   await page.locator("#cardExpiry").fill("12 / 34");
