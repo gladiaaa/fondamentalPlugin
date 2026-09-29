@@ -13,9 +13,12 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
 
   // Moyens de paiement en liste (Carte, Amazon Pay, Klarna… selon le pays) : choisir « Carte » si les
   // champs de la carte ne sont pas déjà affichés.
-  const choixCarte = page.getByRole("radio", { name: /^(Carte|Card)$/ });
-  await page.locator("#cardNumber").or(choixCarte).first().waitFor();
-  if (!(await page.locator("#cardNumber").isVisible()) && (await choixCarte.isVisible())) await choixCarte.check();
+  // Toute la ligne « Carte » est couverte par le bouton « Payer par carte » de Stripe, qui intercepte les
+  // clics (sur la radio comme sur son libellé), et qui est tantôt visible, tantôt caché selon la mise en
+  // page : on lui envoie directement l'événement de clic.
+  const boutonCarte = page.getByTestId("card-accordion-item-button");
+  await page.locator("#cardNumber").or(boutonCarte).first().waitFor({ state: "attached" });
+  if (!(await page.locator("#cardNumber").isVisible())) await boutonCarte.dispatchEvent("click");
   await page.locator("#cardNumber").waitFor();
 
   await page.locator("#cardNumber").fill("4242424242424242");
@@ -27,7 +30,10 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
   if (await codePostal.isVisible().catch(() => false)) await codePostal.fill("75001");
 
   // Case obligatoire : CGV et renonciation au droit de rétractation (contenu numérique).
-  await page.getByRole("checkbox", { name: /renoncez expressément|droit de rétractation/ }).check();
+  // Même principe que la radio : si la case est dessinée par Stripe, on clique sur son texte.
+  const cgv = page.getByRole("checkbox", { name: /renoncez expressément|droit de rétractation/ });
+  await cgv.check({ timeout: 5_000 }).catch(() => page.getByText(/renoncez expressément/).first().click());
+  await expect(cgv).toBeChecked();
   await page.getByRole("button", { name: /^(Payer|Pay)$/ }).click();
 }
 
