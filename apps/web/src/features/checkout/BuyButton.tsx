@@ -9,6 +9,7 @@ import { PanierIcon } from "@/components/icons";
 import { useSession } from "@/lib/session/SessionContext";
 import { checkout } from "@/lib/api/orders";
 import { ApiRequestError } from "@/lib/api/client";
+import { suivreEvenement } from "@/lib/supervision";
 
 /** Erreurs de `POST /checkout` que le client peut comprendre (docs/api-front.md §4 et §5). */
 const CHECKOUT_ERRORS: Record<string, { title: string; message: string }> = {
@@ -59,6 +60,7 @@ export function BuyButton({ productSlug }: { productSlug: string }) {
     if (!csrfToken) return;
     setError(null);
     setPending(true);
+    suivreEvenement("achat-clic", { plugin: productSlug });
     try {
       const { url } = await checkout(productSlug, csrfToken);
       // Page Stripe : navigation complète, pas le routeur Next (autre domaine).

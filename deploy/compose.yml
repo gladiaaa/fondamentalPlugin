@@ -11,7 +11,11 @@ services:
     # Écoute uniquement en local : nginx (HTTPS) fait le lien avec Internet.
     ports:
       - "127.0.0.1:${HOST_PORT:?HOST_PORT manquant}:3000"
-    # Secrets de l'application (Stripe, licences...) : fichier présent uniquement sur le VPS.
+    environment:
+      APP_ENV: ${APP_ENV}
+      # Rendu serveur : le site joint l'API directement, sans repasser par nginx.
+      API_INTERNAL_URL: http://api:4000/api
+    # Réglages propres au VPS (Sentry, Umami…) : fichier présent uniquement sur le VPS.
     env_file:
       - app.env
     security_opt:

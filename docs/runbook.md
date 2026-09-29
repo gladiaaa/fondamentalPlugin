@@ -22,6 +22,10 @@ cat /opt/fondamentalplugin/prod/current /opt/fondamentalplugin/prod/previous   #
 | L'API refuse de démarrer | variable d'environnement manquante ou invalide : le message des logs nomme la variable | corriger `api.env` puis §4 |
 | Inscription, renvoi du lien ou « mot de passe oublié » répondent `503` | `RESEND_API_KEY` absente ou invalide | §4 |
 | Le site s'affiche, `/api/...` non | bloc nginx `/api/` absent ou API arrêtée | `nginx -t`, logs de l'API |
+| Alerte Discord « Site dev » (catalogue) mais « API dev » en ligne | le site ne joint plus l'API (`API_INTERNAL_URL`) | logs du site : `docker logs fondamentalplugin-dev` |
+| Alerte Discord « Sauvegarde » ou « Copie externe » | tâche de nuit en échec : le message contient la fin du journal | `/var/log/fondamentalplugin-backup.log`, [deploy/README.md](../deploy/README.md#sauvegardes) |
+
+Les alertes (UptimeRobot, tâches de nuit) arrivent sur Discord ; les erreurs de code dans Sentry. Voir [deploy/README.md](../deploy/README.md#supervision-33).
 
 ## 1. Déployer
 
