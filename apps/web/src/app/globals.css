@@ -174,6 +174,38 @@ body {
   box-shadow: var(--focus-ring);
 }
 
+/*
+ * Blocs de code du wiki (Shiki, via Fumadocs) : chaque mot porte deux couleurs,
+ * `--shiki-light` et `--shiki-dark`, et Fumadocs ne choisit la sombre que sous
+ * une classe `.dark` — que next-themes ne pose pas ici (il pose `data-theme`).
+ * Sans ces règles, le code s'affiche avec les couleurs du thème clair sur le
+ * fond sombre : illisible. Même logique de thème que plus haut : sombre si
+ * choisi, ou si le système n'est pas en clair et qu'aucun choix contraire n'est fait.
+ */
+:root[data-theme="dark"] .shiki:not(.not-fumadocs-codeblock *) code span,
+:root[data-theme="dark"] code.shiki:not(.not-fumadocs-code *) span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+}
+@media not (prefers-color-scheme: light) {
+  :root:not([data-theme="light"]) .shiki:not(.not-fumadocs-codeblock *) code span,
+  :root:not([data-theme="light"]) code.shiki:not(.not-fumadocs-code *) span {
+    color: var(--shiki-dark);
+    font-style: var(--shiki-dark-font-style);
+  }
+}
+
+/* Commentaires du thème sombre de Shiki (#6A737D) : trop peu contrastés sur nos
+   fonds violets ; on prend le gris de la charte (--color-muted, AA sur surface-2). */
+:root[data-theme="dark"] .shiki code span[style*="--shiki-dark:#6A737D"] {
+  color: var(--color-muted);
+}
+@media not (prefers-color-scheme: light) {
+  :root:not([data-theme="light"]) .shiki code span[style*="--shiki-dark:#6A737D"] {
+    color: var(--color-muted);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
