@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { isShown, isValues, matchingOption, optionDefault, withKey } from "./values";
 import { MiniMessagePreview } from "./MiniMessagePreview";
+import { ColorListEditor } from "./ColorListEditor";
 
 /**
  * Formulaire généré depuis le schéma d'un fichier (#30) : un composant par sorte de champ
@@ -187,6 +188,22 @@ function FieldEditor({
       );
 
     case "textList":
+      // Liste de couleurs : pastilles, sélecteur de couleur et palettes, pas de codes à taper.
+      if (isHexField(field.pattern)) {
+        return (
+          <div className="grid gap-2">
+            <span className="font-body text-[.84rem] font-medium">
+              <Label field={field} />
+            </span>
+            <ColorListEditor
+              label={field.label}
+              value={Array.isArray(value) ? (value as string[]) : []}
+              max={field.maxItems}
+              onChange={(colors) => onChange(colors.length === 0 && inEntry ? undefined : colors)}
+            />
+          </div>
+        );
+      }
       return (
         <FieldShell field={field} id={id} hintSuffix="Un élément par ligne.">
           <Textarea
@@ -198,13 +215,6 @@ function FieldEditor({
               onChange(e.target.value === "" ? (inEntry ? undefined : []) : items);
             }}
           />
-          {isHexField(field.pattern) && Array.isArray(value) && value.length > 0 && (
-            <div className="flex flex-wrap gap-1.5" aria-hidden>
-              {(value as string[]).filter((c) => HEX_COLOR.test(c)).map((c, i) => (
-                <span key={i} className="size-6 rounded-full border border-line" style={{ background: c }} />
-              ))}
-            </div>
-          )}
           {field.minimessage && Array.isArray(value) && value.length > 0 && (
             <MiniMessagePreview value={(value as string[]).join("\n")} />
           )}

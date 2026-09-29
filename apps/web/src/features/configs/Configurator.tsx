@@ -27,6 +27,7 @@ import {
 } from "@/lib/api/configs";
 import { ConfigFields, MapLinks } from "./ConfigFields";
 import { TagPreview } from "./MiniMessagePreview";
+import { plainText } from "./minimessage";
 import { breadcrumb, generalFields, resolveNode, screenFields, setAt, type NodePath } from "./navigation";
 import { isValues } from "./values";
 
@@ -539,6 +540,7 @@ function NodeEditor({
     <>
       {header}
       {isTag && <TagPreview tag={node.values} />}
+      {isTag && <TagModeHint tag={node.values} onChange={(v) => onChange(setAt(values, path, v))} />}
       <ConfigFields
         fields={node.map.fields ?? []}
         values={node.values}
@@ -548,4 +550,44 @@ function NodeEditor({
       />
     </>
   );
+}
+
+const GENERATED_KEYS = ["effect", "colors", "style", "format", "speed", "highlight", "spread", "pause", "motion", "font", "shadow"];
+
+/**
+ * FondamentalTag choisit l'apparence d'un tag dans cet ordre : les images (`frames`), sinon le tag
+ * généré si « Texte » est rempli, sinon l'affichage écrit à la main. Un effet sans texte, ou
+ * masqué par des images, n'a donc aucun effet en jeu : on le dit, avec de quoi corriger.
+ */
+function TagModeHint({ tag, onChange }: { tag: ConfigValues; onChange: (tag: ConfigValues) => void }) {
+  const hasFrames = Array.isArray(tag.frames) && tag.frames.length > 0;
+  const hasText = typeof tag.text === "string" && tag.text.trim() !== "";
+  const hasGenerated = GENERATED_KEYS.some((k) => tag[k] !== undefined);
+  const display = typeof tag.display === "string" ? tag.display : "";
+
+  if (hasFrames && (hasText || hasGenerated)) {
+    return (
+      <Alert variant="warning" title="L’effet n’est pas utilisé">
+        Ce tag a des images d’animation : elles passent avant le tag généré. Videz « Images » (animation image par
+        image) pour que l’effet s’applique.
+      </Alert>
+    );
+  }
+  if (!hasText && hasGenerated) {
+    const fromDisplay = plainText(display).trim();
+    return (
+      <Alert variant="warning" title="L’effet n’est pas utilisé">
+        <p>
+          Les effets, couleurs et styles s’appliquent au <strong>texte généré</strong> : remplissez « Texte » dans « Tag
+          généré par un effet ». Sans texte, le plugin affiche l’« Affichage » écrit à la main, tel quel.
+        </p>
+        {fromDisplay !== "" && (
+          <Button size="sm" variant="secondary" className="mt-2" onClick={() => onChange({ ...tag, text: fromDisplay })}>
+            Utiliser l’affichage comme texte : « {fromDisplay} »
+          </Button>
+        )}
+      </Alert>
+    );
+  }
+  return null;
 }
