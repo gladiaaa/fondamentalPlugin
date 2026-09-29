@@ -1,0 +1,75 @@
+---
+title: Créer une arène
+description: De la carte construite à l'arène prête à jouer — schematic, lits, générateurs, marchands.
+---
+
+Une arène, c'est une **carte** (sauvegardée en schematic) et des **positions** : spawns, lits, générateurs, marchands. À chaque partie, le plugin colle la carte dans un **monde vide neuf**, puis le supprime à la fin : les parties ne se gênent jamais.
+
+<Callout>
+  L'édition Free permet **2 arènes**. En Premium, elles sont illimitées.
+</Callout>
+
+## 1. Sauvegarder la carte
+
+Construisez la carte dans un monde de construction, puis, **debout au centre exact** de la carte :
+
+```
+//copy
+//schem save <nom_schematic>
+```
+
+Copiez le fichier `<nom_schematic>.schem` (dossier de schematics de FastAsyncWorldEdit) dans `plugins/FondamentalBedwars/schematics/`.
+
+## 2. Créer l'arène
+
+```
+/bw create <arène>
+/bw setmode <arène> DUOS
+/bw settemplate <arène> <nom_schematic>
+```
+
+Modes disponibles :
+
+| Mode | Équipes × joueurs |
+|---|---|
+| `SOLO_1V1` | 2 × 1 |
+| `SOLO_4TEAMS` | 4 × 1 |
+| `SOLO` | 8 × 1 |
+| `DUOS` | 4 × 2 |
+| `DOUBLES` | 8 × 2 |
+| `TRIOS` | 4 × 3 |
+| `QUADS` | 4 × 4 |
+| `SQUADS` | 4 × 4 |
+| `FOURS_2T` | 2 × 4 |
+
+## 3. Placer les positions
+
+Téléportez-vous dans l'arène avec `/bw tp <arène>`, puis :
+
+```
+/bw setorigin <arène>              # au centre EXACT de la carte, comme pour //copy
+/bw setlobby <arène>               # salle d'attente
+/bw setspawn <arène> RED           # répéter pour chaque équipe
+/bw setbed <arène> RED             # debout sur le lit ou juste à côté
+/bw addteamgenerator <arène> RED   # générateur fer/or de l'équipe
+/bw addgenerator <arène> diamond   # générateurs centraux : iron, gold, diamond, emerald
+/bw setshop <arène> WEAPONS        # marchands : WEAPONS, BLOCKS, POTIONS, TRAPS, UPGRADES
+```
+
+Couleurs d'équipe : `RED`, `BLUE`, `GREEN`, `YELLOW`, `AQUA`, `WHITE`, `PINK`, `GRAY`. Toutes les positions sont enregistrées **par rapport à l'origine** : c'est pourquoi l'origine doit être exactement le point du `//copy`.
+
+Pour corriger : `/bw removegenerator <arène> <id>`, `/bw removeteamgenerator <arène> <équipe>`, `/bw removeshop <arène> <id>`.
+
+### L'éditeur visuel
+
+`/bw edit <arène>` affiche des **marqueurs** sur les positions et un menu pour les placer ; `/bw edit stop` pour quitter. L'éditeur gère les équipes Rouge, Bleu, Vert et Jaune ; pour les modes à 8 équipes, placez les équipes `AQUA`, `WHITE`, `PINK` et `GRAY` avec les commandes ci-dessus.
+
+## 4. Vérifier et tester
+
+```
+/bw status <arène>
+```
+
+L'arène doit être **prête ✔**. Sinon, le message indique ce qui manque. Ensuite, passez par le menu `/bw play` ou forcez une partie avec `/bw start <arène>`.
+
+Les réglages d'une arène sont enregistrés dans `plugins/FondamentalBedwars/arenas/<arène>.yml`.

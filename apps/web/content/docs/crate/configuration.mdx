@@ -1,0 +1,87 @@
+---
+title: Configuration
+description: config.yml de FondamentalCrate — comportement, stockage, liaison FondamentalTag, textes.
+---
+
+Fichier : `plugins/FondamentalCrate/config.yml`. Après modification : `/crate reload`.
+
+## Comportement général
+
+```yaml
+settings:
+  one-open-at-a-time: true     # une seule ouverture à la fois par joueur
+  cooldown-seconds: 0          # délai entre deux ouvertures (0 = aucun)
+  full-inventory: drop         # drop = l'objet tombe au sol ; deny = ouverture refusée
+  broadcast-enabled: true      # annonces serveur des lots rares
+  preview-show-chance: true    # afficher les pourcentages dans l'aperçu
+  win-flourish:
+    title: true                # titre plein écran
+    sound: true
+    firework: true
+    firework-rare-only: true   # feu d'artifice seulement pour les lots annoncés
+  autosave-seconds: 300
+  floating-key: true           # clé 3D qui tourne au-dessus de chaque bloc
+```
+
+Chaque gain est aussi inscrit dans un journal daté : `plugins/FondamentalCrate/logs/wins-AAAA-MM-JJ.log`.
+
+## Licence
+
+```yaml
+license:
+  key: ""                  # vide = édition Free
+  check-interval-hours: 6
+  grace-hours: 72
+```
+
+Après avoir collé la clé, **redémarrez** le serveur. Voir [Activer ma licence](/wiki/licence).
+
+## Stockage
+
+```yaml
+storage:
+  type: json               # json | mysql (Premium)
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentalcrate"
+    username: "root"
+    password: ""
+    useSSL: false
+    table-prefix: "cc_"     # plusieurs installations sur une même base
+```
+
+- **`json`** (toutes éditions) : fichiers `keys.json`, `history.json`, `pity.json`, `limits.json` et `global-limits.json` dans le dossier du plugin. Ne les modifiez pas serveur allumé.
+- **`mysql`** <Premium /> : clés, historique, pitié et compteurs par joueur suivent le joueur sur tout le réseau. Si la base est injoignable, le plugin repasse sur JSON plutôt que de refuser de démarrer.
+
+<Callout type="warn">
+  Premier démarrage d'une licence neuve avec `storage.type: mysql` : le stockage est choisi avant la fin de la première vérification de licence, JSON est donc utilisé. Redémarrez une fois pour passer sur MySQL.
+</Callout>
+
+<Callout type="warn">
+  Sur un réseau, les **limites de gain globales** (`limit.global`) et les compteurs `used_*` sont gardés par chaque serveur : ne comptez pas sur eux pour une limite exacte partagée entre plusieurs serveurs. Les données **par joueur** sont, elles, fiables partout.
+</Callout>
+
+## Liaison FondamentalTag
+
+La section s'appelle `tagcustom` pour des raisons historiques ; **FondamentalTag est détecté automatiquement** et prioritaire.
+
+```yaml
+tagcustom:
+  enabled: true
+  rarity-from-tag: true      # un lot de tag sans rarity prend la rareté du tag
+  rarity-map:                # correspondance des raretés Tag → Crate
+    commun: common
+    rare: rare
+    epique: epic
+    legendaire: legendary
+    mythique: legendary
+    evenement: legendary
+```
+
+Les autres clés (`plugin-name`, `grant-mode`, `grant-command`, `luckperms-context-server`) ne servent que pour l'ancien plugin TagsCustom 1.x.
+
+## Couleurs et textes
+
+- `colors` : la palette des messages, menus et console. Voir [la charte commune](/wiki/gamme#une-charte-commune).
+- `messages.yml` : tous les textes, en MiniMessage, avec les variables `<crate>`, `<reward>`, `<amount>`, `<player>`, `<keys>`, `<cost>`, `<seconds>`, `<tag>`… À chaque démarrage, les textes ajoutés par une nouvelle version sont complétés sans toucher aux vôtres.

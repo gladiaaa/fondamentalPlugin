@@ -1,0 +1,124 @@
+---
+title: Les quêtes
+description: quests.yml — difficultés, pools, quêtes et les 15 types d'objectifs.
+---
+
+Fichier : `plugins/FondamentalPass/quests.yml`. La configuration livrée compte 37 quêtes (jeu vanilla, Bedwars et Crate). Après modification : `/pass admin reload`.
+
+## Difficultés
+
+Du plus facile au plus dur (cet ordre sert au tri dans les menus) :
+
+```yaml
+difficulties:
+  facile:    { name: "<ok>Facile", stars: 1 }
+  normal:    { name: "<info>Normale", stars: 2 }
+  difficile: { name: "<alerte>Difficile", stars: 3 }
+  extreme:   { name: "<erreur>Extrême", stars: 4 }
+```
+
+## Pools
+
+Un pool est un groupe de quêtes **tirées au hasard** pour chaque joueur et renouvelées ensemble.
+
+```yaml
+pools:
+  daily:
+    name: "Quêtes du jour"
+    icon: SUNFLOWER
+    reset: daily                     # daily | weekly | season
+    amount: {facile: 2, normal: 1, difficile: 1}
+    completion:                      # bonus quand tout le pool est terminé
+      xp: 500
+  weekly:
+    name: "Quêtes de la semaine"
+    icon: CLOCK
+    reset: weekly
+    amount: {normal: 1, difficile: 1, extreme: 1}
+    completion:
+      xp: 2500
+      rewards:
+        - {type: crate-key, crate: "vote", amount: 1}
+  season:
+    name: "Défis de saison"
+    icon: NETHER_STAR
+    reset: season
+    amount: all
+```
+
+| Champ | Rôle |
+|---|---|
+| `reset` | `daily` : chaque jour à `reset-hour` ; `weekly` : le lundi ; `season` : jamais |
+| `amount` | Nombre de quêtes tirées, `all` pour toutes, ou un tirage par difficulté |
+| `completion` | Bonus (`xp`, `rewards`) quand toutes les quêtes de la période sont terminées |
+
+## Une quête
+
+```yaml
+quests:
+  mineur:
+    pool: daily
+    difficulty: normal
+    name: "Mineur"
+    description: "<texte>Casse <fort><amount></fort> blocs de pierre."   # <amount> = quantité
+    icon: IRON_PICKAXE
+    xp: 250
+    weight: 10                     # chance d'être tirée (10 par défaut)
+    servers: ["survie-*"]          # facultatif : serveurs où la quête avance
+    where: "Survie"                # nom affiché aux joueurs pour ces serveurs
+    rewards:                       # facultatif : en plus de l'XP
+      - {type: money, amount: 100}
+    objective: {type: break-block, amount: 200, materials: [STONE, DEEPSLATE]}
+```
+
+Avec `servers`, la quête n'avance que sur les serveurs dont le nom (`server.name`) correspond ; ailleurs, le menu indique où la faire.
+
+## Les objectifs
+
+### 13 objectifs de jeu (Free)
+
+| `type` | Compte | Remarque |
+|---|---|---|
+| `break-block` | Blocs cassés | Un bloc posé par un joueur ne compte pas s'il le recasse |
+| `place-block` | Blocs posés | |
+| `kill-mob` | Créatures tuées | Filtre `entities` |
+| `kill-player` | Joueurs tués | |
+| `craft` | Objets fabriqués | Le shift-clic compte |
+| `fish` | Prises à la pêche | |
+| `smelt` | Objets cuits (retirés du four) | |
+| `enchant` | Objets enchantés | |
+| `consume` | Objets consommés | Filtre `items` |
+| `breed` | Animaux reproduits | |
+| `playtime` | Minutes de jeu | Pas pendant l'inactivité (5 min) |
+| `walk` | Blocs parcourus à pied | Pas en vol, en véhicule, ni par téléportation |
+| `login` | Jours de connexion | Une fois par jour |
+
+Filtres facultatifs : `materials`, `entities`, `items` (noms Minecraft). Les actions en mode créatif ou spectateur ne comptent pas.
+
+### `custom` : depuis un autre plugin (Premium)
+
+```yaml
+    objective: {type: custom, key: "bedwars:win", amount: 10}
+```
+
+Clés envoyées automatiquement par la gamme :
+
+| Plugin | Clés |
+|---|---|
+| FondamentalBedwars | `bedwars:play`, `bedwars:win`, `bedwars:kill`, `bedwars:final_kill`, `bedwars:bed_break` |
+| FondamentalCrate | `crate:open`, `crate:open:<id de la crate>` |
+
+Tout autre plugin peut envoyer ses propres clés par l'[API](/wiki/pass/guides#pour-les-développeurs--lapi). Pour tester : `/pass admin trigger <joueur> <clé> [n]`.
+
+### `placeholder` : n'importe quel plugin (Premium)
+
+Suit la valeur d'un placeholder PlaceholderAPI, relevée toutes les `placeholder-interval-seconds` (30 par défaut) :
+
+```yaml
+    objective: {type: placeholder, placeholder: "%vault_eco_balance%", amount: 10000, mode: reach}
+```
+
+- `mode: reach` : atteindre la valeur.
+- `mode: increase` : gagner `amount` depuis le tirage de la quête (« gagne 500 pièces aujourd'hui »).
+
+Une quête dont l'objectif est invalide, ou réservé au Premium en édition Free, est ignorée au chargement avec un avertissement dans la console.

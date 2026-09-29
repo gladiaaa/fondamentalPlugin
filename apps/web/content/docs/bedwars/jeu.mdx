@@ -1,0 +1,94 @@
+---
+title: Déroulement d'une partie
+description: Matchmaking, boutique, objets spéciaux, pièges, améliorations, calendrier d'événements, classé et rangs.
+---
+
+## Trouver une partie
+
+- **Boussole** du lobby ou `/bw play` : bascule **Normal / Classé**, puis choix du mode. Les modes à 8 équipes n'apparaissent que si une arène prête existe pour eux.
+- **Files d'attente** par mode ; **vote** entre les cartes candidates. Le compte à rebours (`matchmaking.countdown`, 30 s) démarre dès `matchmaking.min-players` joueurs (2).
+- **Party** : `/party invite <joueur>` (invitation valable 60 s). Seul le chef lance la file ; les membres suivent.
+- **Partie privée** (permission `bedwars.private`) : le créateur choisit le mode et la carte et reçoit un code `FBW-XXXX` ; ses amis font `/bw join FBW-XXXX` ; il lance avec `/bw start-private <code>`.
+
+## En partie
+
+1. **Salle d'attente** : choix de l'équipe (sauf en classé, où les équipes sont **équilibrées par l'Elo**).
+2. **Île** de chaque équipe : le lit à protéger, un générateur de fer et d'or, et des **marchands** (armes, blocs, potions, pièges, améliorations). Diamants et émeraudes apparaissent au centre, avec un compte à rebours en hologramme.
+3. **Boutique** : armes, blocs, potions ; armure et pioche **permanentes** par paliers (la pioche perd un palier à la mort). Monnaies : fer, or, diamant, émeraude.
+4. **Lit détruit** : l'équipe ne réapparaît plus. Dernière équipe en vie : victoire.
+5. **Équipe éliminée** : son île **s'effondre** (styles `ice`, `scorch`, `obsidian`, `crumble` ou au hasard).
+6. **Déconnexion** : le joueur garde sa place pendant `game.rejoin-grace` (120 s) et peut revenir si son lit est encore debout.
+7. **Fin** : titre victoire ou défaite, résumé (kills, kills finaux, lits, MVP), feux d'artifice, animation de victoire du cosmétique choisi, puis retour au spawn ou au lobby du réseau (Premium).
+
+### Objets spéciaux
+
+Boule de feu · Plateforme de secours · Lait magique (immunité aux pièges 30 s) · Œuf-pont · TNT (s'amorce à la pose) · Dream Defender (golem allié) · Bedbug (poisson d'argent). Les explosions ne détruisent que les blocs posables en jeu (laine, planches, terre cuite, verre, pierre de l'End, obsidienne…) : la carte reste intacte.
+
+Les potions ont un délai de réutilisation par type (`balance.potion-cooldown-seconds`, 30 s).
+
+### Pièges
+
+File de 3 pièges par équipe, déclenchés quand un ennemi approche à **8 blocs** du lit. Prix en diamants :
+
+| Piège | Effet | Prix |
+|---|---|---|
+| Alarme | Révèle l'intrus | 2 |
+| Anti-magie | Retire les effets | 2 |
+| Dégâts | 4 cœurs | 2 |
+| Lenteur | 8 secondes | 2 |
+| Contre-offensive | Force I et Vitesse II pour l'équipe, 10 s | 3 |
+
+### Améliorations d'équipe
+
+| Amélioration | Niveaux | Prix (diamants) |
+|---|---|---|
+| Épée aiguisée | Tranchant I | 4 |
+| Armure renforcée | Protection I à IV | 2 / 4 / 8 / 16 |
+| Mineur maniaque | Hâte I et II | 2 / 4 |
+| Forge | ×1,5 / ×2 / ×2,5 / ×3 (diamants aux niveaux 3 et 4) | 2 / 4 / 6 / 8 |
+| Piscine de soin | Régénération autour de la base | 1 |
+
+### Calendrier des événements
+
+| Moment | Événement |
+|---|---|
+| 6:00 | Diamants II |
+| 12:00 | Émeraudes II |
+| 18:00 | Diamants III |
+| 24:00 | Émeraudes III |
+| 30:00 | Destruction des lits |
+| 35:00 | Mort subite |
+| 40:00 | Fin de la partie |
+
+Tout se règle dans `config.yml` → `events` (en secondes depuis le début).
+
+## Coins
+
+Gagnés en jouant, ils servent à acheter des [cosmétiques](/wiki/bedwars/cosmetiques) :
+
+| Action | Coins |
+|---|---|
+| Kill | 10 |
+| Kill final | 25 |
+| Lit détruit | 30 |
+| Participation | 15 |
+| Victoire | 100 |
+
+Réglables dans `config.yml` → `coins`.
+
+## Classé, Elo et rangs (Premium)
+
+En mode **Classé**, l'Elo de chaque joueur est mis à jour en fin de partie (Elo de départ 1000, coefficient K = 32). Il détermine le **rang**, affiché en suffixe dans le chat et le TAB :
+
+| Rang | Elo |
+|---|---|
+| Bois | 0 |
+| Pierre | 800 |
+| Fer | 1000 |
+| Or | 1200 |
+| Diamant | 1500 |
+| Émeraude | 1800 |
+| Rubis | 2100 |
+| Légende | 2500 |
+
+Le classé demande l'édition Premium, MySQL et LuckPerms. Voir [le guide](/wiki/bedwars/guides#activer-le-classé-premium).

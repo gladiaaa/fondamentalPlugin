@@ -1,0 +1,71 @@
+---
+title: Activer ma licence
+description: Passer de l'édition Free à l'édition Premium avec votre clé de licence.
+---
+
+Chaque plugin fonctionne **sans clé** : c'est l'édition **Free**, sans aucun appel réseau. La clé de licence reçue à l'achat débloque l'édition **Premium** du plugin acheté.
+
+## Où trouver ma clé ?
+
+- Sur la page de confirmation, juste après le paiement ;
+- dans l'e-mail de reçu ;
+- à tout moment dans [Mes licences](/compte/licences), depuis votre compte.
+
+<Callout type="warn">
+  Votre clé est personnelle : ne la publiez pas (capture d'écran, dépôt Git public, Discord). Une clé qui circule peut être révoquée.
+</Callout>
+
+## Installer la clé
+
+<Steps>
+<Step>
+
+### Copier la clé dans `config.yml`
+
+Ouvrez `plugins/<NomDuPlugin>/config.yml` et collez la clé :
+
+```yaml
+license:
+  key: "VOTRE-CLÉ"
+```
+
+</Step>
+<Step>
+
+### Recharger ou redémarrer
+
+| Plugin | Vérifier la licence |
+|---|---|
+| FondamentalBedwars | `/fbw license check` |
+| FondamentalTag | `/tag reload` puis `/tag license check` |
+| FondamentalCrate | redémarrer le serveur ; l'édition s'affiche dans la console au démarrage |
+| FondamentalPass | `/pass admin reload` puis `/pass admin license check` |
+
+</Step>
+<Step>
+
+### Contrôler l'édition
+
+La commande de vérification (ou la console) indique **Premium**. Les fonctions Premium s'activent sans redémarrage, sauf le stockage **MySQL**, qui demande un redémarrage.
+
+</Step>
+</Steps>
+
+## Comment fonctionne la vérification
+
+- Au démarrage puis **toutes les 6 heures**, le plugin vérifie la clé auprès du serveur de licences Fondamental (réglage `license.check-interval-hours`).
+- La réponse est **signée** : elle ne peut pas être imitée.
+- **Panne réseau ?** Le plugin garde son édition pendant **72 heures** (`license.grace-hours`), puis repasse en Free jusqu'à la vérification suivante.
+- Une clé **révoquée** (par exemple après un remboursement) repasse immédiatement en Free.
+- Si la licence n'est plus valide, vos données restent intactes : elles réapparaissent dès que la licence redevient valide.
+
+## Plusieurs serveurs
+
+Chaque serveur qui utilise la clé compte comme une **installation**. Le nombre d'installations permises est indiqué dans [Mes licences](/compte/licences).
+
+Après une réinstallation (nouvelle machine, dossier du plugin supprimé), l'ancienne installation reste comptée : libérez-la depuis le détail de la licence, bouton **Libérer**.
+
+## Free ou Premium ?
+
+Chaque plugin détaille ses différences sur sa page d'accueil :
+[Bedwars](/wiki/bedwars#free-ou-premium) · [Tag](/wiki/tag#free-ou-premium) · [Crate](/wiki/crate#free-ou-premium) · [Pass](/wiki/pass#free-ou-premium).

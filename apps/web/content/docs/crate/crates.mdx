@@ -1,0 +1,145 @@
+---
+title: Créer des crates
+description: crates.yml — raretés, options d'une crate, récompenses et actions.
+---
+
+Les crates se définissent dans `plugins/FondamentalCrate/crates.yml`, en deux sections : `rarities` puis `crates`. Après modification : `/crate reload`. L'[éditeur en jeu](#léditeur-en-jeu) écrit dans ce même fichier.
+
+## Exemple minimal
+
+```yaml
+crates:
+  vote:
+    display: "<gradient:#00FFFF:#1E90FF><bold>Crate Vote</bold></gradient>"
+    animation: cascade
+    block: CHEST
+    rewards:
+      diamants:
+        weight: 35
+        rarity: common
+        display: { material: DIAMOND, amount: 8, name: "<aqua>8 Diamants" }
+        actions:
+          - { type: item, material: DIAMOND, amount: 8 }
+      tag_frost:
+        weight: 3
+        rarity: legendary
+        display: { material: NAME_TAG, name: "<white>Tag <tag>" }
+        actions:
+          - { type: tag, tag: frost, duration: 30d }
+```
+
+Le fichier livré contient 5 crates d'exemple : `vote`, `legendaire`, `mythic` (avec pitié), `storm` et `choix` (mode « au choix »).
+
+## Raretés
+
+```yaml
+rarities:
+  legendary:
+    display: "<gradient:#FFD700:#FF8C00>Légendaire</gradient>"
+    color: ORANGE_STAINED_GLASS_PANE   # vitre des animations en menu
+    firework: "#FFD700"                 # couleur des feux d'artifice
+    broadcast: true                     # annonce le gain à tout le serveur
+```
+
+Quatre raretés par défaut : `common`, `rare`, `epic`, `legendary`. Un lot sans rareté est `common`.
+
+## Options d'une crate
+
+| Option | Par défaut | Rôle |
+|---|---|---|
+| `display` | l'identifiant | Nom de la crate (MiniMessage) |
+| `animation` | `animations.default` | Voir [les 9 animations](/wiki/crate/animations) |
+| `block` | `CHEST` | Bloc posé dans le monde |
+| `cooldown` | global | Délai minimum entre deux ouvertures (secondes) |
+| `permission` | — | Permission requise pour ouvrir |
+| `cost` | 0 | Prix d'ouverture (Vault) |
+| `max-bulk` | 54 | Clés ouvrables d'un coup (shift + clic droit) |
+| `rewards-per-open` | 1 | Lots gagnés par ouverture (9 max) |
+| `hologram` | — | Hologramme : `enabled`, `offset`, `lines` (MiniMessage). La balise `<winners>` affiche les **derniers gagnants** en bandeau. |
+| `key` | crochet | Apparence de la clé : `material`, `name`, `lore`, `glow`, `custom-model-data` |
+| `preview` | 3 lignes | Menu d'aperçu : `title`, `rows` (1 à 6) |
+| `keys-required` | 1 | Clés consommées par ouverture <Premium /> |
+| `selection` | false | Mode **« au choix »** : le joueur choisit ses lots <Premium /> |
+| `pity` | — | **Pitié** : `threshold`, `rarity` <Premium /> |
+| `milestones` | — | **Paliers** d'ouverture <Premium /> |
+| `floating-item` | la clé | Objet 3D qui tourne au-dessus du bloc <Premium /> |
+| `ambient-particle`, `ambient-effect` | — | Particules d'ambiance ; formes `puff`, `halo`, `helix`, `vortex`, `fountain`, `spiral` <Premium /> |
+| `double-or-nothing` | false | **Quitte ou double** après un gain <Premium /> |
+| `double-or-nothing-chance` | 0.5 | Chance de réussir un doublage (0,05 à 0,95) |
+| `double-or-nothing-max` | 8 | Multiplicateur maximum |
+| `quad-themes` | tous | Thèmes de la chambre au trésor : `classic`, `nether`, `ocean`, `soul`, `end`, `forest` |
+
+### Pitié (Premium)
+
+```yaml
+    pity: { threshold: 50, rarity: legendary }
+```
+
+Au 50ᵉ tirage sans lot `legendary`, un lot `legendary` est garanti. Le compteur repart à zéro dès qu'un lot de cette rareté sort. Le joueur peut suivre son compteur avec `%fondamentalcrate_pity_<crate>%`.
+
+### Paliers d'ouverture (Premium)
+
+```yaml
+    milestones:
+      '25':
+        repeat: true       # à chaque multiple : 25, 50, 75…
+        display: { material: DIAMOND_BLOCK, name: "<aqua>Récompense de fidélité" }
+        actions:
+          - { type: item, material: DIAMOND_BLOCK, amount: 4 }
+```
+
+Un lot **bonus garanti** à la 25ᵉ ouverture cumulée du joueur.
+
+### Mode « au choix » (Premium)
+
+```yaml
+    selection: true
+    rewards-per-open: 2
+```
+
+Pas de hasard : le joueur choisit lui-même 2 lots dans un menu.
+
+### Quitte ou double (Premium)
+
+Après un gain simple, le joueur choisit : **encaisser**, ou **tenter de doubler** le lot. Fermer le menu revient à encaisser : jamais de perte par erreur.
+
+## Récompenses
+
+Chaque lot se place sous `crates.<id>.rewards.<id du lot>` :
+
+| Champ | Rôle |
+|---|---|
+| `weight` | Poids, obligatoire. Chance = poids ÷ somme des poids |
+| `rarity` | Rareté (couleur, son, annonce). Pour un lot de tag, absente = rareté du tag |
+| `broadcast` | Force ou annule l'annonce serveur pour ce lot |
+| `permission` | Le lot n'est tirable qu'avec cette permission |
+| `permission-negated` | `true` : au contraire, réservé à ceux qui **n'ont pas** la permission |
+| `limit` | Limites de gain <Premium /> : `global` (tous joueurs), `per-player`. Un lot épuisé sort du tirage |
+| `display` | Icône dans l'aperçu et l'animation : `material` ou `custom-item`, `amount`, `name`, `lore`. Variables `<chance>`, `<rarity>`, `<tag>` |
+| `actions` | Ce que le joueur reçoit (liste, cumulable) |
+
+### Types d'actions
+
+| `type` | Champs | Effet |
+|---|---|---|
+| `item` | `material` ou `custom-item`, `amount`, `name`, `lore`, `enchants`, `glow`, `custom-model-data` | Donne un objet |
+| `command` | `command`, `as: console\|player` | Exécute une commande (`%player%` = le joueur) |
+| `message` | `message` | Envoie un message |
+| `tag` | `tag`, `duration` (`12h`, `7d`, `1d12h`…) | Donne un tag **FondamentalTag**, à vie ou temporaire (le regagner prolonge) |
+| `cosmetic` | `permission`, `coins`, `display` | Donne un cosmétique **FondamentalBedwars** ; s'il est déjà possédé, le joueur reçoit `coins` à la place (LuckPerms requis) |
+
+### Objets personnalisés
+
+Dans un `display` ou une action `item`, `custom-item: "itemsadder:ruby"` (ou `oraxen:<id>`, `nexo:<id>`). Si le plugin n'est pas installé, `material` est utilisé.
+
+## L'éditeur en jeu
+
+`/crate editor` ouvre la liste des crates et le bouton **Créer une crate**. Pour chaque crate :
+
+- **nom affiché**, **animation** (les Premium sont signalées), **bloc** ;
+- **récompenses** : « ajouter l'objet en main », « ajouter un tag », puis pour chaque lot quantité, poids, rareté ou suppression ;
+- **réglages** : cooldown, lots par ouverture, mode « au choix », thèmes de la chambre au trésor, ouverture multiple, permission ;
+- **hologramme** : activé ou non, hauteur, objet flottant, lignes ;
+- **donner des clés à tous**, **supprimer** (shift + clic pour confirmer).
+
+Chaque changement réécrit `crates.yml` et recharge les crates : le fichier reste la référence. Les saisies se font dans le chat ; tapez `annuler` pour abandonner.

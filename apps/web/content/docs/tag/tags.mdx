@@ -1,0 +1,140 @@
+---
+title: Créer des tags
+description: Le catalogue tags.yml — catégories, apparence, effets animés, boutique, raretés et événements.
+---
+
+Le catalogue se trouve dans `plugins/FondamentalTag/tags.yml`. Après chaque modification : `/tag reload`.
+
+## Structure
+
+```yaml
+rarities:
+  # voir « Raretés » plus bas
+
+categories:
+  grades:                         # identifiant de la catégorie
+    display: "<gold>Grades</gold>"
+    icon: DIAMOND
+    tags:
+      vip:                        # identifiant du tag : lettres, chiffres, _ et -
+        display: "<green><bold>[VIP]</bold></green>"
+        permission: "boutique.tag.vip"
+        description:
+          - "<gray>Réservé aux VIP."
+        icon: EMERALD
+        numeric-id: 1
+```
+
+| Champ | Rôle |
+|---|---|
+| `display` | Apparence du tag, en MiniMessage |
+| `permission` | Permission requise. Par défaut `fondamentaltag.tag.<id>` ; `""` = tag **public** |
+| `description` | Lignes affichées dans le menu |
+| `icon` | Objet affiché dans le menu |
+| `numeric-id` | Numéro, pour le placeholder `%fondamentaltag_id_<n>%` |
+
+## Quatre façons de définir l'apparence
+
+### 1. Écrit à la main
+
+```yaml
+      king:
+        display: "<gold><bold>[King]</bold></gold>"
+```
+
+En Free, seules les couleurs **unies** et les décorations simples sont acceptées : couleurs nommées ou hexadécimales, `<bold>`, `<italic>`, `<underlined>`, `<strikethrough>`, `<reset>`. En Premium, tout MiniMessage est permis (dégradés, arc-en-ciel…).
+
+### 2. Généré par un effet (Premium)
+
+Vous donnez le texte, les couleurs et l'effet : le plugin calcule l'animation lettre par lettre.
+
+```yaml
+      fondateur:
+        text: "Fondateur"
+        style: smallcaps
+        effect: shine
+        colors: ["#FFF3B0", "#FFC837", "#FF8008"]
+        bold: true
+        format: "<color:#FFD54F>♛</color> {text}"   # {text} = le texte généré
+```
+
+**Effets** (`effect`) — les dégradés sont calculés dans l'espace OKLab, pour des transitions vives sans zone grise :
+
+| Effet | Rendu |
+|---|---|
+| `solid` | Première couleur, unie (utile avec un `style`) |
+| `gradient` | Dégradé fixe |
+| `wave` | Le dégradé défile en boucle (`spread` = largeur) |
+| `rainbow` | Arc-en-ciel qui défile |
+| `shine` | Un reflet (`highlight`, blanc par défaut) balaie le texte, puis pause (`pause`) |
+| `pulse` | La couleur « respire » vers `highlight` |
+| `flicker` | Néon qui grésille |
+| `fade` | Fondu d'une couleur à l'autre |
+| `glitch` | Des lettres changent brièvement de couleur |
+| `sparkle` | Des lettres s'illuminent au hasard |
+| `fire` | Chaque lettre ondule dans la palette, comme des flammes |
+| `strobe` | Bascule franche entre la première et la dernière couleur |
+
+**Styles de lettres** (`style`), de vrais caractères Unicode visibles sans pack : `smallcaps` (ᴠɪᴘ), `bold` (𝐕𝐈𝐏), `sans` (𝗩𝗜𝗣), `italic` (𝘝𝘐𝘗), `script` (𝓥𝓘𝓟), `fraktur` (𝖁𝕴𝕻), `double` (𝕍𝕀ℙ), `mono` (𝚅𝙸𝙿), `fullwidth` (ＶＩＰ). Ces alphabets n'ont pas d'accents : ils sont retirés.
+
+**Mouvements** (`motion`, avec le [pack de ressources](/wiki/tag/configuration#pack-de-ressources-premium)) : `bounce`, `shake`, `float`, `sway`, `jump`.
+
+**Autres réglages** : `speed` (ticks entre deux images, 2 par défaut), `spread`, `highlight`, `pause`, `italic`, `font`, `shadow` (ombre colorée).
+
+### 3. Animé à la main (Premium)
+
+```yaml
+      clignotant:
+        frames:
+          - "<red>[Alerte]"
+          - "<dark_red>[Alerte]"
+        interval: 8        # ticks entre deux images (20 = 1 seconde)
+```
+
+### 4. Boutique, rareté, événement
+
+Ces champs s'ajoutent à n'importe quel tag, quelle que soit la façon dont il est dessiné.
+
+```yaml
+rarities:
+  legendaire: { display: "<gradient:#FFD700:#FF8C00>Légendaire</gradient>", order: 4 }
+
+categories:
+  boutique:
+    display: "<gold>Boutique"
+    icon: GOLD_INGOT
+    tags:
+      halloween_2026:
+        text: "Halloween"
+        effect: flicker
+        colors: ["#FF7B00", "#8B00FF"]
+        price: 500              # en vente dans le menu (Premium) ; 0 = gratuit
+        rarity: evenement
+        event:
+          name: "<gold>Halloween 2026"
+          start: "2026-10-15"   # AAAA-MM-JJ ou "AAAA-MM-JJ HH:MM" (heure du serveur)
+          end: "2026-11-05"     # sans heure : jusqu'à la fin de la journée
+          after: keep           # keep = gardé par ceux qui l'ont ; remove = retiré à tous
+```
+
+- **`price`** <Premium /> : le tag s'achète dans le menu avec la monnaie de l'Atelier (points, Vault ou PlayerPoints, voir [l'Atelier](/wiki/tag/atelier#monnaie)). Sans `price`, il n'est pas en vente.
+- **`rarity`** : raretés par défaut `commun` (1), `rare` (2), `epique` (3), `legendaire` (4), `mythique` (5), `evenement` (6). Plus `order` est grand, plus c'est rare. `menu.sort-by-rarity: true` affiche les plus rares en premier.
+- **`event`** : pendant ses dates, le tag apparaît dans le menu. Avant et après, **seuls ceux qui le possèdent** le voient : c'est un objet de collection.
+
+| Besoin | Configuration |
+|---|---|
+| Réservé à un grade | `permission` seulement |
+| En vente toute l'année | `price: 250` |
+| Offert pendant les fêtes | `price: 0` + `event` |
+| Payant, gardé ensuite | `price: 500` + `event` + `after: keep` |
+| Disparaît après l'événement | `event` + `after: remove` |
+| À gagner uniquement en crate | ni `price` ni permission ; récompense `type: tag` dans [FondamentalCrate](/wiki/crate/crates#récompenses) |
+
+## Tester un rendu
+
+- `/tag preview <id>` : aperçu animé du tag dans la barre d'action.
+- `/tag preview "<gradient:#ff0000:#0000ff>Test"` : aperçu d'un rendu libre, avec l'indication « compatible Free » ou non.
+
+## Créer un tag depuis le jeu (Premium)
+
+`/tag create <id> <catégorie> <affichage>` écrit un tag simple (`display`) dans `tags.yml`. Les effets, le prix et les événements se règlent ensuite dans le fichier. `/tag edit` et `/tag delete` modifient ou suppriment un tag (la suppression le retire à tous les joueurs).

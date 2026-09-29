@@ -1,0 +1,55 @@
+---
+title: Les 9 animations
+description: Cinq animations en menu, quatre dans le monde en 3D, dont la chambre au trésor.
+---
+
+Chaque crate choisit son animation avec `animation:` dans `crates.yml` (ou dans l'éditeur). Sans précision, c'est `animations.default` de `config.yml` qui s'applique (`roulette` par défaut).
+
+| Animation | Type | Description | Édition |
+|---|---|---|---|
+| `roulette` | Menu | Bande horizontale qui ralentit sur le gain | Free |
+| `cascade` | Menu | Machine à sous à 5 rouleaux qui s'arrêtent un par un | Free |
+| `wheel` | Menu | Roue de la fortune : un curseur parcourt la bordure | <Premium /> |
+| `spotlight` | Menu | Un projecteur saute de lot en lot avant de se figer | <Premium /> |
+| `flip` | Menu | Des cartes se retournent une à une | <Premium /> |
+| `spiral` | 3D | Les lots tournent en spirale autour du bloc, le gagnant s'élève | <Premium /> |
+| `firework` | 3D | Le lot jaillit du bloc, feux d'artifice aux couleurs de la rareté | <Premium /> |
+| `tornado` | 3D | Hélice de lots en entonnoir jusqu'au gagnant | <Premium /> |
+| `quad` | 3D | **Chambre au trésor** (voir ci-dessous) | <Premium /> |
+
+Après chaque animation : titre plein écran (rareté et nom du lot), son de gain, feu d'artifice coloré et annonce serveur pour les lots marqués `broadcast`. Chaque effet se règle dans `config.yml` → `settings.win-flourish`.
+
+## La chambre au trésor (`quad`)
+
+Une petite zone décorée apparaît autour du joueur avec **un coffre par lot** à gagner (autant de coffres que `rewards-per-open`). Le joueur ouvre chaque coffre d'un clic, puis tout disparaît.
+
+- **Aucun bloc du monde n'est modifié** : tout est fait d'entités d'affichage.
+- Six thèmes de décor : `classic`, `nether`, `ocean`, `soul`, `end`, `forest`. Par défaut, un thème est tiré au hasard à chaque ouverture ; `quad-themes` dans `crates.yml` restreint le choix pour une crate.
+- Si le joueur n'ouvre pas tous ses coffres, la chambre se referme seule après `timeout-ticks` et remet les lots.
+
+## Régler une animation
+
+Chaque animation a son bloc dans `config.yml` → `animations` : durée, vitesse de départ et de fin, sons, particules, rayon… Exemple :
+
+```yaml
+animations:
+  default: roulette
+  roulette:
+    title: "<discret>Ouverture <texte>|</texte> <fort><crate></fort>"
+    ticks: 46            # nombre de crans avant l'arrêt
+    speed-start: 1       # ticks entre deux crans au départ…
+    speed-end: 9         # … et à la fin (ralentissement)
+    tick-sound: BLOCK_NOTE_BLOCK_HAT
+    win-sound: ENTITY_PLAYER_LEVELUP
+    hold-ticks: 45       # affichage du gagnant avant fermeture (20 ticks = 1 s)
+  quad:
+    radius: 1.9
+    timeout-ticks: 700
+    theme: random        # ou classic, nether, ocean, soul, end, forest
+```
+
+Un nom de son ou de particule inconnu est remplacé par une valeur par défaut, avec un avertissement dans la console.
+
+<Callout>
+  En Free, une crate réglée sur une animation Premium joue l'animation par défaut. Passez en Premium et `/crate reload` : l'animation choisie s'applique.
+</Callout>

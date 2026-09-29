@@ -1,0 +1,85 @@
+---
+title: FondamentalCrate
+description: Crates animées en menu et en 3D, éditeur en jeu, pitié, limites de gain et paliers.
+---
+
+FondamentalCrate lie un bloc du monde (coffre, ender chest…) à une **crate**. Le joueur l'ouvre avec une **clé** (physique ou virtuelle), une **animation** se joue, et il gagne un lot tiré selon des **poids** que vous choisissez. Tout se règle dans un fichier… ou directement **en jeu** avec l'éditeur.
+
+**Garanties pour vos joueurs :**
+
+- **Probabilités honnêtes** : l'aperçu affiche les chances réelles, calculées depuis les poids.
+- **Aucune clé perdue** : le tirage est fait avant l'animation. Déconnexion ou arrêt du serveur pendant l'ouverture : la clé est rendue. Menu d'animation fermé en plein tour : le gain est remis aussitôt.
+- **Clés infalsifiables** : renommer un objet à l'enclume ne crée pas de clé.
+- **Blocs protégés** contre la casse, les explosions et les pistons.
+
+## Prérequis
+
+| | |
+|---|---|
+| Serveur | Paper 1.21.4 ou plus récent, Java 21 |
+| Dépendances | aucune obligatoire |
+| Facultatif | Vault (coût d'ouverture), PlaceholderAPI, LuckPerms, ItemsAdder / Oraxen / Nexo (objets personnalisés), FondamentalTag, FondamentalBedwars, FondamentalPass |
+| Réseau <Premium /> | MySQL |
+
+## Installation
+
+<Steps>
+<Step>
+
+### Déposer le jar
+
+Deux jars sont proposés au téléchargement : **Free** et **Premium**. Déposez-en un dans `plugins/` et démarrez : `config.yml`, `crates.yml` et `messages.yml` sont créés dans `plugins/FondamentalCrate/`.
+
+</Step>
+<Step>
+
+### Créer une crate
+
+Le plus simple : `/crate editor` → **Créer une crate**. Voir [le guide « Première crate »](/wiki/crate/guides#première-crate-en-2-minutes).
+
+</Step>
+<Step>
+
+### Poser le bloc
+
+Posez un bloc, visez-le et tapez `/crate set <crate>`.
+
+</Step>
+<Step>
+
+### Distribuer des clés
+
+`/crate give <joueur> <crate> 5`, puis clic droit sur le bloc.
+
+</Step>
+<Step>
+
+### Activer la licence (Premium)
+
+Collez votre clé dans `config.yml` → `license.key` et redémarrez. Voir [Activer ma licence](/wiki/licence).
+
+</Step>
+</Steps>
+
+## Free ou Premium
+
+| | Free | Premium |
+|---|---|---|
+| Nombre de crates | **2** (les deux premières de `crates.yml`) | Illimité |
+| Animations | `roulette`, `cascade` | Les 9, dont la **chambre au trésor** 3D |
+| Pitié, limites de gain, paliers, mode « au choix », « quitte ou double », clés multiples par ouverture | ❌ | ✅ |
+| Particules d'ambiance, objet flottant propre à chaque crate | ❌ | ✅ |
+| Stockage | Fichiers JSON | JSON ou **MySQL** (réseau) |
+| Éditeur en jeu, menu `/crate`, aperçu et chances, hologrammes, objets personnalisés, placeholders, liaison FondamentalTag, coût Vault, clés physiques et virtuelles, ouverture multiple, cooldown, permissions, annonces, statistiques, historique | ✅ | ✅ |
+
+En Free, une crate qui demande une animation Premium joue l'animation par défaut ; les crates au-delà de deux sont ignorées, avec un message dans la console.
+
+## Aller plus loin
+
+<Cards>
+  <Card title="Commandes et permissions" href="/wiki/crate/commandes" />
+  <Card title="Créer des crates" href="/wiki/crate/crates" />
+  <Card title="Les 9 animations" href="/wiki/crate/animations" />
+  <Card title="Configuration" href="/wiki/crate/configuration" />
+  <Card title="Guides" href="/wiki/crate/guides" />
+</Cards>

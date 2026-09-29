@@ -1,0 +1,83 @@
+---
+title: Guides
+description: Recettes pas à pas pour FondamentalPass.
+---
+
+## Lancer sa première saison
+
+1. `season.yml` : réglez `id`, `name`, `start`, `end`, `xp-per-tier` et `max-level`.
+2. Ajoutez des paliers dans `tiers`, avec une piste `free` et/ou `premium`.
+3. `quests.yml` : ajustez les pools et les quêtes.
+4. `/pass admin reload`, puis `/pass admin info` : la saison doit être « en cours ».
+
+## Vendre la piste premium
+
+Sur votre boutique, commande de livraison :
+
+```
+lp user {username} permission set fondamentalpass.premium true
+```
+
+Ou laissez les joueurs l'acheter en jeu avec `premium-purchase` (voir [La saison](/wiki/pass/saison#acheter-le-premium-en-jeu-premium)).
+
+<Callout type="warn">
+  La piste premium du pass demande l'**édition Premium du plugin**. En Free, elle reste fermée, même pour un joueur qui a la permission.
+</Callout>
+
+## Organiser un week-end « XP ×2 » (Premium)
+
+```
+/pass admin boost 100 48h
+```
+
+Tout le réseau gagne +100 % d'XP de quête pendant 48 heures.
+
+## Offrir de l'XP
+
+`pass admin xp give {username} 1000`, par exemple en récompense de vote.
+
+## Quêtes Bedwars sur un réseau
+
+1. Sur le serveur Bedwars : `server.name: "bedwars-1"`.
+2. Dans `quests.yml` :
+
+```yaml
+  gagnant:
+    pool: daily
+    difficulty: difficile
+    name: "Gagnant"
+    description: "<texte>Gagne <fort><amount></fort> parties de Bedwars."
+    icon: RED_BED
+    xp: 400
+    servers: ["bedwars-*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:win", amount: 3}
+```
+
+FondamentalBedwars envoie `bedwars:win` à chaque victoire (édition Premium de FondamentalPass requise). Sur le lobby, la quête indique qu'elle se fait sur « Bedwars ».
+
+## Une quête basée sur un autre plugin (Premium)
+
+Avec PlaceholderAPI, suivez n'importe quelle valeur :
+
+```yaml
+    objective: {type: placeholder, placeholder: "%vault_eco_balance%", amount: 500, mode: increase}
+```
+
+« Gagne 500 pièces » : la hausse est comptée depuis le tirage de la quête.
+
+## Nouvelle saison
+
+Changez `season.id` (et les dates) puis `/pass admin reload` : tout le monde repart de zéro, l'ancienne saison reste en base. Les récompenses de classement de l'ancienne saison ont été distribuées à sa date de fin.
+
+## Pour les développeurs : l'API
+
+```java
+// Fait avancer les quêtes {type: custom, key: "monplugin:action"} (édition Premium)
+FondamentalPassApi.progress(player, "monplugin:action", 1);
+FondamentalPassApi.addXp(player, 250);          // ajoute (ou retire) de l'XP
+int level = FondamentalPassApi.level(player);   // -1 si le profil n'est pas chargé
+boolean premium = FondamentalPassApi.hasPremium(player);
+```
+
+Événements Bukkit : `PassLevelUpEvent`, `QuestCompleteEvent`. Appelez l'API depuis le fil principal du serveur.

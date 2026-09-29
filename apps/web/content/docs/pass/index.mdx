@@ -1,0 +1,99 @@
+---
+title: FondamentalPass
+description: Pass de saison et quêtes partagés sur tout le réseau, parchemins, pass événement et calendrier.
+---
+
+FondamentalPass ajoute un **pass de saison** à votre serveur ou à tout votre réseau : les joueurs gagnent de l'XP en réalisant des **quêtes**, montent des **paliers** et récupèrent des récompenses sur une **piste gratuite** et une **piste premium**.
+
+- **Saison** : dates de début et de fin, paliers d'XP, deux pistes de récompenses, paliers bonus et récompenses de classement.
+- **Quêtes** quotidiennes, hebdomadaires et de saison, tirées au hasard par difficulté ; 15 types d'objectifs, dont un qui suit **n'importe quel placeholder**.
+- **Réseau** : la même progression sur le lobby, les mini-jeux et la survie, sans perte lors d'un changement de serveur.
+- **Et aussi** : parchemins de quête, pass événement, calendrier de connexion, objectif commun, boosts d'XP, classement.
+
+<Callout title="Deux « premium » à ne pas confondre">
+
+| | Édition Premium du plugin | Piste premium du pass |
+|---|---|---|
+| Qui l'achète ? | Vous, propriétaire du serveur | Vos joueurs, sur votre boutique ou en jeu |
+| Comment ça s'active ? | Clé de licence dans `config.yml` | Permission `fondamentalpass.premium`, ou achat en jeu |
+| Ce que ça débloque | Des fonctions du plugin (tableau ci-dessous) | La deuxième rangée de récompenses |
+
+La piste premium du pass demande **les deux** : sans l'édition Premium du plugin, elle reste fermée pour tout le monde.
+
+</Callout>
+
+## Prérequis
+
+| | |
+|---|---|
+| Serveur | Paper 1.21.4 ou plus récent, Java 21 |
+| Dépendances | aucune obligatoire |
+| Facultatif | Vault (récompenses d'argent, achats), PlaceholderAPI, LuckPerms, FondamentalTag, FondamentalCrate, FondamentalBedwars |
+| Réseau <Premium /> | MySQL |
+
+## Installation
+
+<Steps>
+<Step>
+
+### Déposer le jar
+
+Un seul jar, pour les deux éditions : déposez-le dans `plugins/` et démarrez. Les fichiers `config.yml`, `season.yml`, `quests.yml`, `scrolls.yml`, `calendar.yml`, `community.yml` et `messages.yml` sont créés dans `plugins/FondamentalPass/`.
+
+</Step>
+<Step>
+
+### Nommer le serveur
+
+Dans `config.yml` : `server.name` (un nom **unique** sur le réseau, par exemple `lobby` ou `bedwars-1`), `timezone` et `reset-hour`.
+
+</Step>
+<Step>
+
+### Préparer la saison
+
+Réglez les dates et les paliers dans [`season.yml`](/wiki/pass/saison), les quêtes dans [`quests.yml`](/wiki/pass/quetes), puis `/pass admin reload` et `/pass admin info`.
+
+</Step>
+<Step>
+
+### Activer la licence (Premium)
+
+Collez votre clé dans `config.yml` → `license.key`, puis `/pass admin reload` et `/pass admin license check`.
+
+</Step>
+</Steps>
+
+## Free ou Premium
+
+| Fonction | Free | Premium |
+|---|:---:|:---:|
+| Paliers par saison | 30 | Illimité |
+| Piste premium du pass (permission ou achat en jeu) | ❌ | ✅ |
+| Stockage | SQLite | SQLite ou **MySQL** (réseau) |
+| 13 objectifs de jeu (casser, tuer, pêcher, marcher…) | ✅ | ✅ |
+| Objectifs `custom` (FondamentalBedwars, FondamentalCrate, autres plugins) | ❌ | ✅ |
+| Objectifs `placeholder` (n'importe quel plugin via PlaceholderAPI) | ❌ | ✅ |
+| Récompenses argent, objet, commande, message, parchemin | ✅ | ✅ |
+| Récompenses `tag` (FondamentalTag) et `crate-key` (FondamentalCrate) | ❌ | ✅ |
+| Pass événement | ❌ | ✅ |
+| Objectif commun du réseau | ❌ | ✅ |
+| Boost d'XP global (`/pass admin boost`) | ❌ | ✅ |
+| Achat de paliers et du premium en jeu | ❌ | ✅ |
+| Parchemins, calendrier, boosts par permission, série, changement de quête, classement, placeholders | ✅ | ✅ |
+
+<Callout type="warn">
+  En Free, une récompense `tag` ou `crate-key` est ignorée : ne la placez pas dans la piste gratuite d'un serveur en édition Free.
+</Callout>
+
+## Aller plus loin
+
+<Cards>
+  <Card title="Commandes et permissions" href="/wiki/pass/commandes" />
+  <Card title="La saison et ses paliers" href="/wiki/pass/saison" />
+  <Card title="Les quêtes" href="/wiki/pass/quetes" />
+  <Card title="Les parchemins" href="/wiki/pass/parchemins" />
+  <Card title="Événements et bonus" href="/wiki/pass/engagement" />
+  <Card title="Configuration et réseau" href="/wiki/pass/configuration" />
+  <Card title="Guides" href="/wiki/pass/guides" />
+</Cards>

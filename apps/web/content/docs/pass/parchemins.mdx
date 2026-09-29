@@ -1,0 +1,139 @@
+---
+title: Les parchemins
+description: scrolls.yml — des quêtes sous forme d'objets, à acheter, échanger et activer, pour les modes de jeu calmes.
+---
+
+Les parchemins sont pensés pour les modes de jeu calmes (skyblock, survie, semi-RP). Un parchemin est un **objet** :
+
+1. on l'achète par **niveau** dans `/parchemins`, ou on le reçoit (récompense, crate, événement) ;
+2. on l'**active** d'un clic droit ;
+3. il avance tant qu'il est dans l'inventaire ;
+4. terminé, un nouveau clic droit l'**échange** contre ses récompenses.
+
+Quelques règles :
+
+- Non activés, les parchemins identiques s'empilent et **s'échangent** entre joueurs.
+- Activé, chaque parchemin est unique : une copie (duplication) ne rapporte jamais deux fois.
+- Ils avancent même hors saison et ne donnent **jamais d'XP de pass** : seulement de l'argent, des objets ou des commandes.
+
+Fichier : `plugins/FondamentalPass/scrolls.yml`.
+
+## Réglages
+
+```yaml
+settings:
+  enabled: true
+  max-active: 3            # parchemins en cours en même temps
+  bind-on-activate: false  # true = lié au joueur une fois activé (plus échangeable)
+  team-placeholder: ""     # parchemins d'équipe, voir plus bas
+```
+
+## Niveaux
+
+Autant de niveaux que vous voulez, du plus bas au plus haut, avec le nom de votre choix :
+
+```yaml
+levels:
+  display: both            # name = le nom ; stars = des étoiles ; both = les deux
+  list:
+    commun: "<texte>Commun"
+    peu-commun: "<ok>Peu commun"
+    rare: "<info>Rare"
+    epique: "<accent>Épique"
+    legendaire: "<alerte>Légendaire"
+```
+
+D'autres idées de dénominations : bronze / argent / or / diamant, ou rangs C / B / A / S.
+
+## La boutique `/parchemins`
+
+Le joueur choisit un **niveau** et reçoit un parchemin de ce niveau **tiré au hasard** (selon le `weight` des parchemins).
+
+```yaml
+shop:
+  enabled: true
+  currency: niveaux        # monnaie (config.yml > currencies) ; vide = monnaie par défaut
+  tiers:
+    commun:
+      price: 5
+      icon: PAPER
+    rare:
+      price: 20
+      daily-limit: 3       # achats par joueur et par jour (0 = illimité)
+      icon: MAP
+    epique:
+      price: 35
+      daily-limit: 2
+      permission: "fondamentalpass.scroll.epique"
+      icon: BOOK
+    # legendaire absent : pas en vente, se gagne en jeu
+```
+
+Un niveau absent de `tiers` ne s'achète pas : il apparaît verrouillé, et ses parchemins se gagnent autrement.
+
+## Un parchemin
+
+```yaml
+scrolls:
+  bucheron:
+    name: "Parchemin du bûcheron"
+    level: commun
+    icon: PAPER
+    description: "<texte>Coupe <fort><amount></fort> bûches."
+    objective:
+      type: break-block
+      materials: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG]
+      amount: 64
+    duration: 24h          # temps pour le finir une fois activé ; absent = illimité
+    weight: 10
+    rewards:
+      - {type: money, amount: 200-400}                          # fourchette tirée à l'échange
+      - {type: item, material: GOLDEN_APPLE, amount: 1-3}
+      - {type: item, material: CHERRY_SAPLING, amount: 4, chance: 25}   # 1 fois sur 4
+```
+
+| Champ | Rôle |
+|---|---|
+| `objective` | Même format que [les quêtes](/wiki/pass/quetes#les-objectifs), sauf `placeholder` |
+| `steps` | À la place d'`objective` : des **étapes successives** (voir ci-dessous) |
+| `duration` | Temps pour le terminer une fois activé (`30m`, `12h`, `3d`) |
+| `servers`, `where` | Comme pour les quêtes ; absent = tout le réseau |
+| `weight` | Chance d'être tiré dans son niveau |
+| `team` | `true` : parchemin d'équipe |
+| `rewards` | `money`, `item`, `command`, `message`. `amount` fixe ou en fourchette (`200-400`) ; `chance` en % ; `display` = texte affiché sur le parchemin (obligatoire pour une commande, `{amount}` y affiche la quantité) |
+
+## Parchemins à étapes
+
+```yaml
+  batisseur:
+    name: "Parchemin du bâtisseur"
+    level: rare
+    steps:
+      - description: "Coupe <amount> bûches"
+        objective: {type: break-block, materials: [OAK_LOG], amount: 32}
+      - description: "Fabrique <amount> coffres"
+        objective: {type: craft, items: [CHEST], amount: 4}
+      - description: "Parcours <amount> blocs à pied"
+        objective: {type: walk, amount: 1000}
+    duration: 24h
+    rewards:
+      - {type: money, amount: 1000}
+```
+
+Les étapes se suivent ; la récompense est remise à la fin.
+
+## Parchemins d'équipe
+
+Un parchemin `team: true` avance avec les actions de **tous les coéquipiers** connectés sur le serveur. L'équipe d'un joueur est donnée par un placeholder (PlaceholderAPI requis) :
+
+```yaml
+settings:
+  team-placeholder: "%superior_island_uuid%"   # SuperiorSkyblock2
+```
+
+Autres exemples : `%bentobox_island_uuid%` (BentoBox), `%factionsuuid_faction_id%` (FactionsUUID), `%parties_party%` (Parties).
+
+## Donner des parchemins
+
+- Commande : `/pass admin scroll give <joueur|*> <parchemin|random|random:niveau> [quantité]`, utilisable depuis une crate, un vote ou votre boutique.
+- Récompense (saison, quêtes, calendrier…) : `{type: scroll, scroll: bucheron, amount: 1}` ou `{type: scroll, scroll: random, level: legendaire}`.

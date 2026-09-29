@@ -1,0 +1,60 @@
+---
+title: La gamme ensemble
+description: Ce que les plugins Fondamental font les uns avec les autres, et les commandes prêtes pour votre boutique.
+---
+
+Les quatre plugins fonctionnent seuls. Installés ensemble, ils se reconnaissent automatiquement : rien à compiler, aucune dépendance obligatoire entre eux.
+
+## Les liaisons
+
+| De | Vers | Ce que ça fait |
+|---|---|---|
+| FondamentalCrate | FondamentalTag | Une récompense de crate peut donner un **tag**, permanent ou temporaire (`duration: 7d`). La rareté du tag est reprise pour le lot. |
+| FondamentalCrate | FondamentalBedwars | Une récompense de crate peut donner un **cosmétique Bedwars** ; un joueur qui le possède déjà reçoit des coins à la place. |
+| FondamentalPass | FondamentalTag | Palier, quête ou calendrier peuvent donner un **tag**. <Premium /> |
+| FondamentalPass | FondamentalCrate | Palier, quête ou calendrier peuvent donner des **clés de crate**. <Premium /> |
+| FondamentalBedwars | FondamentalPass | Les parties font avancer les quêtes : `bedwars:play`, `bedwars:win`, `bedwars:kill`, `bedwars:final_kill`, `bedwars:bed_break`. <Premium /> |
+| FondamentalCrate | FondamentalPass | Chaque ouverture fait avancer les quêtes `crate:open` et `crate:open:<id de la crate>`. <Premium /> |
+
+<Callout>
+  Les liaisons marquées <Premium /> demandent l'édition Premium de **FondamentalPass** : c'est lui qui reçoit l'information et distribue les récompenses.
+</Callout>
+
+## Sur un serveur Bedwars avec FondamentalTag
+
+FondamentalBedwars gère les équipes du scoreboard pendant les parties. Dans `plugins/FondamentalTag/config.yml`, mettez `nametag.enabled: false` et affichez le tag avec le placeholder `%fondamentaltag_tag_prefix%` là où vous le voulez (TAB, chat, scoreboard).
+
+## Commandes pour votre boutique (Tebex, CraftingStore…)
+
+Toutes ces commandes fonctionnent depuis la console. Certaines exigent que le joueur soit **connecté** au moment de la livraison : cochez l'option « joueur en ligne » de votre boutique pour celles-ci.
+
+| Ce que vous vendez | Commande | Joueur connecté ? |
+|---|---|---|
+| Un tag à vie | `tag give {username} <tag>` | Non (déjà venu une fois) |
+| Un tag pour 30 jours <Premium /> | `tag give {username} <tag> 30d` | Non |
+| Des points d'Atelier | `tag points give {username} 500` | Non |
+| Une pièce d'Atelier | `tag unlock {username} <famille> <pièce>` | Non |
+| Des clés de crate virtuelles | `crate give {username} <crate> 5` | **Oui** |
+| Des clés de crate physiques | `crate givekey {username} <crate> 5` | **Oui** |
+| Le pass premium de la saison | `lp user {username} permission set fondamentalpass.premium true` | Non |
+| De l'XP de pass | `pass admin xp give {username} 1000` | **Oui** |
+| Un parchemin de quête | `pass admin scroll give {username} <parchemin>` | **Oui** |
+| Un cosmétique Bedwars | `fbw givecosmetic {username} <catégorie:id>` | Non (déjà venu une fois) |
+| Des coins Bedwars | `fbw coins add {username} 500` | **Oui** |
+
+Le détail de chaque commande est dans la section du plugin concerné.
+
+## Une charte commune
+
+Les quatre plugins partagent la même palette, réglable dans `config.yml` → `colors`. Chaque couleur devient une balise utilisable dans les textes (MiniMessage) :
+
+| Balise | Usage | Par défaut |
+|---|---|---|
+| `<texte>` | texte courant | `#9A90B3` |
+| `<fort>` | noms, nombres, valeurs | `#F0ECF8` |
+| `<accent>` | actions, commandes | `#B7A0FF` |
+| `<discret>` | séparateurs, états vides | `#6A5D94` |
+| `<ok>` / `<erreur>` / `<alerte>` / `<info>` | états | `#7ED6A0` / `#F07A7A` / `#F0C36A` / `#8FB8FF` |
+| `<degrade>…</degrade>` | titres, préfixe | `#B7A0FF` → `#6A5D94` |
+
+Changer une couleur recolore le chat, les menus et la console d'un coup.

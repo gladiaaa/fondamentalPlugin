@@ -1,0 +1,129 @@
+---
+title: Configuration et réseau
+description: config.yml de FondamentalPass — serveur, stockage, réseau, temps, monnaies, liaisons.
+---
+
+Fichier : `plugins/FondamentalPass/config.yml`. Après modification : `/pass admin reload`.
+
+## Licence
+
+```yaml
+license:
+  key: ""                   # vide = édition Free, aucun appel réseau
+  check-interval-hours: 6
+  grace-hours: 72
+```
+
+## Serveur et stockage
+
+```yaml
+server:
+  name: "serveur"           # nom UNIQUE de ce serveur sur le réseau
+
+storage:
+  type: sqlite              # sqlite | mysql (Premium)
+  table-prefix: "fpass_"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentalpass"
+    user: "fondamentalpass"
+    password: ""
+    pool-size: 5
+  autosave-seconds: 60
+  lock-wait-seconds: 10
+  lock-stale-seconds: 180
+```
+
+- **`sqlite`** : fichier `data.db`, un seul serveur.
+- **`mysql`** <Premium /> : la même progression sur tout le réseau. En Free, ou si la base est injoignable, le plugin repasse sur SQLite avec un avertissement.
+
+## Réseau (Premium)
+
+<Steps>
+<Step>
+
+### Même base partout
+
+Sur chaque serveur : `storage.type: mysql` avec les **mêmes** identifiants.
+
+</Step>
+<Step>
+
+### Un nom par serveur
+
+Donnez à chaque serveur un `server.name` **unique** (`lobby`, `bedwars-1`, `survie`…). Deux serveurs avec le même nom se gêneraient.
+
+</Step>
+<Step>
+
+### Cibler des quêtes
+
+Les quêtes avec `servers: ["bedwars-*"]` n'avancent que sur les serveurs dont le nom correspond. Ailleurs, le menu indique où les faire.
+
+</Step>
+</Steps>
+
+**Aucune progression perdue au changement de serveur.** Le proxy connecte le joueur au nouveau serveur avant de le déconnecter de l'ancien. Le nouveau serveur attend que l'ancien ait sauvegardé : un **verrou** de profil l'y oblige, pendant `lock-wait-seconds` au plus. Un verrou laissé par un serveur planté expire après `lock-stale-seconds`. Toutes les sauvegardes se font hors du fil principal du serveur.
+
+## Temps
+
+```yaml
+timezone: "Europe/Paris"
+reset-hour: 0             # heure (0-23) du renouvellement quotidien ; l'hebdomadaire change le lundi
+```
+
+## Comportement
+
+```yaml
+pass:
+  enabled: true                  # false = mode « quêtes seules »
+auto-claim: false                # récupérer automatiquement à chaque palier
+afk-excludes-playtime: true      # l'inactivité (5 min) ne compte pas dans playtime
+placeholder-interval-seconds: 30
+notifications:
+  progress-actionbar: true       # barre d'action à chaque progression
+  explain-ignored: true          # explique pourquoi une action n'a pas compté
+  join-reminder: true            # rappel s'il reste des récompenses à récupérer
+```
+
+Les sections `boosts`, `streak`, `tracking`, `rerolls` et `tier-purchase` sont décrites dans [Événements et bonus](/wiki/pass/engagement).
+
+## Monnaies
+
+Les achats (parchemins, paliers, premium, changement de quête) utilisent une **monnaie** au choix :
+
+```yaml
+currencies:
+  default: vault
+  list:
+    vault:
+      type: vault                 # l'économie du serveur (EssentialsX, CMI… via Vault)
+    emeraudes:
+      type: item                  # un objet de l'inventaire
+      material: EMERALD
+      format: "<amount> émeraude(s)"
+    niveaux:
+      type: xp-levels             # les niveaux d'expérience
+      format: "<amount> niveau(x) d'XP"
+    points:
+      type: placeholder           # n'importe quel plugin de monnaie (PlaceholderAPI)
+      balance: "%playerpoints_points%"
+      take: "points take {player} {amount}"
+      format: "<amount> point(s)"
+```
+
+Chaque achat peut préciser sa monnaie (`currency: emeraudes`) ; vide, c'est `default`.
+
+## Liaisons
+
+```yaml
+hooks:
+  crate-key-command: "crate give {player} {crate} {amount}"   # récompense crate-key
+```
+
+## Couleurs, menus, textes
+
+- `colors` : la palette. Voir [la charte commune](/wiki/gamme#une-charte-commune).
+- `menus.border`, `menus.accent` : les vitres du cadre et des coins des menus.
+- `messages.yml` : tous les textes, menus compris (MiniMessage). `""` désactive un message ; une clé absente reprend le texte d'origine.

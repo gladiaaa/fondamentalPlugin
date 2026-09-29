@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DocsPage, DocsBody, DocsTitle, DocsDescription } from "fumadocs-ui/layouts/docs/page";
 import { source } from "@/lib/source";
+import { wikiMdxComponents } from "@/features/wiki/mdx-components";
 
 interface PageProps {
   params: Promise<{ slug?: string[] }>;
@@ -30,7 +31,7 @@ export default async function WikiPage({ params }: PageProps) {
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <Body />
+        <Body components={wikiMdxComponents} />
       </DocsBody>
     </DocsPage>
   );

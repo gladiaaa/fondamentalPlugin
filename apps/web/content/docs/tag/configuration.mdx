@@ -1,0 +1,112 @@
+---
+title: Configuration
+description: config.yml de FondamentalTag — chat, tag au-dessus de la tête, menus, base de données, pack de ressources.
+---
+
+Fichier : `plugins/FondamentalTag/config.yml`. Après modification : `/tag reload`. Tous les textes sont en [MiniMessage](https://docs.advntr.dev/minimessage/format.html).
+
+## Licence
+
+```yaml
+license:
+  key: ""                  # vide = édition Free
+  check-interval-hours: 6
+  grace-hours: 72
+```
+
+Voir [Activer ma licence](/wiki/licence).
+
+## Chat
+
+```yaml
+chat:
+  enabled: true
+  format: "{tag}<white><player></white><dark_gray> » </dark_gray><gray><message>"
+  tag-format: "{tag} "
+```
+
+`{tag}` est remplacé par `tag-format` (vide si le joueur n'a pas de tag), `<player>` par le pseudo, `<message>` par le message.
+
+**Vous avez déjà un plugin de chat** (EssentialsChat, LPC, ChatControl, VentureChat…) ? Mettez `enabled: false` et ajoutez `%fondamentaltag_tag_prefix%` dans son format. Voir [le guide](/wiki/tag/guides#brancher-un-plugin-de-chat).
+
+## Au-dessus de la tête et dans le TAB
+
+```yaml
+nametag:
+  enabled: true
+  format: "{tag} "
+  cleanup-legacy-teams: true   # supprime les équipes laissées par TagsCustom 1.x
+```
+
+Le tag est posé comme préfixe d'équipe du scoreboard. Un joueur déjà placé dans l'équipe d'un autre plugin (Bedwars, TAB…) n'est **jamais déplacé** : sur ces serveurs, mettez `enabled: false` et utilisez les placeholders dans le plugin concerné.
+
+## Placeholders
+
+```yaml
+placeholders:
+  no-tag: ""                 # valeur de %fondamentaltag_tag% sans tag équipé
+  legacy-identifier: false   # true = garde les anciens %tags_…% de TagsCustom
+```
+
+## Base de données
+
+```yaml
+database:
+  type: "sqlite"       # sqlite | mysql (Premium)
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentaltag"
+    username: "fondamentaltag"
+    password: "change-moi"
+```
+
+- **`sqlite`** : fichier `tags.db`, aucune configuration.
+- **`mysql`** <Premium /> : même base sur chaque serveur d'un réseau, les tags, les points et le tag personnalisé suivent le joueur partout. Redémarrez après le changement.
+
+Aucune requête SQL n'est faite sur le fil principal du serveur : pas de ralentissement.
+
+## Menus
+
+```yaml
+menu:
+  show-locked: true            # tags non débloqués affichés (grisés)
+  show-premium: true           # tags Premium affichés en Free (grisés)
+  skip-single-category: true   # une seule catégorie : ouvrir directement ses tags
+  close-on-equip: false
+  sort-by-rarity: false        # les plus rares en premier
+  items: { … }                 # matériaux de chaque bouton
+  sounds: { … }                # sons ("" = aucun son)
+```
+
+## Couleurs
+
+La section `colors` règle la palette des messages, des menus et de la console. Voir [la charte commune](/wiki/gamme#une-charte-commune).
+
+## Pack de ressources (Premium)
+
+Le pack anime les tags **directement sur l'écran des joueurs**, grâce à des shaders : les animations sont fluides et visibles **partout, chat compris**, et les mouvements (`motion`) deviennent possibles.
+
+```yaml
+resource-pack:
+  enabled: true
+  shader-effects: true
+  send-on-join: true
+  required: false              # true = expulse le joueur qui refuse le pack
+  prompt: "<gold>FondamentalTag</gold> <gray>: acceptez le pack pour voir les tags animés."
+  host:
+    enabled: true              # le plugin héberge lui-même le pack
+    port: 8095                 # à ouvrir dans le pare-feu
+    public-url: "http://IP-DU-SERVEUR:8095"
+  external-url: ""             # ou : l'adresse d'un zip hébergé ailleurs
+```
+
+- Le pack est **généré** d'après `tags.yml` et l'Atelier, puis envoyé à la connexion.
+- Soit le plugin l'héberge (ouvrez le port et renseignez `public-url`), soit vous le mettez en ligne vous-même (`external-url`, fichier `plugins/FondamentalTag/resourcepack.zip`).
+- Un joueur **sans le pack** voit le tag dans sa couleur principale : jamais de texte cassé.
+- Les shaders visent **Minecraft 1.21.11** ; les autres versions reçoivent un pack vide et voient la couleur principale.
+- `/tag pack` renvoie le pack à un joueur.
+
+## Textes
+
+`messages.yml` contient tous les textes, menus compris. Variables entre accolades : `{tag}`, `{player}`, `{time}`, `{price}`… Une valeur vide (`""`) désactive le message. Une clé absente reprend le texte d'origine du plugin.

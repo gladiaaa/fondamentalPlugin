@@ -1,0 +1,73 @@
+---
+title: Commandes et permissions
+description: Toutes les commandes de FondamentalTag, ses permissions et ses placeholders.
+---
+
+Commande principale : `/tag` (alias `/tags`, `/ftag`). Les commandes d'administration fonctionnent aussi depuis la **console**.
+
+## Joueurs
+
+| Commande | Effet |
+|---|---|
+| `/tag` | Ouvre le menu des tags |
+| `/tag equip <tag>` ou `/tag <tag>` | Équipe un tag débloqué |
+| `/tag remove` | Retire le tag porté |
+| `/tag list` | Liste des tags disponibles (cliquables) |
+| `/tag atelier` | Ouvre l'[Atelier](/wiki/tag/atelier) |
+| `/tag points` | Solde de points de l'Atelier |
+| `/tag pack` | Renvoie le pack de ressources <Premium /> |
+| `/tag help` | Aide |
+
+Dans le menu : **clic droit** sur un tag ou une pièce (même verrouillé) pour voir son **aperçu animé** pendant 6 secondes. Pour acheter, cliquez puis **cliquez à nouveau dans les 5 secondes** : pas d'achat par erreur.
+
+## Administration
+
+| Commande | Effet | Édition |
+|---|---|---|
+| `/tag give <joueur> <tag>` | Donne le tag à vie | Free |
+| `/tag give <joueur> <tag> <durée>` | Tag **temporaire** : `30m`, `12h`, `7d`, `1w`, `1d12h`. Redonner le même tag **prolonge** la durée. | <Premium /> |
+| `/tag take <joueur> <tag>` | Reprend le tag | Free |
+| `/tag set <joueur> <tag\|none>` | Impose un tag (et le donne si besoin) | Free |
+| `/tag info <joueur>` | Tag porté, tags débloqués, expirations (joueur connecté) | Free |
+| `/tag points <give\|take\|set> <joueur> <n>` | Points de l'Atelier (monnaie `internal`) | Free |
+| `/tag unlock <joueur> <famille> <pièce>` | Offre une pièce d'Atelier | Free |
+| `/tag atelier reset <joueur>` | Réinitialise le tag personnalisé du joueur | Free |
+| `/tag create <id> <catégorie> <affichage>` | Crée un tag et l'écrit dans `tags.yml` | <Premium /> |
+| `/tag edit <id> <affichage>` | Change l'affichage d'un tag | <Premium /> |
+| `/tag delete <id>` | Supprime un tag et le retire à tous les joueurs | <Premium /> |
+| `/tag preview <affichage\|id>` | Aperçu d'un rendu ; indique s'il est compatible Free | Free |
+| `/tag reload` | Recharge config, tags et textes ; réapplique aux joueurs connectés | Free |
+| `/tag license [check]` | Statut de la licence / nouvelle vérification | Free |
+
+Pour `give`, `take`, `set`, `unlock` et `points`, le joueur doit être **déjà venu** au moins une fois sur le serveur (il peut être déconnecté).
+
+## Permissions
+
+| Permission | Par défaut | Effet |
+|---|---|---|
+| `fondamentaltag.use` | tout le monde | Menu, équiper, retirer, lister |
+| `fondamentaltag.atelier` | tout le monde | Utiliser l'Atelier |
+| `fondamentaltag.admin` | op | Toutes les commandes d'administration |
+| `fondamentaltag.tag.<id>` | — | Débloque le tag `<id>` (ou la permission choisie dans `tags.yml`) |
+
+Un joueur peut utiliser un tag s'il est **public** (`permission: ""`), s'il a **sa permission**, ou s'il le **possède** (acheté, gagné en crate, donné par `/tag give`).
+
+## Placeholders
+
+Avec PlaceholderAPI, identifiant `fondamentaltag` :
+
+| Placeholder | Valeur |
+|---|---|
+| `%fondamentaltag_tag%` | Tag porté (couleurs §), ou `placeholders.no-tag` |
+| `%fondamentaltag_tag_prefix%` | Tag suivi d'un espace, ou rien : **à mettre dans un format de chat** |
+| `%fondamentaltag_tag_raw%` | Tag en MiniMessage (TAB et plugins compatibles) |
+| `%fondamentaltag_tag_plain%` | Tag sans couleurs |
+| `%fondamentaltag_tag_id%` | Identifiant du tag porté |
+| `%fondamentaltag_tag_category%` | Catégorie du tag porté |
+| `%fondamentaltag_unlocked%` / `%fondamentaltag_total%` | Nombre de tags débloqués / disponibles |
+| `%fondamentaltag_has_<id>%` | `true` ou `false` |
+| `%fondamentaltag_id_<n>%` | Le tag dont `numeric-id` vaut `n` |
+| `%fondamentaltag_points%` | Solde de points de l'Atelier |
+| `%fondamentaltag_edition%` | `Free` ou `Premium` |
+
+Les anciens placeholders de TagsCustom (`%tags_Player_tag%`, `%tags_id_N%`) restent disponibles avec `placeholders.legacy-identifier: true`.

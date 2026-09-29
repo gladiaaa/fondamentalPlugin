@@ -1,0 +1,83 @@
+---
+title: Commandes et permissions
+description: Les commandes de FondamentalPass, ses permissions et ses placeholders.
+---
+
+## Joueurs
+
+| Commande | Effet |
+|---|---|
+| `/pass` (alias `/battlepass`, `/bp`) | Ouvre le pass, sur le prochain palier à atteindre |
+| `/quetes [daily\|weekly\|season]` (alias `/quests`, `/quest`) | Quêtes du moment, par onglet |
+| `/pass recuperer` | Récupère toutes les récompenses disponibles |
+| `/pass top` | Classement de la saison |
+| `/pass profil [joueur]` | Profil de progression d'un joueur |
+| `/pass calendrier` | Récompense de connexion du jour |
+| `/parchemins` (alias `/scrolls`) | Boutique de [parchemins](/wiki/pass/parchemins) |
+| `/pass evenement` | Pass de l'événement en cours <Premium /> |
+| `/pass premium [événement]` | Acheter la piste premium en jeu, si activé <Premium /> |
+| `/pass offrir <joueur> [événement]` | Offrir la piste premium à un joueur connecté <Premium /> |
+| `/pass acheter` | Acheter un palier, si activé <Premium /> |
+| `/pass aide` | Aide |
+
+Dans `/pass` : la rangée du haut est la **piste gratuite**, celle du bas la **piste premium** ; un clic récupère la récompense d'un palier atteint.
+
+Dans `/quetes` : **shift + clic** sur une quête pour **suivre** sa progression en haut de l'écran ; **clic droit** pour la **changer** (une fois par jour par défaut).
+
+## Administration
+
+Permission `fondamentalpass.admin` (op par défaut).
+
+| Commande | Effet |
+|---|---|
+| `/pass admin reload` | Recharge config, textes, saison et quêtes. Une configuration invalide est refusée : l'ancienne reste active. |
+| `/pass admin info` | Édition, stockage, serveur, saison, nombre de quêtes, profils chargés |
+| `/pass admin license [check]` | Statut de la licence / nouvelle vérification |
+| `/pass admin xp <give\|take\|set> <joueur\|*> <n>` | Gère l'XP (`give` fonctionne aussi pour un joueur déconnecté) |
+| `/pass admin level <joueur> <palier>` | Place un joueur à un palier |
+| `/pass admin quest <joueur> <quête> <complete\|set <n>\|reset>` | Termine, règle ou remet à zéro une quête |
+| `/pass admin reroll <joueur\|*> [groupe]` | Retire les quêtes tirées (un nouveau tirage suit) |
+| `/pass admin reset <joueur>` | Remet un pass à zéro (XP, récompenses, quêtes) |
+| `/pass admin trigger <joueur> <clé> [n]` | Fait avancer un objectif `custom` <Premium /> |
+| `/pass admin scroll give <joueur\|*> <parchemin\|random[:niveau]> [n]` | Donne des parchemins |
+| `/pass admin scroll list` | Liste des parchemins |
+| `/pass admin premium <give\|take> <joueur> [événement]` | Donne ou retire la piste premium achetée |
+| `/pass admin event` | Liste des pass événement et leur état |
+| `/pass admin boost <pourcent> <durée>` / `stop` | Boost d'XP sur tout le réseau, ex. `50 2h` <Premium /> |
+
+## Permissions
+
+| Permission | Par défaut | Effet |
+|---|---|---|
+| `fondamentalpass.premium` | personne | Ouvre la piste premium (nom réglable dans `season.yml`) |
+| `fondamentalpass.admin` | op | Commandes `/pass admin` |
+| `fondamentalpass.boost.<pourcent>` | — | Boost d'XP de quête, ex. `fondamentalpass.boost.25` = +25 % (la plus haute compte) |
+| `fondamentalpass.rerolls.<n>` | — | Changements de quête par jour |
+| `fondamentalpass.event.<événement>.premium` | — | Piste premium d'un pass événement (nom réglable dans le fichier de l'événement) |
+
+Les parchemins peuvent aussi demander une permission par niveau (réglage `permission` de la boutique).
+
+## Placeholders
+
+Avec PlaceholderAPI, préfixe `fpass` :
+
+| Placeholder | Valeur |
+|---|---|
+| `%fpass_level%` / `%fpass_max_level%` | Palier actuel / nombre de paliers |
+| `%fpass_xp%` / `%fpass_xp_needed%` | XP dans le palier / XP à atteindre pour le suivant |
+| `%fpass_xp_total%` | XP totale de la saison |
+| `%fpass_progress%` | Progression du palier en % |
+| `%fpass_premium%` | Piste premium ouverte (`Oui` / `Non`) |
+| `%fpass_claimable%` | Récompenses à récupérer |
+| `%fpass_season%` / `%fpass_season_id%` / `%fpass_season_remaining%` | Nom, identifiant et temps restant de la saison |
+| `%fpass_quests_done_<pool>%` / `%fpass_quests_total_<pool>%` | Quêtes terminées / tirées dans un pool |
+| `%fpass_boost%` / `%fpass_boost_global%` | Boost d'XP du joueur / boost global en cours |
+| `%fpass_streak%` | Jours de série |
+| `%fpass_rerolls%` | Changements de quête restants aujourd'hui |
+| `%fpass_calendar_day%` | Jour du calendrier de connexion |
+| `%fpass_overflow%` | Paliers bonus gagnés |
+| `%fpass_rank%` | Rang du joueur au classement |
+| `%fpass_top_<n>_name%` / `_level%` / `_xp%` | Joueur classé n |
+| `%fpass_community_total%` / `_target%` / `_percent%` / `_mine%` | Objectif commun : total, cible, %, contribution du joueur |
+
+Les valeurs propres au joueur sont vides tant que son profil n'est pas chargé sur ce serveur.

@@ -1,0 +1,62 @@
+---
+title: Commandes et permissions
+description: Les commandes de FondamentalCrate, ses permissions et ses placeholders.
+---
+
+Commande principale : `/crate` (alias `/crates`, `/cc`).
+
+## Joueurs
+
+| Commande ou geste | Effet |
+|---|---|
+| **Clic droit** sur le bloc | Ouvre la crate (clé physique en main, ou clés virtuelles) |
+| **Shift + clic droit** | Ouvre plusieurs clés d'un coup, avec un récapitulatif |
+| **Clic gauche** sur le bloc | Aperçu du contenu et des chances |
+| `/crate` | Menu de toutes les crates : ouvrir de n'importe où, sans bloc |
+| `/crate preview <crate>` | Aperçu et chances |
+| `/crate keys` | Mes clés |
+| `/crate stats` | Ouvertures et clés par crate, derniers gains |
+| `/crate history` | Mes derniers gains |
+| `/crate list` | Liste des crates |
+
+## Administration
+
+| Commande | Effet |
+|---|---|
+| `/crate give <joueur> <crate> [nb]` | Clés **virtuelles** (joueur connecté) |
+| `/crate givekey <joueur> <crate> [nb]` | Clés **physiques** (objets) |
+| `/crate giveall <crate> [nb]` | Clés virtuelles à tous les joueurs connectés |
+| `/crate givekeyall <crate> [nb]` | Clés physiques à tous les joueurs connectés |
+| `/crate get <crate> [nb]` | Vous donne des clés physiques (pour tester) |
+| `/crate take <joueur> <crate> [nb\|all]` | Retire des clés virtuelles |
+| `/crate takeall <crate> [nb\|all]` | Retire des clés à tous les joueurs connectés |
+| `/crate set <crate>` | Lie le bloc visé (6 blocs max) à la crate |
+| `/crate unset` | Délie le bloc visé |
+| `/crate editor` | Éditeur complet en jeu |
+| `/crate reload` | Recharge configuration, crates, textes et hologrammes |
+| `/crate history <joueur>` | Historique d'un joueur |
+
+Quantité maximale par commande : 2304. Toutes ces commandes fonctionnent depuis la console.
+
+## Permissions
+
+| Permission | Par défaut | Donne |
+|---|---|---|
+| `fondamentalcrate.use` | tout le monde | Ouvrir, menu, clés, statistiques, liste, historique |
+| `fondamentalcrate.preview` | tout le monde | Aperçu et chances |
+| `fondamentalcrate.admin` | op | Toutes les commandes d'administration |
+
+Dans `crates.yml`, une crate peut exiger une `permission` pour être ouverte, et un lot peut être réservé à ceux qui ont (ou n'ont **pas**) une permission.
+
+## Placeholders
+
+Avec PlaceholderAPI, identifiant `fondamentalcrate` :
+
+| Placeholder | Valeur |
+|---|---|
+| `%fondamentalcrate_keys_<crate>%` | Clés du joueur pour cette crate (physiques et virtuelles) |
+| `%fondamentalcrate_keys_total%` | Toutes ses clés |
+| `%fondamentalcrate_name_<crate>%` | Nom affiché de la crate |
+| `%fondamentalcrate_pity_<crate>%` | Compteur de pitié (`compteur/seuil`) |
+| `%fondamentalcrate_opens_<crate>%` / `%fondamentalcrate_opens_total%` | Ouvertures du joueur |
+| `%fondamentalcrate_used_<crate>%` / `%fondamentalcrate_used_total%` | Clés utilisées sur tout le serveur |

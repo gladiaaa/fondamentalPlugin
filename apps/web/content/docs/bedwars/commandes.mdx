@@ -1,0 +1,82 @@
+---
+title: Commandes et permissions
+description: Les commandes de FondamentalBedwars, ses permissions et ses placeholders.
+---
+
+## Joueurs
+
+| Commande | Effet |
+|---|---|
+| `/bw play` | Menu de jeu : mode Normal ou Classé, choix du mode |
+| `/bw leave` | Quitte la file d'attente |
+| `/bw join <FBW-XXXX>` | Rejoint une partie privée par son code |
+| `/bw start-private <code>` | Lance sa partie privée |
+| `/bw stats [joueur]` | Statistiques (Premium, MySQL) |
+| `/bw top [kills\|wins\|beds\|deaths\|elo]` | Classement (Premium, MySQL) |
+| `/bw ranks` | Échelle des rangs |
+| `/cosmetics` (alias `/cosmetiques`, `/cosmetic`) | Menu des cosmétiques |
+| `/party <invite\|accept\|leave\|kick\|disband\|list\|chat>` (alias `/p`) | Groupe d'amis ; seul le chef lance la file |
+
+`/bedwars` est l'alias long de `/bw`. Au lobby, une **boussole** ouvre aussi le menu de jeu.
+
+## Administration des arènes
+
+Permission `bedwars.admin` (op).
+
+| Commande | Effet |
+|---|---|
+| `/bw create <arène>` | Crée une arène (2 max en Free) |
+| `/bw edit <arène>` / `/bw edit stop` | Éditeur visuel |
+| `/bw setmode <arène> <mode>` | Mode de l'arène |
+| `/bw settemplate <arène> <schematic>` | Carte (fichier de `schematics/`) |
+| `/bw setorigin <arène>` | Centre exact de la carte |
+| `/bw setlobby <arène>` | Salle d'attente |
+| `/bw setspawn <arène> <équipe>` | Point d'apparition d'une équipe |
+| `/bw setbed <arène> <équipe>` | Lit d'une équipe |
+| `/bw addgenerator <arène> <iron\|gold\|diamond\|emerald>` | Générateur central |
+| `/bw removegenerator <arène> <id>` | Retire un générateur |
+| `/bw addteamgenerator <arène> <équipe>` | Générateur d'équipe |
+| `/bw removeteamgenerator <arène> <équipe>` | Retire un générateur d'équipe |
+| `/bw setshop <arène> <WEAPONS\|BLOCKS\|POTIONS\|TRAPS\|UPGRADES>` | Marchand |
+| `/bw removeshop <arène> <id>` | Retire un marchand |
+| `/bw status <arène>` | Mode, arène prête ou non, parties et joueurs |
+| `/bw start <arène>` | Force le démarrage d'une partie en attente |
+| `/bw tp <arène>` | Téléporte dans le monde de l'arène |
+| `/bw lb set\|remove <kills\|wins\|beds\|elo>` | Classement en hologramme à votre position (Premium) |
+| `/bw reload` | Recharge config, textes et arènes (ferme les parties en cours) |
+
+## Administration du plugin
+
+Permission `fbw.admin` (op). Utilisable depuis la console.
+
+| Commande | Effet |
+|---|---|
+| `/fbw license [check]` | Statut de la licence / nouvelle vérification |
+| `/fbw reload` | Recharge config, textes, thèmes, cosmétiques, boutique et pack |
+| `/fbw givecosmetic <joueur> <catégorie:id>` | Donne un cosmétique ; déjà possédé : la moitié de son prix en coins |
+| `/fbw coins <add\|set> <joueur> <n>` | Gère les coins (joueur connecté) |
+
+## Permissions
+
+| Permission | Par défaut | Effet |
+|---|---|---|
+| `bedwars.admin` | op | Commandes d'arènes |
+| `fbw.admin` | op | Commandes `/fbw` |
+| `bedwars.private` | — | Créer une partie privée |
+| `bedwars.rank.vip`, `.vipp`, `.mvp`, `.mvpp`, `.mvppp` | — | Grade affiché sur le scoreboard du lobby (VIP, VIP+, MVP, MVP+, MVP++) |
+| `fbw.cosmetic.<catégorie>.<id>` | — | Possession d'un cosmétique (posée automatiquement à l'achat) |
+| `fbw.rank.<rang>` | — | Posée automatiquement selon l'Elo : utilisable par vos autres plugins |
+
+Ces dernières permissions se gèrent avec LuckPerms.
+
+## Placeholders
+
+Avec PlaceholderAPI, identifiant `fondamentalbedwars` (valeurs lues dans LuckPerms, donc partagées sur le réseau) :
+
+| Placeholder | Valeur |
+|---|---|
+| `%fondamentalbedwars_elo%` | Elo |
+| `%fondamentalbedwars_rank%` | Rang |
+| `%fondamentalbedwars_rank_id%` | Identifiant du rang |
+| `%fondamentalbedwars_rank_colored%` | Rang en couleur |
+| `%fondamentalbedwars_coins%` | Coins |
