@@ -2,18 +2,63 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../config/env.js';
 
-/**
- * Statut d'une clé sur le serveur de licences (`GET /api/v1/admin/licenses/:key`).
- *
- * ⚠️ Forme **provisoire** : le serveur de licences existant n'a pas encore été relu pour confirmer les
- * noms exacts des champs (voir #22). Elle n'est utilisée nulle part ailleurs que dans ce fichier et
- * `LicenseServerClient.get`, donc un écart avec la vraie réponse se corrige à un seul endroit.
- */
+/** Une installation (un serveur Minecraft) qui consomme une activation. Dates ISO 8601. */
+export interface LicenseActivationStatus {
+  installationId: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+}
+
+/** Statut d'une clé sur le serveur de licences, sous une forme propre à l'API (voir `parseStatus`). */
 export interface LicenseStatus {
   product: string;
   edition: string;
   revoked: boolean;
-  activations: unknown[];
+  /** Date ISO 8601 d'expiration, ou `null` pour une licence sans limite de durée. */
+  expiresAt: string | null;
+  maxActivations: number;
+  activations: LicenseActivationStatus[];
+}
+
+/**
+ * Réponse brute de `GET /api/v1/admin/licenses/:key` : la ligne de la table `licenses` du serveur de
+ * licences, plus ses installations (`getLicenseStatus` dans license-server/src/license.js).
+ */
+interface RawLicenseStatus {
+  product_id: unknown;
+  edition: unknown;
+  max_activations: unknown;
+  revoked_at: unknown;
+  expires_at: unknown;
+  activations: unknown;
+}
+
+const isDate = (value: unknown): value is string => typeof value === 'string' && !Number.isNaN(Date.parse(value));
+
+/**
+ * Traduit la réponse brute. Une forme inattendue lève `LicenseServerError` : surtout pas de valeur par
+ * défaut, une clé révoquée passerait pour valide si `revoked_at` venait à manquer.
+ */
+function parseStatus(raw: RawLicenseStatus): LicenseStatus {
+  const invalid = (field: string) => new LicenseServerError(`Serveur de licences : champ ${field} inattendu.`);
+  if (typeof raw.product_id !== 'string') throw invalid('product_id');
+  if (typeof raw.edition !== 'string') throw invalid('edition');
+  if (typeof raw.max_activations !== 'number') throw invalid('max_activations');
+  if (raw.revoked_at !== null && !isDate(raw.revoked_at)) throw invalid('revoked_at');
+  if (raw.expires_at !== null && !isDate(raw.expires_at)) throw invalid('expires_at');
+  if (!Array.isArray(raw.activations)) throw invalid('activations');
+  return {
+    product: raw.product_id,
+    edition: raw.edition,
+    revoked: raw.revoked_at !== null,
+    expiresAt: raw.expires_at === null ? null : new Date(raw.expires_at).toISOString(),
+    maxActivations: raw.max_activations,
+    activations: raw.activations.map((activation: Record<string, unknown>) => {
+      const { installation_id: id, first_seen: first, last_seen: last } = activation ?? {};
+      if (typeof id !== 'string' || !isDate(first) || !isDate(last)) throw invalid('activations');
+      return { installationId: id, firstSeenAt: new Date(first).toISOString(), lastSeenAt: new Date(last).toISOString() };
+    }),
+  };
 }
 
 /**
@@ -28,7 +73,7 @@ export interface CreateLicenseInput {
   maxActivations: number;
 }
 
-/** Réponse de la création : au minimum la clé générée. Forme provisoire, comme `LicenseStatus`. */
+/** Réponse de la création (`res.status(201).json({ key })` côté serveur de licences). */
 export interface CreatedLicense {
   key: string;
 }
@@ -59,7 +104,7 @@ export class LicenseServerClient {
 
   /** @throws LicenseNotFoundError si la clé n'existe pas, LicenseServerError pour toute autre erreur. */
   async get(key: string): Promise<LicenseStatus> {
-    return this.request<LicenseStatus>('GET', `/api/v1/admin/licenses/${encodeURIComponent(key)}`);
+    return parseStatus(await this.request<RawLicenseStatus>('GET', `/api/v1/admin/licenses/${encodeURIComponent(key)}`));
   }
 
   /** Crée une licence après un paiement. N'appelle jamais deux fois pour la même commande (voir #24). */

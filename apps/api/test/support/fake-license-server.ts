@@ -4,8 +4,14 @@ import {
   type CreatedLicense,
   LicenseNotFoundError,
   type LicenseServerClient,
+  type LicenseActivationStatus,
   type LicenseStatus,
 } from '../../src/licenses/license-server-client.js';
+
+/** Installation de test : seules les dates changent d'un test à l'autre, on les fixe. */
+export function activation(installationId: string): LicenseActivationStatus {
+  return { installationId, firstSeenAt: '2026-09-01T10:00:00.000Z', lastSeenAt: '2026-09-28T08:00:00.000Z' };
+}
 
 /**
  * Faux serveur de licences pour les tests e2e : pas d'appel réseau, comportement dicté par le test
@@ -25,7 +31,15 @@ export class FakeLicenseServer
 
   /** Déclare une clé existante sur le faux serveur (par défaut : valide, non révoquée). */
   set(key: string, status: Partial<LicenseStatus> = {}): void {
-    this.keys.set(key, { product: 'tag', edition: 'PREMIUM', revoked: false, activations: [], ...status });
+    this.keys.set(key, {
+      product: 'tag',
+      edition: 'PREMIUM',
+      revoked: false,
+      expiresAt: null,
+      maxActivations: 1,
+      activations: [],
+      ...status,
+    });
   }
 
   /** Retire une clé (simule une suppression côté serveur de licences, entre le rattachement et une lecture). */
@@ -65,9 +79,7 @@ export class FakeLicenseServer
   async releaseActivation(key: string, installationId: string): Promise<void> {
     const status = this.keys.get(key);
     if (!status) throw new LicenseNotFoundError('Clé inconnue.');
-    const activations = status.activations.filter(
-      (activation) => (activation as { installationId?: unknown })?.installationId !== installationId,
-    );
+    const activations = status.activations.filter((activation) => activation.installationId !== installationId);
     if (activations.length === status.activations.length) throw new LicenseNotFoundError('Installation inconnue.');
     this.keys.set(key, { ...status, activations });
     this.releasedActivations.push({ key, installationId });

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import type { LicenseActivation, LicenseDetailResponse, OwnedLicenseResponse } from '@fondamental/shared';
+import type { LicenseDetailResponse, OwnedLicenseResponse } from '@fondamental/shared';
 import { LicenseNotFoundError, LicenseServerClient } from './license-server-client.js';
 import { MESSAGES } from './licenses.constants.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -10,11 +10,6 @@ const UNIQUE_VIOLATION = 'P2002';
 /** Ne montre jamais la clé en entier dans un log : seuls ses 4 derniers caractères. */
 const redact = (key: string) => `…${key.slice(-4)}`;
 
-/** Forme provisoire (comme `LicenseStatus.activations`, voir #22) : on ne connaît que ce champ pour l'instant. */
-function toActivation(raw: unknown): LicenseActivation {
-  const installationId = (raw as { installationId?: unknown } | null)?.installationId;
-  return { installationId: typeof installationId === 'string' ? installationId : String(installationId) };
-}
 
 @Injectable()
 export class LicensesService {
@@ -81,7 +76,9 @@ export class LicensesService {
       claimedAt: owned.claimedAt.toISOString(),
       edition: status.edition,
       revoked: status.revoked,
-      activations: status.activations.map(toActivation),
+      expiresAt: status.expiresAt,
+      maxActivations: status.maxActivations,
+      activations: status.activations,
     };
   }
 

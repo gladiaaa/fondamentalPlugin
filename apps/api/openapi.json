@@ -2182,10 +2182,21 @@
           "installationId": {
             "type": "string",
             "description": "À repasser à DELETE /me/licenses/:key/activations/:installationId."
+          },
+          "firstSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Dernière vérification de la licence par ce serveur."
           }
         },
         "required": [
-          "installationId"
+          "installationId",
+          "firstSeenAt",
+          "lastSeenAt"
         ]
       },
       "LicenseDetailApiResponse": {
@@ -2204,6 +2215,16 @@
           "revoked": {
             "type": "boolean"
           },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Vide : licence sans limite de durée."
+          },
+          "maxActivations": {
+            "type": "number",
+            "description": "Nombre d'installations simultanées permises."
+          },
           "activations": {
             "type": "array",
             "items": {
@@ -2216,6 +2237,8 @@
           "claimedAt",
           "edition",
           "revoked",
+          "expiresAt",
+          "maxActivations",
           "activations"
         ]
       },
