@@ -18,37 +18,34 @@ import {
   PassContourIcon,
 } from "@/components/icons";
 import { Logo } from "@/components/brand/Logo";
+import { HeroChat } from "@/features/home/HeroChat";
+import { getProducts } from "@/lib/api/products";
 
-// Exemples dans la fourchette de 8 à 20 € (brief §13, docs/api-front.md §4) :
-// à remplacer une fois les prix réels fixés. `priceCents: null` afficherait
-// « Bientôt disponible », comme le fera la vraie fiche produit.
+// Accroches courtes de la page d'accueil ; les prix viennent du catalogue de l'API (mêmes chiffres
+// que /plugins et les fiches), jamais écrits ici.
 const PLUGINS = [
   {
     slug: "bedwars",
     name: "FondamentalBedwars",
     description: "Bedwars complet : des équipes, un lit à défendre, un classé Elo et 82 cosmétiques.",
-    priceCents: 1990,
     Icon: BedwarsContourIcon,
   },
   {
     slug: "tag",
     name: "FondamentalTag",
     description: "Des tags de joueur animés dans le chat, au-dessus de la tête et dans la liste TAB.",
-    priceCents: 1290,
     Icon: TagContourIcon,
   },
   {
     slug: "crate",
     name: "FondamentalCrate",
     description: "Des crates animées, des clés physiques ou virtuelles et un éditeur entièrement en jeu.",
-    priceCents: 1490,
     Icon: CrateContourIcon,
   },
   {
     slug: "pass",
     name: "FondamentalPass",
     description: "Un pass de saison et des quêtes, avec la même progression sur tout votre réseau.",
-    priceCents: 1690,
     Icon: PassContourIcon,
   },
 ];
@@ -113,7 +110,21 @@ const CONFIG_EXAMPLE = `# plugins/FondamentalBedwars/config.yml
 license:
   key: "FBW-XXXX-XXXX-XXXX"`;
 
-export default function Home() {
+// Prix lus à chaque visite : jamais figés au build (l'API n'y est pas joignable, voir /plugins).
+export const dynamic = "force-dynamic";
+
+/** Prix Premium en centimes par plugin ; `undefined` si le catalogue ne répond pas (prix masqués). */
+async function premiumPrices(): Promise<Record<string, number | null> | undefined> {
+  try {
+    const products = await getProducts();
+    return Object.fromEntries(products.map((p) => [p.slug, p.price?.amountCents ?? null]));
+  } catch {
+    return undefined;
+  }
+}
+
+export default async function Home() {
+  const prices = await premiumPrices();
   return (
     <>
       <section className="px-4 py-[clamp(36px,7vw,84px)] sm:px-8">
@@ -146,48 +157,7 @@ export default function Home() {
             </ul>
           </div>
 
-          <div className="grid gap-3.5" aria-hidden="true">
-            <div className="grid gap-4 rounded-card-lg border border-line bg-surface p-5">
-              <div className="flex items-center gap-3.5">
-                <span className="grid size-[52px] shrink-0 place-items-center rounded-field border border-line bg-bg">
-                  <Logo withWordmark={false} size={30} />
-                </span>
-                <div>
-                  <b className="block font-display text-[1.1rem] font-semibold tracking-[-.03em]">Mon serveur</b>
-                  <small className="flex items-center gap-1.5 text-[.85rem] text-muted">
-                    <i className="size-2 rounded-full bg-success" /> 42 / 100 joueurs en ligne
-                  </small>
-                </div>
-              </div>
-              <ul className="grid gap-2">
-                {PLUGINS.map(({ slug, name, Icon }) => (
-                  <li key={slug} className="flex items-center gap-3 rounded-2xl bg-surface-2 px-3.5 py-2.5">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-field bg-bg text-accent-text">
-                      <Icon width={22} height={22} />
-                    </span>
-                    <span>{name.replace("Fondamental", "")}</span>
-                    <em className="ml-auto rounded-pill bg-[color-mix(in_srgb,var(--color-success)_16%,transparent)] px-[.7em] py-[.3em] text-[.76rem] not-italic text-success">
-                      Actif
-                    </em>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="grid gap-0 rounded-field border border-[#2A2338] bg-[#08060D] p-4 font-mono text-[.8rem] leading-[1.75] text-[#D8D2E6]">
-              <div className="mb-2 font-mono text-[.66rem] uppercase tracking-[.12em] text-[#8A8199]">Chat du serveur</div>
-              <div>
-                <span className="bg-gradient-to-r from-[#B7A0FF] to-[#6A5D94] bg-clip-text font-medium text-transparent">
-                  [Fondamental]
-                </span>{" "}
-                Bedwars <span className="text-[#8A8199]">· Votre lit est protégé.</span>
-              </div>
-              <div>
-                <span className="text-[#B7A0FF]">[VIP]</span> Alex{" "}
-                <span className="text-[#8A8199]">a rejoint la partie.</span>
-              </div>
-              <div className="text-success">Caisse Légendaire ouverte.</div>
-            </div>
-          </div>
+          <HeroChat />
         </div>
       </section>
 
@@ -205,7 +175,7 @@ export default function Home() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PLUGINS.map((plugin) => (
-              <PluginCard key={plugin.slug} {...plugin} freeAvailable />
+              <PluginCard key={plugin.slug} {...plugin} priceCents={prices ? (prices[plugin.slug] ?? null) : undefined} freeAvailable />
             ))}
           </div>
         </div>
