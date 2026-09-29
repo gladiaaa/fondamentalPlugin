@@ -46,6 +46,9 @@ jobs:
           PARCOURS_URL: https://dev.fondamentalplugin.fr
           E2E_EMAIL: ${{ vars.E2E_EMAIL }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          # Mot de passe de la préprod (nginx) : variable PREPROD_USER, secret PREPROD_PASSWORD.
+          PREPROD_USER: ${{ vars.PREPROD_USER }}
+          PREPROD_PASSWORD: ${{ secrets.PREPROD_PASSWORD }}
       - name: Rapport (en cas d'échec)
         if: failure()
         uses: actions/upload-artifact@v4
