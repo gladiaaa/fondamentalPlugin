@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/Switch";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { isShown, isValues, matchingOption, optionDefault, withKey } from "./values";
+import { MiniMessagePreview } from "./MiniMessagePreview";
 
 /**
  * Formulaire généré depuis le schéma d'un fichier (#30) : un composant par sorte de champ
@@ -18,29 +19,43 @@ export function ConfigFields({
   values,
   onChange,
   inEntry = false,
+  onOpenEntry,
 }: {
   fields: ConfigField[];
   values: ConfigValues;
   onChange: (values: ConfigValues) => void;
   /** Dans une entrée nommée ou un élément de liste : un texte vidé retire la clé. */
   inEntry?: boolean;
+  /**
+   * Configurateur : les entrées nommées de ces champs (crates, tags…) s'ouvrent chacune sur leur
+   * propre écran au lieu d'être toutes dépliées ici. `entryKey` null : la liste elle-même.
+   */
+  onOpenEntry?: (mapKey: string, entryKey: string | null) => void;
 }) {
+  const shown = fields.filter((field) => isShown(field, values));
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
-      {fields
-        .filter((field) => isShown(field, values))
-        .map((field) => (
+      {shown.map((field, i) => (
+        <div key={field.key} className="contents">
+          {field.group && field.group !== shown[i - 1]?.group && (
+            <h3 className={cn("font-display text-[1rem] font-semibold", i > 0 && "mt-3 border-t border-line pt-5")}>{field.group}</h3>
+          )}
           <FieldEditor
-            key={field.key}
             field={field}
             value={values[field.key]}
             inEntry={inEntry}
             onChange={(value) => onChange(withKey(values, field.key, value))}
+            onOpenEntry={onOpenEntry && ((entryKey) => onOpenEntry(field.key, entryKey))}
           />
-        ))}
+        </div>
+      ))}
     </div>
   );
 }
+
+const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+/** Champ de couleur #RRGGBB (motif HEX des schémas de l'API) : sélecteur de couleur en plus. */
+const isHexField = (pattern: string | undefined) => pattern === "^#[0-9A-Fa-f]{6}$";
 
 function PremiumBadge() {
   return (
@@ -64,11 +79,13 @@ function FieldEditor({
   value,
   onChange,
   inEntry,
+  onOpenEntry,
 }: {
   field: ConfigField;
   value: ConfigValue | undefined;
   onChange: (value: ConfigValue | undefined) => void;
   inEntry: boolean;
+  onOpenEntry?: (entryKey: string | null) => void;
 }) {
   const id = useId();
 
@@ -91,6 +108,23 @@ function FieldEditor({
               placeholder={field.placeholder}
               onChange={(e) => onChange(e.target.value === "" && inEntry ? undefined : e.target.value)}
             />
+          ) : isHexField(field.pattern) ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label={`${field.label} : choisir`}
+                value={typeof value === "string" && HEX_COLOR.test(value) ? value : "#ffffff"}
+                onChange={(e) => onChange(e.target.value.toUpperCase())}
+                className="h-11 w-12 shrink-0 cursor-pointer rounded-field border border-line bg-surface-2 p-1"
+              />
+              <Input
+                id={id}
+                value={typeof value === "string" ? value : ""}
+                placeholder="#RRGGBB"
+                className="font-mono text-[.85rem]"
+                onChange={(e) => onChange(e.target.value === "" && inEntry ? undefined : e.target.value)}
+              />
+            </div>
           ) : (
             <Input
               id={id}
@@ -102,6 +136,7 @@ function FieldEditor({
               onChange={(e) => onChange(e.target.value === "" && inEntry ? undefined : e.target.value)}
             />
           )}
+          {field.minimessage && typeof value === "string" && <MiniMessagePreview value={value} />}
         </FieldShell>
       );
 
@@ -163,6 +198,16 @@ function FieldEditor({
               onChange(e.target.value === "" ? (inEntry ? undefined : []) : items);
             }}
           />
+          {isHexField(field.pattern) && Array.isArray(value) && value.length > 0 && (
+            <div className="flex flex-wrap gap-1.5" aria-hidden>
+              {(value as string[]).filter((c) => HEX_COLOR.test(c)).map((c, i) => (
+                <span key={i} className="size-6 rounded-full border border-line" style={{ background: c }} />
+              ))}
+            </div>
+          )}
+          {field.minimessage && Array.isArray(value) && value.length > 0 && (
+            <MiniMessagePreview value={(value as string[]).join("\n")} />
+          )}
         </FieldShell>
       );
 
@@ -179,7 +224,11 @@ function FieldEditor({
       );
 
     case "map":
-      return <MapEditor field={field} value={isValues(value) ? value : {}} onChange={onChange} />;
+      return onOpenEntry && field.fields ? (
+        <MapLinks field={field} value={isValues(value) ? value : {}} onChange={onChange} onOpen={onOpenEntry} />
+      ) : (
+        <MapEditor field={field} value={isValues(value) ? value : {}} onChange={onChange} />
+      );
 
     case "list":
       return <ListEditor field={field} value={Array.isArray(value) ? (value as ConfigValues[]) : []} onChange={onChange} />;
@@ -432,5 +481,103 @@ function ListEditor({
         </Button>
       </div>
     </Group>
+  );
+}
+
+/** Nom lisible d'une entrée : son `display` ou `name` en MiniMessage, sinon rien. */
+function entryTitle(entry: ConfigValue | undefined): string | null {
+  if (!isValues(entry)) return null;
+  const title = entry.display ?? entry.name ?? entry.text;
+  return typeof title === "string" && title.trim() !== "" ? title : null;
+}
+
+/**
+ * Entrées nommées affichées comme une liste de liens (configurateur) : chacune s'ouvre sur son
+ * propre écran. Ajout et suppression restent ici.
+ */
+export function MapLinks({
+  field,
+  value,
+  onChange,
+  onOpen,
+}: {
+  field: ConfigMapField;
+  value: ConfigValues;
+  onChange: (value: ConfigValues) => void;
+  onOpen: (entryKey: string | null) => void;
+}) {
+  const [newKey, setNewKey] = useState("");
+  const newId = useId();
+  const pattern = new RegExp(field.keyPattern);
+  const keyValid = newKey !== "" && pattern.test(newKey) && !(newKey in value);
+  const entries = Object.entries(value);
+
+  function add() {
+    if (!keyValid) return;
+    onChange({ ...value, [newKey]: {} });
+    onOpen(newKey);
+    setNewKey("");
+  }
+
+  return (
+    <div className="grid gap-3 rounded-card border border-line bg-surface p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="font-medium">
+          <Label field={field} /> <span className="text-[.8rem] font-normal text-muted">({entries.length})</span>
+        </span>
+      </div>
+      {field.help && <p className="text-[.85rem] text-muted">{field.help}</p>}
+      {entries.length === 0 ? (
+        <p className="text-[.85rem] text-muted">Aucun(e) {field.itemLabel} pour l’instant.</p>
+      ) : (
+        <ul className="grid gap-1.5">
+          {entries.map(([key, entry]) => {
+            const title = entryTitle(entry);
+            return (
+              <li key={key} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onOpen(key)}
+                  className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-field border border-line bg-surface-2 px-3 py-2 text-left transition-colors hover:border-accent"
+                >
+                  <span className="min-w-0 truncate">
+                    <span className="font-mono text-[.85rem] text-muted">{key}</span>
+                    {title && <MiniMessagePreview value={title} className="mt-1 inline-block max-w-full bg-transparent px-0 py-0" />}
+                  </span>
+                  <span aria-hidden className="text-muted">›</span>
+                </button>
+                <Button size="sm" variant="ghost" aria-label={`Retirer ${key}`} onClick={() => onChange(withKey(value, key, undefined))}>
+                  Retirer
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <div className="flex flex-wrap items-end gap-2">
+        <Field
+          label={`Identifiant (${field.itemLabel} à ajouter)`}
+          htmlFor={newId}
+          hint={field.keyHelp ?? "Lettres, chiffres, _ et -."}
+          error={newKey !== "" && !keyValid ? (newKey in value ? "Existe déjà." : "Identifiant invalide.") : undefined}
+          className="min-w-[200px] flex-1"
+        >
+          <Input
+            id={newId}
+            value={newKey}
+            onChange={(e) => setNewKey(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                add();
+              }
+            }}
+          />
+        </Field>
+        <Button variant="secondary" disabled={!keyValid} onClick={add}>
+          Ajouter
+        </Button>
+      </div>
+    </div>
   );
 }

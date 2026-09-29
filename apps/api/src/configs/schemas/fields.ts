@@ -133,3 +133,6 @@ export const mysqlFields = (userKey: 'username' | 'user' = 'username'): ConfigFi
   text(userKey, 'Utilisateur'),
   text('password', 'Mot de passe', { help: 'Écrit tel quel dans le fichier généré.' }),
 ];
+
+/** Range des champs sous un même intertitre du formulaire (sans effet sur le YAML). */
+export const grouped = (group: string, fields: ConfigField[]): ConfigField[] => fields.map((f) => ({ ...f, group }));

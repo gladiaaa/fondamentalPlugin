@@ -416,6 +416,8 @@ interface ConfigFieldBase {
   help?: string;
   /** Fonction de l'édition Premium du plugin (information : le générateur est réservé aux acheteurs). */
   premium?: boolean;
+  /** Intertitre sous lequel ranger le champ dans le formulaire (affichage seulement). */
+  group?: string;
   /** N'afficher le champ que si le champ voisin `key` vaut `equals` (affichage seulement). */
   showIf?: { key: string; equals: string | number | boolean };
 }

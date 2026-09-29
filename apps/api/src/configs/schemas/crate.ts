@@ -1,5 +1,5 @@
 import type { ConfigField } from '@fondamental/shared';
-import { bool, decimal, DURATION, ID, int, lines, list, map, material, mm, section, select, text, MATERIAL } from './fields.js';
+import { bool, decimal, DURATION, grouped, ID, int, lines, list, map, material, mm, section, select, text, MATERIAL } from './fields.js';
 
 /** `crates.yml` de FondamentalCrate 1.2 : raretés et crates (voir le wiki, « Créer des crates »). */
 
@@ -98,47 +98,55 @@ const reward = [
 ];
 
 const crate: ConfigField[] = [
-  mm('display', 'Nom'),
-  select('animation', 'Animation', ANIMATIONS),
-  material('block', 'Bloc'),
-  int('cooldown', 'Délai entre deux ouvertures (s, -1 = global)', { min: -1 }),
-  text('permission', 'Permission pour ouvrir'),
-  decimal('cost', 'Prix d’ouverture (Vault)', { min: 0 }),
-  int('max-bulk', 'Clés ouvrables d’un coup', { min: 1, max: 54 }),
-  int('rewards-per-open', 'Lots par ouverture', { min: 1, max: 9 }),
-  int('keys-required', 'Clés consommées par ouverture', { min: 1, max: 64, premium: true }),
-  bool('selection', 'Mode « au choix »', { premium: true }),
-  section('pity', 'Pitié', [int('threshold', 'Seuil (ouvertures)', { min: 1 }), text('rarity', 'Rareté garantie', { pattern: ID })], {
-    premium: true,
-  }),
-  map('milestones', 'Paliers d’ouverture', {
-    premium: true,
-    itemLabel: 'palier',
-    keyPattern: '^[1-9][0-9]{0,5}$',
-    keyHelp: 'Nombre d’ouvertures, ex. 25.',
-    fields: [bool('repeat', 'À chaque multiple'), section('display', 'Apparence', displayFields), actions],
-  }),
-  material('floating-item', 'Objet flottant', { premium: true }),
-  text('ambient-particle', 'Particule d’ambiance', { pattern: MATERIAL, premium: true, placeholder: 'FLAME' }),
-  select('ambient-effect', 'Forme des particules', ['puff', 'halo', 'helix', 'vortex', 'fountain', 'spiral'], { premium: true }),
-  bool('double-or-nothing', 'Quitte ou double', { premium: true }),
-  decimal('double-or-nothing-chance', 'Chance de doubler', { min: 0.05, max: 0.95, step: 0.05 }),
-  int('double-or-nothing-max', 'Multiplicateur maximum', { min: 2, max: 4096 }),
-  lines('quad-themes', 'Thèmes de la chambre au trésor', { pattern: '^(classic|nether|ocean|soul|end|forest)$' }),
-  section('hologram', 'Hologramme', [
-    bool('enabled', 'Activé'),
-    decimal('offset', 'Hauteur', { min: -5, max: 10, step: 0.1 }),
-    lines('lines', 'Lignes', { minimessage: true, help: '<winners> = derniers gagnants.' }),
+  ...grouped('Général', [
+    mm('display', 'Nom'),
+    select('animation', 'Animation', ANIMATIONS),
+    material('block', 'Bloc'),
+    int('cooldown', 'Délai entre deux ouvertures (s, -1 = global)', { min: -1 }),
+    text('permission', 'Permission pour ouvrir'),
+    decimal('cost', 'Prix d’ouverture (Vault)', { min: 0 }),
+    int('max-bulk', 'Clés ouvrables d’un coup', { min: 1, max: 54 }),
+    int('rewards-per-open', 'Lots par ouverture', { min: 1, max: 9 }),
   ]),
-  section('key', 'Clé', [
-    material('material', 'Objet'),
-    mm('name', 'Nom'),
-    lines('lore', 'Description', { minimessage: true }),
-    bool('glow', 'Brillante'),
-    int('custom-model-data', 'Custom model data', { min: 0 }),
+  ...grouped('Récompenses', [
+    map('rewards', 'Récompenses', { itemLabel: 'lot', keyPattern: ID, maxItems: 100, fields: reward }),
   ]),
-  section('preview', 'Aperçu', [mm('title', 'Titre'), int('rows', 'Lignes', { min: 1, max: 6 })]),
-  map('rewards', 'Récompenses', { itemLabel: 'lot', keyPattern: ID, maxItems: 100, fields: reward }),
+  ...grouped('Apparence', [
+    material('floating-item', 'Objet flottant', { premium: true }),
+    text('ambient-particle', 'Particule d’ambiance', { pattern: MATERIAL, premium: true, placeholder: 'FLAME' }),
+    select('ambient-effect', 'Forme des particules', ['puff', 'halo', 'helix', 'vortex', 'fountain', 'spiral'], { premium: true }),
+    lines('quad-themes', 'Thèmes de la chambre au trésor', { pattern: '^(classic|nether|ocean|soul|end|forest)$' }),
+    section('hologram', 'Hologramme', [
+      bool('enabled', 'Activé'),
+      decimal('offset', 'Hauteur', { min: -5, max: 10, step: 0.1 }),
+      lines('lines', 'Lignes', { minimessage: true, help: '<winners> = derniers gagnants.' }),
+    ]),
+    section('key', 'Clé', [
+      material('material', 'Objet'),
+      mm('name', 'Nom'),
+      lines('lore', 'Description', { minimessage: true }),
+      bool('glow', 'Brillante'),
+      int('custom-model-data', 'Custom model data', { min: 0 }),
+    ]),
+    section('preview', 'Aperçu', [mm('title', 'Titre'), int('rows', 'Lignes', { min: 1, max: 6 })]),
+  ]),
+  ...grouped('Mécaniques Premium', [
+    int('keys-required', 'Clés consommées par ouverture', { min: 1, max: 64, premium: true }),
+    bool('selection', 'Mode « au choix »', { premium: true }),
+    section('pity', 'Pitié', [int('threshold', 'Seuil (ouvertures)', { min: 1 }), text('rarity', 'Rareté garantie', { pattern: ID })], {
+      premium: true,
+    }),
+    map('milestones', 'Paliers d’ouverture', {
+      premium: true,
+      itemLabel: 'palier',
+      keyPattern: '^[1-9][0-9]{0,5}$',
+      keyHelp: 'Nombre d’ouvertures, ex. 25.',
+      fields: [bool('repeat', 'À chaque multiple'), section('display', 'Apparence', displayFields), actions],
+    }),
+    bool('double-or-nothing', 'Quitte ou double', { premium: true }),
+    decimal('double-or-nothing-chance', 'Chance de doubler', { min: 0.05, max: 0.95, step: 0.05 }),
+    int('double-or-nothing-max', 'Multiplicateur maximum', { min: 2, max: 4096 }),
+  ]),
 ];
 
 export const crateCrates1_2: ConfigField[] = [

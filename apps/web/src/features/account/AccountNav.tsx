@@ -9,7 +9,7 @@ import { CompteIcon, LicenceIcon, ParametresIcon, GenerateurIcon } from "@/compo
 const NAV_ITEMS = [
   { href: "/compte", label: "Mon compte", Icon: CompteIcon, exact: true },
   { href: "/compte/licences", label: "Mes licences", Icon: LicenceIcon, exact: false },
-  { href: "/compte/config", label: "Générateur config", Icon: GenerateurIcon, exact: false },
+  { href: "/configurateur", label: "Configurateur", Icon: GenerateurIcon, exact: false },
   { href: "/compte/parametres", label: "Paramètres", Icon: ParametresIcon, exact: false },
 ];
 

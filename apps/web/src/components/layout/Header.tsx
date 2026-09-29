@@ -20,6 +20,7 @@ import {
 
 const NAV_ITEMS = [
   { href: "/plugins", label: "Plugins" },
+  { href: "/configurateur", label: "Configurateur" },
   { href: "/wiki", label: "Wiki" },
   { href: "/support", label: "Support" },
 ];
