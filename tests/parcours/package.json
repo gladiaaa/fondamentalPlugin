@@ -1,0 +1,11 @@
+{
+  "name": "fondamental-parcours",
+  "private": true,
+  "description": "Parcours bout en bout (Playwright) sur dev.fondamentalplugin.fr, lancés après chaque déploiement de dev (#34). Hors espaces de travail npm : n'entre ni dans les images Docker ni dans le site.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

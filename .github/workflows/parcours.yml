@@ -1,0 +1,57 @@
+# Parcours bout en bout (Playwright, tests/parcours) sur dev.fondamentalplugin.fr, après chaque
+# déploiement réussi de dev (#34) ; échoue si un parcours casse. Aussi lançable à la main.
+# Jamais sur la prod : le parcours d'achat paie avec la carte de test Stripe.
+name: Parcours dev
+
+on:
+  workflow_run:
+    workflows: ["Déploiement"]
+    types: [completed]
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: parcours-dev
+  cancel-in-progress: true
+
+jobs:
+  parcours:
+    name: Parcours sur dev
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    # Secret E2E_PASSWORD et variable E2E_EMAIL : compte de test dédié (tests/parcours/README.md).
+    environment: dev
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: tests/parcours
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/parcours/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Lancer les parcours
+        run: npx playwright test
+        env:
+          CI: "true"
+          PARCOURS_URL: https://dev.fondamentalplugin.fr
+          E2E_EMAIL: ${{ vars.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      - name: Rapport (en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-parcours
+          path: |
+            tests/parcours/playwright-report
+            tests/parcours/test-results
+          retention-days: 14
