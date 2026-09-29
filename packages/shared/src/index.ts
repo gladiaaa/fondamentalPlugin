@@ -194,16 +194,23 @@ export interface OwnedLicenseResponse {
 /**
  * Une installation (un serveur Minecraft) qui consomme une activation de la licence.
  * `installationId` : à repasser tel quel à `DELETE /api/me/licenses/:key/activations/:installationId`
- * pour la libérer. Forme provisoire (comme le reste de ce qui vient du serveur de licences, voir #22).
+ * pour la libérer.
  */
 export interface LicenseActivation {
   installationId: string;
+  /** Dates ISO 8601 de la première et de la dernière vérification de la licence par ce serveur. */
+  firstSeenAt: string;
+  lastSeenAt: string;
 }
 
 /** Statut détaillé d'une licence (`GET /api/me/licenses/:key`), #25. */
 export interface LicenseDetailResponse extends OwnedLicenseResponse {
   edition: string;
   revoked: boolean;
+  /** Date ISO 8601, ou `null` : licence sans limite de durée. */
+  expiresAt: string | null;
+  /** Nombre d'installations simultanées permises. */
+  maxActivations: number;
   activations: LicenseActivation[];
 }
 
@@ -268,6 +275,8 @@ export interface AdminLicenseResponse {
   key: string;
   edition: string;
   revoked: boolean;
+  expiresAt: string | null;
+  maxActivations: number;
   activations: LicenseActivation[];
   /** Compte auquel la clé est rattachée dans notre base, s'il y en a un. */
   ownerUserId: string | null;

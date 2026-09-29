@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { currentTotpCode } from '../src/admin/totp.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
-import { FakeLicenseServer } from './support/fake-license-server.js';
+import { FakeLicenseServer, activation } from './support/fake-license-server.js';
 import { FakeStripeClient } from './support/fake-stripe-client.js';
 import { createTestApp, InMemoryMailer, newBrowser, STRONG_PASSWORD } from './support/app.js';
 
@@ -336,13 +336,13 @@ describe('Back-office admin (e2e)', () => {
   describe('Licences', () => {
     it('GET /admin/licenses/:key : statut global, avec le propriétaire', async () => {
       const ada = await loggedInUser(CUSTOMER_EMAIL);
-      licenseServer.set('ADMIN-STATUS-1', { activations: [{ installationId: 'srv-1' }] });
+      licenseServer.set('ADMIN-STATUS-1', { activations: [activation('srv-1')] });
       await prisma.license.create({ data: { userId: ada.userId, licenseKey: 'ADMIN-STATUS-1' } });
 
       const { b } = await loggedInAdmin();
       const res = await b.get('/api/admin/licenses/ADMIN-STATUS-1').expect(200);
       expect(res.body.ownerUserId).toBe(ada.userId);
-      expect(res.body.activations).toEqual([{ installationId: 'srv-1' }]);
+      expect(res.body.activations).toEqual([activation('srv-1')]);
     });
 
     it('clé inconnue : 404', async () => {

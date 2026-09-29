@@ -15,6 +15,22 @@ function client(overrides: Partial<{ LICENSE_SERVER_URL: string; LICENSE_ADMIN_T
 
 const server = setupServer();
 
+/** Réponse telle que l'envoie le serveur de licences : ligne `licenses` (snake_case) et ses installations. */
+function rawStatus(override: Record<string, unknown> = {}) {
+  return {
+    license_key: 'ABC-123',
+    product_id: 'tagcustom',
+    edition: 'PREMIUM',
+    customer: 'client@example.test (id)',
+    max_activations: 3,
+    revoked_at: null,
+    expires_at: null,
+    created_at: '2026-09-01T09:00:00.000Z',
+    activations: [{ installation_id: 'srv-1', first_seen: '2026-09-01T10:00:00.000Z', last_seen: '2026-09-28T08:00:00.000Z' }],
+    ...override,
+  };
+}
+
 describe('LicenseServerClient', () => {
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
   afterEach(() => server.resetHandlers());
@@ -31,12 +47,44 @@ describe('LicenseServerClient', () => {
     server.use(
       http.get(`${BASE_URL}/api/v1/admin/licenses/ABC-123`, ({ request }) => {
         seenAuth = request.headers.get('authorization');
-        return HttpResponse.json({ product: 'tag', edition: 'PREMIUM', revoked: false, activations: [] });
+        return HttpResponse.json(rawStatus());
       }),
     );
     const status = await client().get('ABC-123');
-    expect(status).toEqual({ product: 'tag', edition: 'PREMIUM', revoked: false, activations: [] });
+    expect(status).toEqual({
+      product: 'tagcustom',
+      edition: 'PREMIUM',
+      revoked: false,
+      expiresAt: null,
+      maxActivations: 3,
+      activations: [
+        { installationId: 'srv-1', firstSeenAt: '2026-09-01T10:00:00.000Z', lastSeenAt: '2026-09-28T08:00:00.000Z' },
+      ],
+    });
     expect(seenAuth).toBe(`Bearer ${TOKEN}`);
+  });
+
+  it('get : une clé avec revoked_at est révoquée, expires_at est repris', async () => {
+    server.use(
+      http.get(`${BASE_URL}/api/v1/admin/licenses/:key`, () =>
+        HttpResponse.json(rawStatus({ revoked_at: '2026-09-28T09:00:00.000Z', expires_at: '2027-01-01T00:00:00.000Z' })),
+      ),
+    );
+    const status = await client().get('ABC-123');
+    expect(status.revoked).toBe(true);
+    expect(status.expiresAt).toBe('2027-01-01T00:00:00.000Z');
+  });
+
+  it.each([
+    ['revoked_at absent', { revoked_at: undefined }],
+    ['revoked_at illisible', { revoked_at: 'hier' }],
+    ['product_id absent', { product_id: undefined }],
+    ['max_activations en texte', { max_activations: '3' }],
+    ['activations absentes', { activations: undefined }],
+    ['installation sans identifiant', { activations: [{ first_seen: '2026-09-01T10:00:00.000Z', last_seen: '2026-09-01T10:00:00.000Z' }] }],
+  ])('get : réponse inattendue (%s) lève LicenseServerError, jamais un statut valide', async (_, override) => {
+    server.use(http.get(`${BASE_URL}/api/v1/admin/licenses/:key`, () => HttpResponse.json(rawStatus(override))));
+    await expect(client().get('ABC-123')).rejects.toThrow(LicenseServerError);
   });
 
   it('get : une clé inconnue (404) lève LicenseNotFoundError', async () => {

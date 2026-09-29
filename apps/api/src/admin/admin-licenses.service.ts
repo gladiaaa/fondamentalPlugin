@@ -1,15 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import type { AdminLicenseResponse, LicenseActivation, RecreatedLicenseResponse } from '@fondamental/shared';
+import type { AdminLicenseResponse, RecreatedLicenseResponse } from '@fondamental/shared';
 import { LicenseNotFoundError, LicenseServerClient } from '../licenses/license-server-client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AdminActionLogService } from './admin-action-log.service.js';
 import { MESSAGES } from './admin.constants.js';
 
-/** Forme provisoire (comme le reste de ce qui vient du serveur de licences, voir #22). */
-function toActivation(raw: unknown): LicenseActivation {
-  const installationId = (raw as { installationId?: unknown } | null)?.installationId;
-  return { installationId: typeof installationId === 'string' ? installationId : String(installationId) };
-}
 
 @Injectable()
 export class AdminLicensesService {
@@ -27,7 +22,9 @@ export class AdminLicensesService {
       key,
       edition: status.edition,
       revoked: status.revoked,
-      activations: status.activations.map(toActivation),
+      expiresAt: status.expiresAt,
+      maxActivations: status.maxActivations,
+      activations: status.activations,
       ownerUserId: owned?.userId ?? null,
       claimedAt: owned?.claimedAt.toISOString() ?? null,
     };
