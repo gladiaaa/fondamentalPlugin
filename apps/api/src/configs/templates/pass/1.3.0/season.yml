@@ -1,0 +1,122 @@
+# ============================================================
+#  FondamentalPass - saison et paliers
+# ============================================================
+# Changer season.id démarre une nouvelle saison : chaque joueur repart de zéro
+# (l'ancienne progression reste en base). Dates au format AAAA-MM-JJ HH:MM,
+# dans le fuseau de config.yml > timezone.
+
+season:
+  id: "saison-1"
+  name: "<degrade>Saison 1</degrade> <discret>·</discret> <fort>Les Origines"
+  start: "2026-10-01 00:00"
+  end: "2026-12-31 23:59"
+  # XP à gagner pour passer chaque palier (un palier peut la remplacer avec xp:).
+  xp-per-tier: 1000
+  # Nombre de paliers ; ceux sans section n'ont pas de récompense. Édition Free : 30 max.
+  max-level: 30
+  # Permission qui ouvre la piste premium (à donner via ta boutique ou LuckPerms).
+  premium-permission: "fondamentalpass.premium"
+
+# Chaque palier a une piste gratuite (free) et une piste premium, toutes deux facultatives.
+#   name / icon / lore : affichage dans le menu (MiniMessage, balises de la charte)
+#   rewards : liste de récompenses
+#     - {type: money, amount: 500}                          (Vault)
+#     - {type: item, material: DIAMOND, amount: 3}            (name / lore facultatifs)
+#     - {type: command, command: "lp user {player} permission set kit.vip", as: console}
+#     - {type: message, message: "<ok>Bravo {player} !"}
+#     - {type: tag, tag: "galaxy", duration: "30d"}           (FondamentalTag, Premium ; sans duration = permanent)
+#     - {type: crate-key, crate: "vote", amount: 1}           (FondamentalCrate, Premium)
+
+# Paliers bonus : une fois le dernier palier atteint, chaque tranche de "xp" en plus
+# donne un palier bonus répétable (récupéré avec « Tout récupérer »). xp: 0 = désactivé.
+overflow:
+  xp: 2000
+  name: "<fort>Palier bonus"
+  rewards:
+    - {type: crate-key, crate: "vote", amount: 1}
+
+# Récompenses de fin de saison selon le classement final (tranches « 1 », « 2-3 », « 4-10 »...).
+# Distribuées une seule fois sur le réseau à la date de fin, livrées à la connexion suivante.
+ranking-rewards:
+  "1":
+    rewards:
+      - {type: crate-key, crate: "mythic", amount: 5}
+      - {type: money, amount: 50000}
+  "2-3":
+    rewards:
+      - {type: crate-key, crate: "mythic", amount: 3}
+      - {type: money, amount: 25000}
+  "4-10":
+    rewards:
+      - {type: crate-key, crate: "mythic", amount: 1}
+      - {type: money, amount: 10000}
+
+tiers:
+  1:
+    free:
+      name: "<fort>100 pièces"
+      icon: GOLD_NUGGET
+      rewards:
+        - {type: money, amount: 100}
+    premium:
+      name: "<fort>Clé de crate <accent>Vote"
+      icon: TRIPWIRE_HOOK
+      rewards:
+        - {type: crate-key, crate: "vote", amount: 1}
+  2:
+    free:
+      name: "<fort>8 pommes dorées"
+      icon: GOLDEN_APPLE
+      rewards:
+        - {type: item, material: GOLDEN_APPLE, amount: 8}
+  3:
+    free:
+      name: "<fort>250 pièces"
+      icon: GOLD_INGOT
+      rewards:
+        - {type: money, amount: 250}
+    premium:
+      name: "<fort>Tag <accent>Pionnier"
+      icon: NAME_TAG
+      lore:
+        - "<texte>Un tag réservé à la saison 1."
+      rewards:
+        - {type: tag, tag: "pionnier"}
+  5:
+    free:
+      name: "<fort>Clé de crate <accent>Vote"
+      icon: TRIPWIRE_HOOK
+      rewards:
+        - {type: crate-key, crate: "vote", amount: 1}
+    premium:
+      name: "<fort>1 000 pièces"
+      icon: GOLD_BLOCK
+      rewards:
+        - {type: money, amount: 1000}
+  10:
+    xp: 1500
+    free:
+      name: "<fort>Diamants"
+      icon: DIAMOND
+      rewards:
+        - {type: item, material: DIAMOND, amount: 5}
+    premium:
+      name: "<degrade>Clé de crate Mythique</degrade>"
+      icon: END_CRYSTAL
+      rewards:
+        - {type: crate-key, crate: "mythic", amount: 1}
+  30:
+    xp: 3000
+    free:
+      name: "<degrade><bold>Tag Saison 1</bold></degrade>"
+      icon: NETHER_STAR
+      lore:
+        - "<texte>La récompense ultime de la saison."
+      rewards:
+        - {type: tag, tag: "saison1"}
+        - {type: message, message: "<degrade>Tu as terminé la saison 1 !</degrade>"}
+    premium:
+      name: "<degrade><bold>Titre Légende</bold></degrade>"
+      icon: DRAGON_HEAD
+      rewards:
+        - {type: tag, tag: "legende"}

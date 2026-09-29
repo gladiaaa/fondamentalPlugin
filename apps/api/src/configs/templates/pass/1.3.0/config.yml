@@ -1,0 +1,159 @@
+# ============================================================
+#  FondamentalPass - configuration générale
+#  La saison et ses paliers : season.yml   Les quêtes : quests.yml
+#  Tous les textes : messages.yml
+# ============================================================
+
+# Licence en ligne — détermine automatiquement l'édition (FREE ou PREMIUM).
+license:
+  key: ""                   # clé fournie à l'achat. Vide = édition FREE, aucun appel réseau.
+  check-interval-hours: 6   # fréquence de revalidation auprès du serveur de licences
+  grace-hours: 72           # tolérance hors-ligne avant repli sur FREE si le serveur ne répond plus
+
+# ------------------------------------------------------------
+#  Réseau
+# ------------------------------------------------------------
+server:
+  # Nom de CE serveur, unique sur le réseau (lobby, bedwars-1, survie...).
+  # Sert aux quêtes limitées à certains serveurs (servers: dans quests.yml)
+  # et au verrou qui protège la progression lors d'un changement de serveur.
+  name: "serveur"
+
+# ------------------------------------------------------------
+#  Stockage de la progression
+# ------------------------------------------------------------
+storage:
+  # sqlite = fichier local, un seul serveur (toutes éditions)
+  # mysql  = base partagée : même progression sur tout le réseau (Premium ;
+  #          en édition Free, retombe automatiquement sur sqlite)
+  type: sqlite
+  table-prefix: "fpass_"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentalpass"
+    user: "fondamentalpass"
+    password: ""
+    pool-size: 5
+  autosave-seconds: 60      # sauvegarde des profils modifiés
+  lock-wait-seconds: 10     # attente max du serveur précédent lors d'un changement de serveur
+  lock-stale-seconds: 180   # un verrou plus vieux est considéré abandonné (serveur planté)
+
+# ------------------------------------------------------------
+#  Temps
+# ------------------------------------------------------------
+timezone: "Europe/Paris"
+# Heure du renouvellement des quêtes (0-23). Les quêtes hebdomadaires changent le lundi.
+reset-hour: 0
+
+# ------------------------------------------------------------
+#  Comportement
+# ------------------------------------------------------------
+# Récupérer automatiquement les récompenses à chaque palier atteint.
+auto-claim: false
+# Le temps de jeu (objectif playtime) ne compte pas après 5 minutes d'inactivité.
+afk-excludes-playtime: true
+# Relevé des objectifs "placeholder" (Premium), en secondes.
+placeholder-interval-seconds: 30
+
+notifications:
+  progress-actionbar: true   # barre d'action à chaque progression d'une quête
+  explain-ignored: true      # explique pourquoi une action n'a pas compté (bloc posé, mode créatif)
+  join-reminder: true        # rappel à la connexion s'il reste des récompenses à récupérer
+
+# ------------------------------------------------------------
+#  Boosts d'XP (XP des quêtes uniquement, cumulables)
+# ------------------------------------------------------------
+boosts:
+  # Permission fondamentalpass.boost.<pourcent> (ex. fondamentalpass.boost.25 = +25 %),
+  # la plus haute accordée compte. Idéal pour les grades VIP.
+  permissions: true
+  # Boost global : /pass admin boost <pourcent> <durée> (Premium, partagé sur tout le réseau).
+  max-percent: 200   # plafond du boost total (permission + global + série)
+
+# Série : chaque jour où toutes les quêtes du jour sont terminées prolonge la série ;
+# un jour manqué la remet à zéro.
+streak:
+  bonus-percent-per-day: 5   # +5 % d'XP de quête par jour de série
+  max-bonus-percent: 50
+
+# Suivi de quête : shift-clic dans /quetes affiche sa progression en haut de l'écran.
+tracking:
+  enabled: true
+  color: PURPLE      # PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+
+# ------------------------------------------------------------
+#  Changement de quête (clic droit dans /quetes)
+# ------------------------------------------------------------
+rerolls:
+  enabled: true
+  per-day: 1        # changements gratuits par jour ; permission fondamentalpass.rerolls.<n> pour plus
+  cost: 0           # prix par changement (0 = gratuit)
+  currency: ""      # monnaie (voir currencies) ; vide = monnaie par défaut
+
+# ------------------------------------------------------------
+#  Achat de paliers (Premium, Vault)
+# ------------------------------------------------------------
+tier-purchase:
+  enabled: false
+  price: 5000       # prix d'un palier
+  currency: ""      # monnaie (voir currencies) ; vide = monnaie par défaut
+
+# ------------------------------------------------------------
+#  Monnaies
+# ------------------------------------------------------------
+# Monnaie utilisée pour la boutique de parchemins (/parchemins), l'achat de paliers
+# et le changement de quête. Choisis celle de ton serveur dans « default » ;
+# chaque parchemin peut aussi avoir sa propre monnaie (scrolls.yml > shop.currency).
+#   vault       : l'économie du serveur (EssentialsX, CMI... via Vault)
+#   item        : un objet de l'inventaire (material, name facultatif = nom exact de l'objet)
+#   xp-levels   : les niveaux d'expérience
+#   placeholder : n'importe quel plugin de monnaie (PlaceholderAPI requis) :
+#                 balance = placeholder du solde, take = commande console de retrait
+# format : affichage du prix, <amount> = montant (facultatif)
+currencies:
+  default: vault
+  list:
+    vault:
+      type: vault
+    emeraudes:
+      type: item
+      material: EMERALD
+      format: "<amount> émeraude(s)"
+    niveaux:
+      type: xp-levels
+      format: "<amount> niveau(x) d'XP"
+    points:
+      type: placeholder
+      balance: "%playerpoints_points%"
+      take: "points take {player} {amount}"
+      format: "<amount> point(s)"
+
+# ------------------------------------------------------------
+#  Liaisons (Premium)
+# ------------------------------------------------------------
+hooks:
+  # Commande console exécutée pour une récompense crate-key.
+  crate-key-command: "crate give {player} {crate} {amount}"
+
+# ------------------------------------------------------------
+#  Charte graphique
+# ------------------------------------------------------------
+# Couleurs des messages, menus et console. Chaque entrée devient une balise
+# utilisable dans messages.yml, season.yml et quests.yml : <texte>, <accent>...
+# Par défaut : la charte Fondamental.
+colors:
+  texte: "#9A90B3"             # texte courant
+  fort: "#F0ECF8"              # noms, nombres, valeurs
+  accent: "#B7A0FF"            # actions, XP, commandes
+  discret: "#6A5D94"           # séparateurs, états vides
+  ok: "#7ED6A0"                # succès
+  erreur: "#F07A7A"            # erreur
+  alerte: "#F0C36A"            # avertissement
+  info: "#8FB8FF"              # information
+  degrade: ["#B7A0FF", "#6A5D94"]  # titres et préfixe
+
+# Vitres des menus (cadre et coins).
+menus:
+  border: BLACK_STAINED_GLASS_PANE
+  accent: PURPLE_STAINED_GLASS_PANE

@@ -25,6 +25,10 @@ const ERROR_CODES = [
   'ORDER_NOT_PAID',
   'TWO_FACTOR_REQUIRED',
   'TOTP_INVALID_CODE',
+  'CONFIG_NOT_FOUND',
+  'CONFIG_NOT_BUYER',
+  'CONFIG_INVALID',
+  'CONFIG_LIMIT',
 ] as const satisfies readonly NonNullable<ApiError['code']>[];
 
 /** Corps de toutes les erreurs de l'API (voir `ApiError` dans `@fondamental/shared`). */
