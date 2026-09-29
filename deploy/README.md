@@ -125,9 +125,11 @@ gh variable set PREPROD_USER --env dev --repo gladiaaa/fondamentalPlugin --body 
 gh secret set PREPROD_PASSWORD --env dev --repo gladiaaa/fondamentalPlugin   # demande le mot de passe
 ```
 
-**3. nginx**, en root sur le VPS :
+**3. nginx**, en root sur le VPS. Le cookie d'accès (`preprod-acces.conf`) évite de redemander le mot de passe à chaque page : son jeton est tiré au sort ici et ne quitte jamais le VPS.
 
 ```bash
+( umask 027 && J=$(openssl rand -hex 32) && curl -fsSL "https://raw.githubusercontent.com/gladiaaa/fondamentalPlugin/dev/deploy/nginx/preprod-acces.conf"   | sed "s/__JETON__/$J/g" > /etc/nginx/conf.d/fondamentalplugin-preprod-acces.conf )
+chgrp www-data /etc/nginx/conf.d/fondamentalplugin-preprod-acces.conf
 cp /etc/nginx/snippets/fondamentalplugin-api-dev.conf /etc/nginx/snippets/fondamentalplugin-api-dev.conf.bak
 curl -fsSL "https://raw.githubusercontent.com/gladiaaa/fondamentalPlugin/dev/deploy/nginx/api-dev.conf" \
   -o /etc/nginx/snippets/fondamentalplugin-api-dev.conf
