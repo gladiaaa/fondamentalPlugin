@@ -13,10 +13,12 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
 
   // Moyens de paiement en liste (Carte, Amazon Pay, Klarna… selon le pays) : choisir « Carte » si les
   // champs de la carte ne sont pas déjà affichés.
-  // La radio elle-même est invisible (Stripe dessine sa propre pastille) : on clique sur son libellé.
-  const libelleCarte = page.locator("#payment-method-label-card");
-  await page.locator("#cardNumber").or(libelleCarte).first().waitFor();
-  if (!(await page.locator("#cardNumber").isVisible())) await libelleCarte.click();
+  // Toute la ligne « Carte » est couverte par le bouton « Payer par carte » de Stripe, qui intercepte les
+  // clics (sur la radio comme sur son libellé), et qui est tantôt visible, tantôt caché selon la mise en
+  // page : on lui envoie directement l'événement de clic.
+  const boutonCarte = page.getByTestId("card-accordion-item-button");
+  await page.locator("#cardNumber").or(boutonCarte).first().waitFor({ state: "attached" });
+  if (!(await page.locator("#cardNumber").isVisible())) await boutonCarte.dispatchEvent("click");
   await page.locator("#cardNumber").waitFor();
 
   await page.locator("#cardNumber").fill("4242424242424242");
