@@ -1,0 +1,67 @@
+# Mesure d'audience sans cookies (#33), commune à dev et prod : un seul Umami, un « site » par
+# environnement. Installé dans /opt/fondamentalplugin/umami par install.sh (voir deploy/README.md).
+# Lancer depuis ce dossier : docker compose --env-file secrets.env up -d
+name: fondamentalplugin-umami
+
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:v3.4.0
+    container_name: fondamentalplugin-umami
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Écoute uniquement en local : nginx (HTTPS, stats.fondamentalplugin.fr) fait le lien avec Internet.
+    ports:
+      - "127.0.0.1:3200:3000"
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?UMAMI_DB_PASSWORD manquant}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?UMAMI_APP_SECRET manquant}
+      TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_2FA_KEY:?UMAMI_2FA_KEY manquant}
+      # Pas d'appel de télémétrie vers les serveurs d'Umami.
+      DISABLE_TELEMETRY: "1"
+    networks: [default, db]
+    init: true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://127.0.0.1:3000/api/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    logging: &logs
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: postgres:17-alpine
+    container_name: fondamentalplugin-umami-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: umami
+      POSTGRES_DB: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?UMAMI_DB_PASSWORD manquant}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Réseau interne sans accès à Internet, aucun port publié.
+    networks: [db]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    logging: *logs
+
+networks:
+  db:
+    internal: true
+
+volumes:
+  db-data:
+    name: fondamentalplugin-umami-db

@@ -64,6 +64,7 @@ curl -fsSL "$SRC/deploy.sh"       -o deploy.sh.new       && install -m 755 deplo
 curl -fsSL "$SRC/backup.sh"       -o backup.sh           && chmod 755 backup.sh
 curl -fsSL "$SRC/restore-test.sh" -o restore-test.sh     && chmod 755 restore-test.sh
 curl -fsSL "$SRC/offsite.sh"      -o offsite.sh          && chmod 755 offsite.sh
+curl -fsSL "$SRC/alerte.sh"       -o alerte.sh           && chmod 755 alerte.sh
 curl -fsSL "$SRC/cron"            -o /etc/cron.d/fondamentalplugin && chmod 644 /etc/cron.d/fondamentalplugin
 ```
 
@@ -120,7 +121,7 @@ Mêmes étapes 2 et 3 avec `prod`, `API_PORT=4100` et `api-prod.conf` (bloc `ser
 
 - Chaque nuit à 3 h 30 (`/etc/cron.d/fondamentalplugin`), `backup.sh` sauvegarde les bases prod et dev dans `/var/backups/fondamentalplugin/<env>/` (lisibles par root seul), relit chaque fichier et efface ceux de plus de 14 jours. Journal : `/var/log/fondamentalplugin-backup.log`.
 - **Une fois par mois**, vérifier qu'une sauvegarde se restaure : `restore-test.sh` (dernière sauvegarde de prod par défaut) la charge dans une base jetable et affiche le contenu des tables, sans toucher aux bases en service.
-- À 3 h 50, `offsite.sh` **chiffre** la dernière sauvegarde de chaque environnement (GPG, clé « Sauvegardes Fondamental » : la clé privée n'est pas sur le VPS, rien ne peut y déchiffrer) et la pousse dans le dépôt privé [`gladiaaa/fondamentalplugin-backups`](https://github.com/gladiaaa/fondamentalplugin-backups) (`<env>/<env>-AAAAMMJJ-HHMM.dump.gpg`). Les 30 dernières restent dans l'arborescence, l'historique Git garde toutes les autres. Pas d'alerte en cas d'échec pour l'instant (#33) : vérifier de temps en temps la date du dernier commit du dépôt.
+- À 3 h 50, `offsite.sh` **chiffre** la dernière sauvegarde de chaque environnement (GPG, clé « Sauvegardes Fondamental » : la clé privée n'est pas sur le VPS, rien ne peut y déchiffrer) et la pousse dans le dépôt privé [`gladiaaa/fondamentalplugin-backups`](https://github.com/gladiaaa/fondamentalplugin-backups) (`<env>/<env>-AAAAMMJJ-HHMM.dump.gpg`). Les 30 dernières restent dans l'arborescence, l'historique Git garde toutes les autres. En cas d'échec de l'une ou l'autre tâche, `alerte.sh` prévient Discord (voir « Supervision »).
 
 ### Copie hors du VPS : installation (une seule fois)
 
@@ -158,6 +159,57 @@ docker stop fondamentalplugin-api-$ENV
 docker exec -i fondamentalplugin-db-$ENV pg_restore -U fondamental -d fondamental --clean --if-exists --no-owner < "$FILE"
 docker start fondamentalplugin-api-$ENV
 ```
+
+## Supervision (#33)
+
+| Quoi | Outil | Où regarder |
+|---|---|---|
+| Site, API, serveur de licences hors service | UptimeRobot (externe : prévient même si tout le VPS tombe) | alerte Discord |
+| Erreurs de l'API et du site (serveur et navigateur) | Sentry, variable `SENTRY_DSN` (`api.env` pour l'API, `app.env` pour le site) | sentry.io |
+| Sauvegarde ou copie externe ratée | `alerte.sh` dans `deploy/cron` | alerte Discord |
+| Audience (sans cookies) et achats | Umami auto-hébergé, `https://stats.fondamentalplugin.fr` | tableau de bord Umami |
+
+### Webhook Discord (une seule fois)
+
+Dans Discord : *Paramètres du salon → Intégrations → Webhooks → Nouveau webhook*, copier l'URL. C'est un secret (qui l'a peut écrire dans le salon) : ne jamais la coller dans une issue ou un message. Sur le VPS, en root :
+
+```bash
+( umask 077 && read -rsp "URL du webhook Discord : " U && echo && printf '%s
+' "$U" > /opt/fondamentalplugin/alerte-discord.url )
+/opt/fondamentalplugin/alerte.sh "Test d'alerte" false   # doit poster un message dans le salon
+```
+
+### UptimeRobot (une seule fois)
+
+Compte gratuit sur uptimerobot.com, puis *Integrations → Discord* avec la même URL de webhook. Sondes (toutes les 5 minutes) :
+
+| Nom | Type | Adresse | Condition |
+|---|---|---|---|
+| Site dev | Keyword | `https://dev.fondamentalplugin.fr/plugins` | contient `FondamentalTag` (catalogue chargé depuis l'API) |
+| API dev | Keyword | `https://dev.fondamentalplugin.fr/api/health` | contient `"database":"up"` |
+| Serveur de licences | HTTP | `http://46.202.128.132:8091/healthz` | code 200 |
+| Site prod | HTTP | `https://fondamentalplugin.fr/` | code 200 (les sondes prod API/catalogue le jour de la mise en production) |
+
+Tester l'alerte : `docker stop fondamentalplugin-api-dev`, attendre le message Discord (5 à 10 min), puis `docker start fondamentalplugin-api-dev` (un message « de nouveau en ligne » suit).
+
+### Sentry pour le site
+
+Dans `app.env` de l'environnement : `SENTRY_DSN=…` (un projet Sentry « Next.js », ou le même que l'API : les événements portent l'environnement et la version). Le site lit la variable au démarrage, pas à la construction de l'image : recréer le conteneur `web` suffit. Un DSN n'est pas secret (le navigateur l'utilise), mais inutile de le publier.
+
+### Umami (une seule fois)
+
+1. DNS : enregistrement `A` `stats.fondamentalplugin.fr` → IP du VPS.
+2. En root sur le VPS :
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/gladiaaa/fondamentalPlugin/dev/deploy/umami/install.sh -o /tmp/umami-install.sh
+   bash /tmp/umami-install.sh
+   ```
+
+   Le script démarre Umami (`/opt/fondamentalplugin/umami`, écoute sur 127.0.0.1:3200), fait choisir le mot de passe du compte `admin` **avant** d'ouvrir le site sur Internet, crée les sites « dev » et « prod », installe nginx + HTTPS (certbot), puis écrit `UMAMI_URL` et `UMAMI_WEBSITE_ID` dans `dev/app.env` et recrée le site dev.
+3. Dans Umami, activer la double authentification du compte admin.
+
+Événements suivis en plus des pages vues : `achat-clic` (bouton « Acheter la licence ») et `achat-confirme` (licence livrée sur `/merci`), avec le plugin concerné. Aucune donnée personnelle.
 
 ## Revenir à la version précédente
 

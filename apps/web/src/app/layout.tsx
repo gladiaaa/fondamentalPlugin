@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { MockingProvider } from "@/mocks/MockingProvider";
 import { SessionProvider } from "@/lib/session/SessionContext";
 import { Toaster } from "@/components/ui/Toaster";
+import { Supervision } from "@/components/layout/Supervision";
 import "./globals.css";
 
 const sora = Sora({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </SessionProvider>
           </MockingProvider>
           <Toaster />
+          <Supervision />
         </ThemeProvider>
       </body>
     </html>

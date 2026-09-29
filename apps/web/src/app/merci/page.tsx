@@ -12,6 +12,7 @@ import type { OrderResponse } from "@fondamental/shared";
 import { getOrderBySession } from "@/lib/api/orders";
 import { getProduct } from "@/lib/api/products";
 import { RapideIcon } from "@/components/icons";
+import { suivreEvenement } from "@/lib/supervision";
 
 // docs/api-front.md §7 : interroger toutes les 2 s tant que la licence n'est
 // pas prête. Au-delà d'une minute sans réponse, on arrête d'insister : le
@@ -54,6 +55,7 @@ function MerciContent() {
         const result = await getOrderBySession(sessionId!);
         if (cancelled) return;
         setOrder(result);
+        if (result.status === "LICENSED") suivreEvenement("achat-confirme", { plugin: result.productSlug });
         if (result.status === "LICENSED" || result.status === "REFUNDED") return;
         if (Date.now() - (startedAt.current ?? Date.now()) > GIVE_UP_AFTER_MS) {
           setTimedOut(true);

@@ -1,9 +1,10 @@
 # Tâches planifiées de la boutique : copie dans /etc/cron.d/fondamentalplugin (root:root, 644).
 SHELL=/bin/sh
+# alerte.sh : message Discord si la tâche échoue (#33).
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Sauvegarde des bases prod et dev, chaque nuit à 3 h 30 (heure du serveur).
-30 3 * * * root /opt/fondamentalplugin/backup.sh >> /var/log/fondamentalplugin-backup.log 2>&1
+30 3 * * * root /opt/fondamentalplugin/alerte.sh "Sauvegarde des bases" /opt/fondamentalplugin/backup.sh >> /var/log/fondamentalplugin-backup.log 2>&1
 
 # Copie chiffrée hors du VPS de la dernière sauvegarde (#41), une fois backup.sh terminé.
-50 3 * * * root /opt/fondamentalplugin/offsite.sh >> /var/log/fondamentalplugin-backup.log 2>&1
+50 3 * * * root /opt/fondamentalplugin/alerte.sh "Copie externe des sauvegardes" /opt/fondamentalplugin/offsite.sh >> /var/log/fondamentalplugin-backup.log 2>&1
