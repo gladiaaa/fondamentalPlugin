@@ -24,8 +24,8 @@ export function AccountNav() {
   const { user } = useSession();
 
   return (
-    <nav aria-label="Espace client" className="grid gap-4 rounded-card-lg border border-line bg-surface p-4">
-      <div className="flex items-center gap-2.5 border-b border-line pb-4">
+    <nav aria-label="Espace client" className="grid grid-cols-[minmax(0,1fr)] gap-4 rounded-card-lg border border-line bg-surface p-4">
+      <div className="flex min-w-0 items-center gap-2.5 border-b border-line pb-4">
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent font-display text-[.9rem] font-semibold text-on-accent">
           {user?.email[0]?.toUpperCase() ?? "?"}
         </span>

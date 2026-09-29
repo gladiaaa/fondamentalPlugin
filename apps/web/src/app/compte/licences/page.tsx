@@ -16,6 +16,7 @@ import { getLicenses, claimLicense } from "@/lib/api/account";
 import { claimLicenseSchema, type ClaimLicenseValues } from "@/lib/validation/account";
 import { ApiRequestError } from "@/lib/api/client";
 import { LicenceIcon } from "@/components/icons";
+import { PLUGIN_ICONS } from "@/features/plugins/icons";
 
 export default function LicencesPage() {
   const { csrfToken } = useSession();
@@ -100,7 +101,8 @@ export default function LicencesPage() {
         {licenses && licenses.length > 0 && (
           <ul className="grid gap-3">
             {licenses.map((license) => (
-              <li key={license.id} className="grid gap-1.5">
+              <li key={license.id} className="grid gap-2 border-b border-line pb-4 last:border-b-0 last:pb-0">
+                <LicensePlugin product={license.product} />
                 <LicenseKey value={license.key} />
                 <small className="text-[.8rem] text-muted">
                   Rattachée le {new Date(license.claimedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
@@ -146,6 +148,22 @@ export default function LicencesPage() {
           </Button>
         </form>
       </div>
+    </div>
+  );
+}
+
+/** Le plugin d'une licence, au-dessus de sa clé : sans lui, deux clés se ressemblent trop. */
+function LicensePlugin({ product }: { product: OwnedLicenseResponse["product"] }) {
+  const Icon = product ? PLUGIN_ICONS[product.slug] : undefined;
+  return (
+    <div className="flex items-center gap-2.5">
+      {Icon ? <Icon width={30} height={30} /> : <LicenceIcon width={24} height={24} className="text-muted" />}
+      <span className="font-display text-[1rem] font-semibold">{product?.name ?? "Plugin non identifié"}</span>
+      {product && (
+        <Link href={`/plugins/${product.slug}`} className="ml-auto text-[.82rem] text-muted hover:text-text">
+          Fiche du plugin
+        </Link>
+      )}
     </div>
   );
 }
