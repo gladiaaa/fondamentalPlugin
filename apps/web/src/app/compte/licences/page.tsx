@@ -100,14 +100,13 @@ export default function LicencesPage() {
         {licenses && licenses.length > 0 && (
           <ul className="grid gap-3">
             {licenses.map((license) => (
-              <li key={license.key} className="grid gap-1.5">
+              <li key={license.id} className="grid gap-1.5">
                 <LicenseKey value={license.key} />
                 <small className="text-[.8rem] text-muted">
                   Rattachée le {new Date(license.claimedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
                   {" · "}
-                  {/* Détail simulé (#90, #25 pas encore complète) : la même
-                      démonstration s'affiche quelle que soit la clé. */}
-                  <Link href={`/compte/licences/${encodeURIComponent(license.key)}`} className="text-accent-text">
+                  {/* Identifiant interne dans l'URL, jamais la clé (#91). */}
+                  <Link href={`/compte/licences/${license.id}`} className="text-accent-text">
                     Voir le détail
                   </Link>
                 </small>

@@ -4,6 +4,8 @@ import { FakeLicenseServer, activation } from './support/fake-license-server.js'
 import { createTestApp, InMemoryMailer, newBrowser, STRONG_PASSWORD } from './support/app.js';
 
 const EMAIL = 'ada@example.com';
+/** Un identifiant bien formé qui ne correspond à aucune licence. */
+const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
 const OTHER_EMAIL = 'grace@example.com';
 
 describe('Licences : rattacher une clé existante (e2e)', () => {
@@ -28,6 +30,11 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
     await prisma.license.deleteMany();
     licenseServer.reset();
   });
+
+  /** Identifiant interne d'une licence rattachée : ce qui va dans l'URL, jamais la clé (#91). */
+  async function idOf(key: string): Promise<string> {
+    return (await prisma.license.findUniqueOrThrow({ where: { licenseKey: key } })).id;
+  }
 
   async function loggedInUser(email = EMAIL, password = STRONG_PASSWORD) {
     const b = newBrowser(app);
@@ -54,12 +61,13 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
 
       const res = await ada.b.get('/api/me/licenses').expect(200);
       expect(res.body.map((l: { key: string }) => l.key)).toEqual(['ADA-2', 'ADA-1']);
+      expect(res.body.map((l: { id: string }) => l.id)).toEqual([await idOf('ADA-2'), await idOf('ADA-1')]);
     });
   });
 
-  describe('GET /api/me/licenses/:key', () => {
+  describe('GET /api/me/licenses/:id', () => {
     it('exige une session', async () => {
-      await newBrowser(app).get('/api/me/licenses/PEU-IMPORTE').expect(401);
+      await newBrowser(app).get(`/api/me/licenses/${UNKNOWN_ID}`).expect(401);
     });
 
     it('renvoie le statut détaillé et les installations', async () => {
@@ -72,7 +80,8 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       });
       await b.post('/api/me/licenses/claim', { key: 'DETAIL-1' }, { csrf }).expect(204);
 
-      const res = await b.get('/api/me/licenses/DETAIL-1').expect(200);
+      const res = await b.get(`/api/me/licenses/${await idOf('DETAIL-1')}`).expect(200);
+      expect(res.body.id).toBe(await idOf('DETAIL-1'));
       expect(res.body.key).toBe('DETAIL-1');
       expect(res.body.edition).toBe('PREMIUM');
       expect(res.body.revoked).toBe(false);
@@ -81,15 +90,39 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       expect(res.body.activations).toEqual([activation('srv-1'), activation('srv-2')]);
     });
 
-    it('refuse (404) une clé inconnue, ou qui appartient à un autre compte', async () => {
+    it('refuse (404) une licence inconnue, ou qui appartient à un autre compte', async () => {
       const grace = await loggedInUser(OTHER_EMAIL, STRONG_PASSWORD);
       licenseServer.set('GRACE-DETAIL');
       await grace.b.post('/api/me/licenses/claim', { key: 'GRACE-DETAIL' }, { csrf: grace.csrf }).expect(204);
 
       const ada = await loggedInUser();
-      await ada.b.get('/api/me/licenses/INCONNUE').expect(404);
-      const res = await ada.b.get('/api/me/licenses/GRACE-DETAIL').expect(404);
+      await ada.b.get(`/api/me/licenses/${UNKNOWN_ID}`).expect(404);
+      const res = await ada.b.get(`/api/me/licenses/${await idOf('GRACE-DETAIL')}`).expect(404);
       expect(res.body.code).toBe('LICENSE_NOT_FOUND');
+    });
+
+    it("n'accepte pas la clé dans l'URL, seulement l'identifiant interne (#91)", async () => {
+      const { b, csrf } = await loggedInUser();
+      licenseServer.set('DANS-URL-1');
+      await b.post('/api/me/licenses/claim', { key: 'DANS-URL-1' }, { csrf }).expect(204);
+
+      const res = await b.get('/api/me/licenses/DANS-URL-1').expect(404);
+      expect(res.body.code).toBe('LICENSE_NOT_FOUND');
+      await b.delete('/api/me/licenses/DANS-URL-1/activations/srv-1', {}, { csrf }).expect(404);
+    });
+
+    it('donne le plugin du catalogue correspondant à la clé, ou null', async () => {
+      const { b, csrf } = await loggedInUser();
+      const product = await prisma.product.findFirstOrThrow();
+      licenseServer.set('PRODUIT-1', { product: product.licenseProduct });
+      licenseServer.set('PRODUIT-2', { product: 'produit-inconnu' });
+      await b.post('/api/me/licenses/claim', { key: 'PRODUIT-1' }, { csrf }).expect(204);
+      await b.post('/api/me/licenses/claim', { key: 'PRODUIT-2' }, { csrf }).expect(204);
+
+      const known = await b.get(`/api/me/licenses/${await idOf('PRODUIT-1')}`).expect(200);
+      expect(known.body.product).toEqual({ slug: product.slug, name: product.name });
+      const unknown = await b.get(`/api/me/licenses/${await idOf('PRODUIT-2')}`).expect(200);
+      expect(unknown.body.product).toBeNull();
     });
 
     it('retirée du serveur de licences entre-temps : refuse (404)', async () => {
@@ -98,7 +131,7 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       await b.post('/api/me/licenses/claim', { key: 'RETIREE-1' }, { csrf }).expect(204);
       licenseServer.remove('RETIREE-1');
 
-      const res = await b.get('/api/me/licenses/RETIREE-1').expect(404);
+      const res = await b.get(`/api/me/licenses/${await idOf('RETIREE-1')}`).expect(404);
       expect(res.body.code).toBe('LICENSE_NOT_FOUND');
     });
 
@@ -108,19 +141,19 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       await b.post('/api/me/licenses/claim', { key: 'CONF-1' }, { csrf }).expect(204);
       licenseServer.isConfigured = false;
 
-      const res = await b.get('/api/me/licenses/CONF-1').expect(503);
+      const res = await b.get(`/api/me/licenses/${await idOf('CONF-1')}`).expect(503);
       expect(res.body.code).toBe('LICENSE_SERVER_UNAVAILABLE');
     });
   });
 
-  describe('DELETE /api/me/licenses/:key/activations/:installationId', () => {
+  describe('DELETE /api/me/licenses/:id/activations/:installationId', () => {
     it('exige une session et le jeton anti-CSRF', async () => {
-      await newBrowser(app).delete('/api/me/licenses/PEU-IMPORTE/activations/srv-1').expect(401);
+      await newBrowser(app).delete(`/api/me/licenses/${UNKNOWN_ID}/activations/srv-1`).expect(401);
       const { b, csrf } = await loggedInUser();
       licenseServer.set('RELEASE-1', { activations: [activation('srv-1')] });
       await b.post('/api/me/licenses/claim', { key: 'RELEASE-1' }, { csrf }).expect(204);
-      await b.delete('/api/me/licenses/RELEASE-1/activations/srv-1').expect(403); // sans jeton
-      await b.delete('/api/me/licenses/RELEASE-1/activations/srv-1', {}, { csrf }).expect(204);
+      await b.delete(`/api/me/licenses/${await idOf('RELEASE-1')}/activations/srv-1`).expect(403); // sans jeton
+      await b.delete(`/api/me/licenses/${await idOf('RELEASE-1')}/activations/srv-1`, {}, { csrf }).expect(204);
     });
 
     it('libère une installation existante', async () => {
@@ -128,10 +161,10 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       licenseServer.set('RELEASE-2', { activations: [activation('srv-1'), activation('srv-2')] });
       await b.post('/api/me/licenses/claim', { key: 'RELEASE-2' }, { csrf }).expect(204);
 
-      await b.delete('/api/me/licenses/RELEASE-2/activations/srv-1', {}, { csrf }).expect(204);
+      await b.delete(`/api/me/licenses/${await idOf('RELEASE-2')}/activations/srv-1`, {}, { csrf }).expect(204);
       expect(licenseServer.releasedActivations).toContainEqual({ key: 'RELEASE-2', installationId: 'srv-1' });
 
-      const res = await b.get('/api/me/licenses/RELEASE-2').expect(200);
+      const res = await b.get(`/api/me/licenses/${await idOf('RELEASE-2')}`).expect(200);
       expect(res.body.activations).toEqual([activation('srv-2')]);
     });
 
@@ -142,7 +175,7 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
 
       const ada = await loggedInUser();
       const res = await ada.b
-        .delete('/api/me/licenses/GRACE-RELEASE/activations/srv-1', {}, { csrf: ada.csrf })
+        .delete(`/api/me/licenses/${await idOf('GRACE-RELEASE')}/activations/srv-1`, {}, { csrf: ada.csrf })
         .expect(404);
       expect(res.body.code).toBe('LICENSE_NOT_FOUND');
       expect(licenseServer.releasedActivations).toHaveLength(0);
@@ -153,7 +186,7 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       licenseServer.set('RELEASE-3', { activations: [activation('srv-1')] });
       await b.post('/api/me/licenses/claim', { key: 'RELEASE-3' }, { csrf }).expect(204);
 
-      const res = await b.delete('/api/me/licenses/RELEASE-3/activations/inconnue', {}, { csrf }).expect(404);
+      const res = await b.delete(`/api/me/licenses/${await idOf('RELEASE-3')}/activations/inconnue`, {}, { csrf }).expect(404);
       expect(res.body.code).toBe('LICENSE_NOT_FOUND');
     });
 
@@ -163,7 +196,7 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       await b.post('/api/me/licenses/claim', { key: 'RELEASE-4' }, { csrf }).expect(204);
       licenseServer.isConfigured = false;
 
-      const res = await b.delete('/api/me/licenses/RELEASE-4/activations/srv-1', {}, { csrf }).expect(503);
+      const res = await b.delete(`/api/me/licenses/${await idOf('RELEASE-4')}/activations/srv-1`, {}, { csrf }).expect(503);
       expect(res.body.code).toBe('LICENSE_SERVER_UNAVAILABLE');
     });
   });

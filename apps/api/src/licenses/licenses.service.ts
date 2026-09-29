@@ -7,6 +7,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 /** Erreur Prisma « valeur déjà utilisée » (contrainte d'unicité). */
 const UNIQUE_VIOLATION = 'P2002';
 
+/** Forme d'un UUID : tout autre identifiant répond 404 sans interroger la base. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Ne montre jamais la clé en entier dans un log : seuls ses 4 derniers caractères. */
 const redact = (key: string) => `…${key.slice(-4)}`;
 
@@ -26,6 +29,7 @@ export class LicensesService {
       orderBy: { claimedAt: 'desc' },
     });
     return licenses.map((license) => ({
+      id: license.id,
       key: license.licenseKey,
       claimedAt: license.claimedAt.toISOString(),
     }));
@@ -65,14 +69,20 @@ export class LicensesService {
    * d'un autre compte reçoit la **même** réponse (404) qu'une clé inconnue, jamais un 403 qui confirmerait
    * son existence.
    */
-  async getDetail(userId: string, key: string): Promise<LicenseDetailResponse> {
-    const owned = await this.ownedLicenseOrNotFound(userId, key);
+  async getDetail(userId: string, id: string): Promise<LicenseDetailResponse> {
+    const owned = await this.ownedLicenseOrNotFound(userId, id);
     if (!this.licenseServer.isConfigured) {
       throw new ServiceUnavailableException({ code: 'LICENSE_SERVER_UNAVAILABLE', message: MESSAGES.serverUnavailable });
     }
-    const status = await this.getStatusOrThrow(key);
+    const status = await this.getStatusOrThrow(owned.licenseKey);
+    const product = await this.prisma.product.findUnique({
+      where: { licenseProduct: status.product },
+      select: { slug: true, name: true },
+    });
     return {
+      id: owned.id,
       key: owned.licenseKey,
+      product,
       claimedAt: owned.claimedAt.toISOString(),
       edition: status.edition,
       revoked: status.revoked,
@@ -83,8 +93,8 @@ export class LicensesService {
   }
 
   /** Libère une installation (réinstallation de serveur), après vérification du propriétaire. */
-  async releaseActivation(userId: string, key: string, installationId: string): Promise<void> {
-    await this.ownedLicenseOrNotFound(userId, key);
+  async releaseActivation(userId: string, id: string, installationId: string): Promise<void> {
+    const { licenseKey: key } = await this.ownedLicenseOrNotFound(userId, id);
     if (!this.licenseServer.isConfigured) {
       throw new ServiceUnavailableException({ code: 'LICENSE_SERVER_UNAVAILABLE', message: MESSAGES.serverUnavailable });
     }
@@ -97,8 +107,9 @@ export class LicensesService {
     this.logger.log(`Installation libérée (compte ${userId}, clé ${redact(key)})`);
   }
 
-  private async ownedLicenseOrNotFound(userId: string, key: string) {
-    const license = await this.prisma.license.findUnique({ where: { licenseKey: key } });
+  private async ownedLicenseOrNotFound(userId: string, id: string) {
+    if (!UUID.test(id)) this.licenseNotFound();
+    const license = await this.prisma.license.findUnique({ where: { id } });
     if (!license || license.userId !== userId) this.licenseNotFound();
     return license;
   }
