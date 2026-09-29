@@ -106,7 +106,7 @@ La suppression est **définitive** : demander une confirmation claire et le mot 
 
 | Route | Accès | Corps | Réponse |
 |---|---|---|---|
-| `GET /me/licenses` | session | (vide) | `200` : tableau `{ id, key, claimedAt }[]`, les plus récentes en premier |
+| `GET /me/licenses` | session | (vide) | `200` : tableau `{ id, product: { slug, name } \| null, key, claimedAt }[]`, les plus récentes en premier (`product` : plugin de la clé, sert au générateur de configuration) |
 | `GET /me/licenses/:id` | session | (vide) | `:id` = identifiant interne donné par `GET /me/licenses`, **jamais la clé** (#91). `200` : `{ id, key, claimedAt, product: { slug, name } \| null, edition, revoked, expiresAt, maxActivations, activations: { installationId, firstSeenAt, lastSeenAt }[] }` ; `404 LICENSE_NOT_FOUND` (licence inconnue **ou d'un autre compte** — même réponse) ; `503 LICENSE_SERVER_UNAVAILABLE` |
 | `DELETE /me/licenses/:id/activations/:installationId` | session | (vide) | `204` : installation libérée ; `404 LICENSE_NOT_FOUND` (licence ou installation inconnue, ou licence d'un autre compte) ; `503 LICENSE_SERVER_UNAVAILABLE` |
 | `POST /me/licenses/claim` | session | `{ key }` | `204` : la clé est rattachée au compte ; `400 LICENSE_CLAIM_INVALID` (clé inconnue, révoquée, **ou déjà rattachée** — même réponse dans les trois cas, ne pas essayer de deviner laquelle) ; `503 LICENSE_SERVER_UNAVAILABLE` |

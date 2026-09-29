@@ -10,11 +10,14 @@ import type { ApiError } from "@fondamental/shared";
 export class ApiRequestError extends Error {
   readonly statusCode: number;
   readonly code?: ApiError["code"];
+  /** Un texte par champ invalide (erreurs de validation), sinon le message seul. */
+  readonly messages: string[];
 
   constructor(body: ApiError) {
     super(Array.isArray(body.message) ? body.message.join(" ") : body.message);
     this.statusCode = body.statusCode;
     this.code = body.code;
+    this.messages = Array.isArray(body.message) ? body.message : [body.message];
   }
 }
 

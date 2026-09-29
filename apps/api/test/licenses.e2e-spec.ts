@@ -123,6 +123,12 @@ describe('Licences : rattacher une clé existante (e2e)', () => {
       expect(known.body.product).toEqual({ slug: product.slug, name: product.name });
       const unknown = await b.get(`/api/me/licenses/${await idOf('PRODUIT-2')}`).expect(200);
       expect(unknown.body.product).toBeNull();
+
+      // La liste le donne aussi, depuis la base (rempli au rattachement) : le générateur s'en sert (#30).
+      const list = await b.get('/api/me/licenses').expect(200);
+      const byKey = Object.fromEntries(list.body.map((l: { key: string; product: unknown }) => [l.key, l.product]));
+      expect(byKey['PRODUIT-1']).toEqual({ slug: product.slug, name: product.name });
+      expect(byKey['PRODUIT-2']).toBeNull();
     });
 
     it('retirée du serveur de licences entre-temps : refuse (404)', async () => {

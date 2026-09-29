@@ -35,6 +35,18 @@ test("connexion, espace client, déconnexion", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
 });
 
+test("générateur de configuration : la clé de licence du compte est pré-remplie", async ({ page }) => {
+  // Le compte de test possède des licences FondamentalTag (parcours d'achat).
+  await seConnecter(page, "/compte/config");
+  await expect(page.getByRole("heading", { name: "Générateur de configuration" })).toBeVisible();
+  await page.getByLabel("Plugin").selectOption("tag");
+  await page.getByLabel("Fichier").selectOption("config.yml");
+  const apercu = page.locator("pre code");
+  await expect(apercu).toContainText("Généré sur fondamentalplugin.fr", { timeout: 15_000 });
+  // license.key : une vraie clé, pas la valeur vide livrée avec le plugin.
+  await expect(apercu).toContainText(/key: "[A-Za-z0-9._-]{4,}"/);
+});
+
 test("un visiteur est renvoyé vers la connexion depuis l'espace client", async ({ page }) => {
   await page.goto("/compte/licences");
   await expect(page).toHaveURL(/\/connexion/);
