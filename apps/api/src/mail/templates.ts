@@ -194,6 +194,11 @@ export function licenseKeyEmail(
           type: 'note',
           text: 'Votre facture vous est envoyée séparément par Stripe. Gardez cette clé pour vous : elle est liée à votre achat.',
         },
+        // Confirmation sur support durable exigée par l'art. L221-13 du code de la consommation.
+        {
+          type: 'note',
+          text: "Vous avez accepté nos CGV et demandé la livraison immédiate de ce contenu numérique, en renonçant expressément à votre droit de rétractation. La garantie légale de conformité reste applicable.",
+        },
       ],
     },
     en: {
@@ -209,6 +214,10 @@ export function licenseKeyEmail(
         { type: 'code', text: config },
         { type: 'button', label: 'See my licenses', url: licensesLink },
         { type: 'note', text: 'Your invoice is sent separately by Stripe. Keep this key to yourself: it is tied to your purchase.' },
+        {
+          type: 'note',
+          text: 'You accepted our terms of sale and asked for immediate delivery of this digital content, expressly waiving your right of withdrawal. The legal guarantee of conformity still applies.',
+        },
       ],
     },
   });

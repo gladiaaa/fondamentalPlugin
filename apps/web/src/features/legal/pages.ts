@@ -4,50 +4,27 @@ export interface LegalPageConfig {
   title: string;
   /** Titre court pour la navigation (brief : « CGV », pas le titre complet). */
   navLabel: string;
-  sections: string[];
 }
 
+/** Date de la dernière modification des textes (affichée sur chaque page). */
+export const LEGAL_UPDATED_AT = "30 septembre 2026";
+
 /**
- * Squelette des pages légales (#35, #92) : titres de section repris de la
- * maquette, aucun texte juridique rédigé à la place d'Océane — voir
- * `LegalArticle`.
+ * Textes à faire relire (#35) : tant que c'est `true`, chaque page porte la mention « Brouillon · à
+ * faire valider ». À passer à `false` une fois les textes validés et les informations manquantes
+ * complétées (`editeur.ts`).
  */
+export const LEGAL_DRAFT = true;
+
+/** Les 4 pages légales (#35, #92), dans l'ordre de la navigation. */
 export const LEGAL_PAGES: LegalPageConfig[] = [
-  {
-    slug: "cgv",
-    href: "/cgv",
-    title: "Conditions générales de vente",
-    navLabel: "CGV",
-    sections: [
-      "Objet",
-      "Produits et licences",
-      "Prix et paiement",
-      "Livraison",
-      "Droit de rétractation",
-      "Support",
-      "Données personnelles",
-      "Droit applicable",
-    ],
-  },
-  {
-    slug: "mentions-legales",
-    href: "/mentions-legales",
-    title: "Mentions légales",
-    navLabel: "Mentions légales",
-    sections: ["Éditeur du site", "Directeur de la publication", "Hébergeur", "Propriété intellectuelle"],
-  },
+  { slug: "cgv", href: "/cgv", title: "Conditions générales de vente", navLabel: "CGV" },
+  { slug: "mentions-legales", href: "/mentions-legales", title: "Mentions légales", navLabel: "Mentions légales" },
   {
     slug: "confidentialite",
     href: "/confidentialite",
     title: "Politique de confidentialité",
     navLabel: "Confidentialité",
-    sections: ["Données collectées", "Finalités", "Durée de conservation", "Destinataires", "Vos droits"],
   },
-  {
-    slug: "cookies",
-    href: "/cookies",
-    title: "Cookies",
-    navLabel: "Cookies",
-    sections: ["Cookies essentiels", "Cookies de mesure d'audience", "Gérer vos choix"],
-  },
+  { slug: "cookies", href: "/cookies", title: "Cookies", navLabel: "Cookies" },
 ];
