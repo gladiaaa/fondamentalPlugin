@@ -1,0 +1,243 @@
+# ============================================================
+#  FondamentalCrate - configuration generale
+#  Les crates elles-memes se configurent dans crates.yml
+#  Les textes se configurent dans messages.yml
+# ============================================================
+
+# Les couleurs et le formatage utilisent MiniMessage, exactement comme
+# TagCustom Premium : <gradient:#FF4500:#FFA500>texte</gradient>, <red>, <bold>...
+
+settings:
+  # Empeche un joueur d'ouvrir deux crates en meme temps.
+  one-open-at-a-time: true
+
+  # Delai minimum entre deux ouvertures, en secondes (0 = desactive).
+  cooldown-seconds: 0
+
+  # Si l'inventaire du joueur est plein au moment de recevoir un objet :
+  #   drop  = l'objet tombe au sol a ses pieds
+  #   deny  = l'ouverture est refusee tant qu'il n'a pas de place
+  full-inventory: drop
+
+  # Annonce les recompenses rares a tout le serveur (voir 'broadcast' par recompense).
+  broadcast-enabled: true
+
+  # Afficher la chance (%) de chaque lot dans l'apercu. La rarete est toujours
+  # affichee ; mets false pour cacher les pourcentages exacts.
+  preview-show-chance: true
+
+  # Mise en valeur du gain (ouverture simple). Chaque effet s'active
+  # independamment.
+  win-flourish:
+    title: true              # titre plein ecran (rarete + nom du lot)
+    sound: true              # son de gain
+    firework: true           # feu d'artifice colore par la rarete
+    firework-rare-only: true # true = feu seulement pour les lots annonces ;
+                             # false = pour tous les gains
+
+  # Sauvegarde des cles virtuelles sur disque, en secondes.
+  autosave-seconds: 300
+
+  # Affiche une cle 3D qui tourne au-dessus de chaque bloc de crate pose.
+  floating-key: true
+
+# ------------------------------------------------------------
+#  Couleurs des messages (chat, menus et console)
+# ------------------------------------------------------------
+# Utilisees par messages.yml et les menus via les balises <texte>, <fort>,
+# <accent>, <discret>, <ok>, <erreur>, <alerte>, <info> et <degrade>.
+# Par defaut : charte Fondamental.
+colors:
+  texte: "#9A90B3"             # texte courant
+  fort: "#F0ECF8"              # noms, nombres, valeurs
+  accent: "#B7A0FF"            # actions, prix, commandes
+  discret: "#6A5D94"           # separateurs, etats vides
+  ok: "#7ED6A0"                # succes
+  erreur: "#F07A7A"            # erreur
+  alerte: "#F0C36A"            # avertissement
+  info: "#8FB8FF"              # information
+  degrade: ["#B7A0FF", "#6A5D94"]  # titres et prefixe
+
+# ------------------------------------------------------------
+#  Licence (jar Premium uniquement)
+# ------------------------------------------------------------
+license:
+  key: ""                  # cle fournie a l'achat ; vide = edition Free
+  check-interval-hours: 6  # frequence de revalidation
+  grace-hours: 72          # tolerance hors-ligne avant retour en Free
+
+# ------------------------------------------------------------
+#  Stockage des donnees joueur (cles + historique)
+# ------------------------------------------------------------
+storage:
+  # json  = fichiers keys.json / history.json (par defaut, marche partout)
+  # mysql = base partagee entre plusieurs serveurs (Premium uniquement ;
+  #         en edition Free, retombe automatiquement sur json)
+  type: json
+
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentalcrate"
+    username: "root"
+    password: ""
+    useSSL: false
+    # Prefixe des tables (permet plusieurs installs sur une meme base).
+    table-prefix: "cc_"
+
+# ------------------------------------------------------------
+#  Integration TagCustom Premium
+# ------------------------------------------------------------
+tagcustom:
+  # Active la lecture de la config de TagCustom pour afficher le vrai rendu
+  # des tags (gradients compris) dans les previews et les animations.
+  enabled: true
+
+  # Nom du plugin TagCustom tel que declare dans son plugin.yml (ancien TagsCustom 1.x).
+  # FondamentalTag est detecte automatiquement et prioritaire.
+  plugin-name: TagsCustom
+
+  # FondamentalTag : un lot de tag sans 'rarity' (ou avec rarity: from-tag) prend
+  # la rarete du tag. Meme identifiant que dans crates.yml > rarities, sinon cette table.
+  rarity-from-tag: true
+  rarity-map:
+    commun: common
+    rare: rare
+    epique: epic
+    legendaire: legendary
+    mythique: legendary
+    evenement: legendary
+
+  # Comment la possession d'un tag est accordee.
+  #   luckperms = via l'API LuckPerms (recommande, aucune commande console)
+  #   command   = via la commande definie ci-dessous (tout plugin de permissions)
+  grant-mode: luckperms
+
+  # Utilise uniquement si grant-mode = command.
+  # Placeholders : %player%  %permission%  %tag%
+  grant-command: "lp user %player% permission set %permission% true"
+
+  # Groupe LuckPerms auquel la permission est ajoutee (vide = permission directe
+  # sur le joueur). Laisse vide dans le doute.
+  luckperms-context-server: ""
+
+# ------------------------------------------------------------
+#  Animations
+# ------------------------------------------------------------
+animations:
+  # Animation utilisee si une crate n'en precise aucune.
+  default: roulette
+
+  roulette:
+    # Titre du menu pendant que ca tourne.
+    title: "<discret>Ouverture <texte>|</texte> <fort><crate></fort>"
+    # Nombre de crans avant l'arret. Plus c'est haut, plus c'est long.
+    ticks: 46
+    # Vitesse de depart (ticks entre deux crans) puis ralentissement.
+    speed-start: 1
+    speed-end: 9
+    # Son joue a chaque cran.
+    tick-sound: BLOCK_NOTE_BLOCK_HAT
+    win-sound: ENTITY_PLAYER_LEVELUP
+    # Temps d'affichage du gagnant avant fermeture, en ticks (20 = 1s).
+    hold-ticks: 45
+
+  spiral:
+    # Duree de la montee en spirale, en ticks.
+    duration-ticks: 90
+    # Nombre d'objets qui tournent autour de la crate.
+    orbit-count: 6
+    # Rayon de la spirale, en blocs.
+    radius: 1.15
+    # Hauteur atteinte par la recompense gagnante, en blocs.
+    height: 2.2
+    open-sound: BLOCK_CHEST_OPEN
+    spin-sound: BLOCK_NOTE_BLOCK_CHIME
+    win-sound: ENTITY_PLAYER_LEVELUP
+    # Particules pendant la rotation et au moment du gain.
+    spin-particle: END_ROD
+    win-particle: TOTEM_OF_UNDYING
+
+  # --- Animations GUI supplementaires (disponibles en Free) ---
+  cascade:
+    title: "<discret>Ouverture <texte>|</texte> <fort><crate></fort>"
+    # Duree du defilement avant l'arret de la premiere colonne.
+    spin-ticks: 55
+    # Ecart, en crans, entre l'arret de deux colonnes voisines.
+    column-stop-gap: 6
+    tick-sound: BLOCK_NOTE_BLOCK_HAT
+    win-sound: ENTITY_PLAYER_LEVELUP
+    hold-ticks: 40
+
+  wheel:
+    title: "<discret>Roue de la fortune <texte>|</texte> <fort><crate></fort>"
+    # Nombre de pas du curseur avant l'arret.
+    steps: 34
+    speed-start: 1
+    speed-end: 8
+    tick-sound: UI_BUTTON_CLICK
+    win-sound: ENTITY_PLAYER_LEVELUP
+    hold-ticks: 45
+
+
+  spotlight:
+    title: "<discret>Projecteur <texte>|</texte> <fort><crate></fort>"
+    # Nombre de sauts du curseur avant l'arret.
+    steps: 30
+    speed-start: 2
+    speed-end: 9
+    tick-sound: UI_BUTTON_CLICK
+    win-sound: ENTITY_PLAYER_LEVELUP
+    hold-ticks: 45
+
+  flip:
+    title: "<discret>Cartes <texte>|</texte> <fort><crate></fort>"
+    # Delai entre deux retournements de carte, en ticks.
+    flip-delay-ticks: 12
+    flip-sound: ITEM_BOOK_PAGE_TURN
+    win-sound: ENTITY_PLAYER_LEVELUP
+    hold-ticks: 45
+
+  # --- Animations 3D supplementaires (Premium uniquement) ---
+  firework:
+    # Hauteur atteinte par la recompense avant les feux, en blocs.
+    apex-height: 2.6
+    # Duree de la montee, en ticks.
+    rise-ticks: 26
+    # Nombre de gerbes de feux d'artifice a l'apex.
+    burst-count: 3
+    launch-sound: ENTITY_FIREWORK_ROCKET_LAUNCH
+    win-sound: ENTITY_PLAYER_LEVELUP
+
+  tornado:
+    # Nombre de recompenses dans l'helice (la derniere est la gagnante).
+    item-count: 7
+    # Duree de la montee, en ticks.
+    duration-ticks: 100
+    # Hauteur totale de la tornade, en blocs.
+    height: 3.0
+    # Rayon en bas (etroit) et en haut (evase), en blocs.
+    base-radius: 0.25
+    top-radius: 1.4
+    particle: CLOUD
+    spin-sound: BLOCK_NOTE_BLOCK_CHIME
+    win-sound: ENTITY_PLAYER_LEVELUP
+
+  # Chambre au tresor facon "QuadCrate" : une petite zone thematique apparait
+  # autour du joueur avec UN coffre par lot a gagner (nombre de coffres =
+  # rewards-per-open de la crate). Le joueur clique chaque coffre pour l'ouvrir,
+  # puis tout disparait. 100 % en entites d'affichage : aucun bloc n'est touche.
+  quad:
+    # Rayon de l'anneau de coffres, en blocs (zone compacte, 1.2 a 3.0).
+    radius: 1.9
+    # Delai maxi avant cloture automatique si tous les coffres ne sont pas
+    # ouverts, en ticks (20 ticks = 1 s).
+    timeout-ticks: 700
+    # Theme du decor. "random" = tire au hasard a chaque ouverture (la chambre
+    # n'est jamais deux fois la meme). Ou force un theme integre parmi :
+    # classic, nether, ocean, soul, end, forest.
+    theme: random
+    cycle-sound: BLOCK_NOTE_BLOCK_XYLOPHONE
+    open-sound: BLOCK_CHEST_OPEN
+    reveal-sound: ENTITY_PLAYER_LEVELUP
+    stop-sound: UI_TOAST_CHALLENGE_COMPLETE

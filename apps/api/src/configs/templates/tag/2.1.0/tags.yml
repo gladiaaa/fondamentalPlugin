@@ -1,0 +1,388 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     FondamentalTag - tags                     ║
+# ╚══════════════════════════════════════════════════════════════╝
+# categories:
+#   <id-catégorie>:
+#     display: "<green>Nom affiché</green>" # MiniMessage
+#     icon: OAK_SAPLING                      # item dans le menu
+#     description: ["<gray>Ligne 1"]         # optionnel
+#     tags:
+#       <id-tag>:                            # identifiant unique (lettres, chiffres, _ et -)
+#         permission: "..."                  # optionnel ; défaut : fondamentaltag.tag.<id-tag>
+#                                            # permission: "" => tag accessible à tous
+#         description: ["<gray>..."]         # optionnel, lignes affichées dans le menu
+#         icon: OAK_LEAVES                   # optionnel, item du tag dans le menu
+#         numeric-id: 1                      # optionnel, pour %fondamentaltag_id_1%
+#
+# ─── 1) Tag écrit à la main ─────────────────────────────────────
+#         display: "<green>[Forest]</green>"
+#
+# ─── 2) Tag généré par un effet (Premium) ───────────────────────
+#         text: "VIP++"                      # le texte seul
+#         effect: wave                       # voir la liste ci-dessous
+#         colors: ["#FFE259", "#FF6A3D"]     # 1 à N couleurs hex
+#         style: smallcaps                   # optionnel : alphabet Unicode
+#         format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"  # cadre, icônes...
+#         bold: true / italic: true          # optionnel
+#         font: uniform                      # optionnel : police Minecraft (uniform, alt...)
+#         shadow: "#5A3200"                  # optionnel : ombre colorée (1.21.4+)
+#         speed: 2                           # ticks entre deux frames (animations)
+#         motion: bounce                     # avec le pack de ressources : bounce (ondule) ou shake (tremble)
+#
+#   Effets : gradient (fixe), solid (couleur unie), wave (le dégradé défile),
+#            rainbow (arc-en-ciel qui défile), shine (reflet qui balaie le texte),
+#            pulse (la couleur respire), flicker (néon qui grésille), fade (fondu),
+#            glitch, sparkle (scintillement), fire (brasier), strobe (clignotement)
+#   Mouvements (motion, avec le pack) : bounce, shake, float, sway, jump
+#   Options : highlight (couleur du reflet / de la pulsation, blanc par défaut),
+#             spread (largeur du dégradé de wave/rainbow, 1.0 = une fois le texte),
+#             frames (nombre d'images de wave/rainbow/pulse), pause (pause de shine)
+#   Styles  : smallcaps (ᴛᴀɢ), bold (𝐓𝐚𝐠), sans (𝗧𝗮𝗴), italic (𝘛𝘢𝘨), script (𝓣𝓪𝓰),
+#             fraktur (𝕿𝖆𝖌), double (𝕋𝕒𝕘), mono (𝚃𝚊𝚐), fullwidth (Ｔａｇ)
+#   Avec le pack de ressources (config.yml > resource-pack), les tags animés sont animés
+#   par un shader sur l'écran des joueurs : fluide, et animé aussi dans le chat.
+#   Les dégradés sont calculés lettre par lettre dans l'espace OKLab : transitions douces,
+#   sans zone grise ou terne au milieu.
+#
+# ─── 3) Tag animé écrit à la main (Premium) ─────────────────────
+#         frames: ["<aqua>[Neon]", "<light_purple>[Neon]", "<blue>[Neon]"]
+#         interval: 10                       # ticks entre deux frames (20 = 1 seconde)
+#
+# Édition Free : seuls les tags unis écrits à la main sont utilisables (couleurs nommées
+# ou hex, gras, italique, souligné, barré).
+#
+# ─── 4) Boutique, rareté et événements (s'ajoutent à n'importe quel tag) ───
+#         price: 500                         # en vente dans le menu (Premium), dans la monnaie de
+#                                            # customization.yml > economy ; 0 = gratuit, à récupérer.
+#                                            # Sans price : pas en vente (permission, crate ou /tag give).
+#         rarity: legendaire                 # une rareté de la section rarities ci-dessous
+#         event:                             # tag saisonnier : obtenable seulement pendant l'événement
+#           name: "<gold>Halloween 2026"
+#           start: "2026-10-15"              # AAAA-MM-JJ ou "AAAA-MM-JJ HH:MM" (heure du serveur)
+#           end: "2026-11-05"                # une date sans heure court jusqu'à la fin du jour
+#           after: keep                      # keep : les joueurs le gardent (édition limitée)
+#                                            # remove : il est retiré à tous à la fin
+#   Avant et après l'événement, le tag n'apparaît que chez ceux qui le possèdent.
+#   Les crates FondamentalCrate peuvent aussi le donner (récompense de type tag).
+
+# ─── Raretés ────────────────────────────────────────────────────
+# display : nom affiché dans le menu ; order : tri (plus grand = plus rare),
+# utilisé par config.yml > menu.sort-by-rarity et par FondamentalCrate.
+rarities:
+  commun:
+    display: "<gray>Commun"
+    order: 1
+  rare:
+    display: "<aqua>Rare"
+    order: 2
+  epique:
+    display: "<light_purple>Épique"
+    order: 3
+  legendaire:
+    display: "<gradient:#FFD700:#FF8C00>Légendaire</gradient>"
+    order: 4
+  mythique:
+    display: "<gradient:#FF4E50:#C471ED:#12C2E9>Mythique</gradient>"
+    order: 5
+  evenement:
+    display: "<gradient:#FF7B00:#FFD000>Événement</gradient>"
+    order: 6
+
+categories:
+#   <id-catégorie>:
+#     display: "<green>Nom affiché</green>" # MiniMessage
+#     icon: OAK_SAPLING                      # item dans le menu
+#     description: ["<gray>Ligne 1"]         # optionnel
+#     tags:
+#       <id-tag>:                            # identifiant unique (lettres, chiffres, _ et -)
+#         display: "<green>[Forest]</green>" # rendu du tag
+#         permission: "..."                  # optionnel ; défaut : fondamentaltag.tag.<id-tag>
+#                                            # permission: "" => tag accessible à tous
+#         description: ["<gray>..."]         # optionnel, lignes affichées dans le menu
+#         icon: OAK_LEAVES                   # optionnel, item du tag dans le menu
+#         numeric-id: 1                      # optionnel, pour %fondamentaltag_id_1%
+#
+# Tag animé (Premium) : remplacez display par une liste de frames.
+#       neon:
+#         frames: ["<aqua>[Neon]", "<light_purple>[Neon]", "<blue>[Neon]"]
+#         interval: 10                       # ticks entre deux frames (20 = 1 seconde)
+#
+# Édition Free : seuls les tags unis sont utilisables (couleurs nommées ou hex, gras,
+# italique, souligné, barré). Dégradés, arc-en-ciel, animations = Premium.
+
+categories:
+  default:
+    display: "<white>Basiques</white>"
+    icon: NAME_TAG
+    description: ["<gray>Tags accessibles à tous."]
+    tags:
+      member:
+        display: "<gray>[Membre]</gray>"
+        permission: ""
+        numeric-id: 1
+      friend:
+        display: "<green>[Ami]</green>"
+        permission: ""
+        numeric-id: 2
+
+  nature:
+    display: "<green>Nature</green>"
+    icon: OAK_SAPLING
+    tags:
+      forest:
+        display: "<dark_green>[Forest]</dark_green>"
+        numeric-id: 3
+      ocean:
+        display: "<blue>[Ocean]</blue>"
+        numeric-id: 4
+      frost:
+        display: "<gradient:#00FFFF:#1E90FF>[Frost]</gradient>"
+        numeric-id: 5
+
+  elements:
+    display: "<red>Éléments</red>"
+    icon: FIRE_CHARGE
+    tags:
+      fire:
+        display: "<red>[Fire]</red>"
+        numeric-id: 6
+      flame:
+        display: "<gradient:#FF4500:#FFA500>[Flame]</gradient>"
+        numeric-id: 7
+      thunder:
+        display: "<yellow><bold>[Thunder]</bold></yellow>"
+        numeric-id: 8
+
+  grades:
+    display: "<gradient:#FFD700:#FF8C00><bold>Grades</bold></gradient>"
+    icon: DIAMOND
+    description: ["<gray>Les grades du serveur."]
+    tags:
+      vip:
+        text: "VIP"
+        effect: gradient
+        colors: ["#7CFF6B", "#00C9A7"]
+        bold: true
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: EMERALD
+      vip_plus:
+        text: "VIP+"
+        effect: shine
+        colors: ["#00E5FF", "#2979FF"]
+        bold: true
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: DIAMOND
+      vip_plus_plus:
+        text: "VIP++"
+        effect: wave
+        colors: ["#FFE259", "#FFA751", "#FF6A3D", "#FFA751"]
+        bold: true
+        motion: bounce               # avec le pack de ressources : les lettres ondulent
+        format: "<color:#FFB300>✦</color><dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: NETHERITE_INGOT
+      fondateur:
+        text: "Fondateur"
+        style: smallcaps
+        effect: shine
+        colors: ["#FFF3B0", "#FFC837", "#FF8008"]
+        bold: true
+        format: "<color:#FFD54F>♛</color> {text}"
+        description: ["<gray>Doré, avec un reflet qui balaie le texte."]
+        icon: GOLDEN_HELMET
+      admin:
+        text: "Admin"
+        style: smallcaps
+        effect: wave
+        colors: ["#FF1744", "#FF8A80", "#D50000"]
+        bold: true
+        format: "<color:#FF5252>⚔</color> {text}"
+        icon: NETHERITE_SWORD
+      modo:
+        text: "Modo"
+        style: smallcaps
+        effect: pulse
+        colors: ["#40C4FF", "#2962FF"]
+        highlight: "#E1F5FE"
+        bold: true
+        format: "<color:#40C4FF>⚑</color> {text}"
+        icon: SHIELD
+      helper:
+        text: "Helper"
+        style: smallcaps
+        effect: gradient
+        colors: ["#B9F6CA", "#00C853"]
+        format: "<color:#69F0AE>✚</color> {text}"
+        icon: LIME_DYE
+      builder:
+        text: "Builder"
+        style: smallcaps
+        effect: gradient
+        colors: ["#FFCC80", "#EF6C00", "#8D6E63"]
+        format: "<color:#FFB74D>⚒</color> {text}"
+        icon: BRICKS
+      streamer:
+        text: "Streamer"
+        effect: flicker
+        colors: ["#EA80FC", "#7C4DFF"]
+        bold: true
+        format: "<color:#FF1744>●</color> {text}"
+        description: ["<gray>Néon qui grésille."]
+        icon: ENDER_EYE
+
+  effets:
+    display: "<gradient:#00E5FF:#E040FB><bold>Effets</bold></gradient>"
+    icon: BLAZE_POWDER
+    tags:
+      legende:
+        text: "Légende"
+        effect: rainbow
+        spread: 1.5
+        bold: true
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: NETHER_STAR
+      demon:
+        text: "Démon"
+        style: fraktur
+        effect: wave
+        colors: ["#FF1744", "#4A0000", "#B71C1C"]
+        motion: shake                # avec le pack de ressources : les lettres tremblent
+        format: "<dark_red>☠</dark_red> {text}"
+        icon: WITHER_SKELETON_SKULL
+      glace:
+        text: "Glace"
+        style: smallcaps
+        effect: shine
+        colors: ["#B3E5FC", "#4FC3F7", "#0288D1"]
+        bold: true
+        format: "<color:#B3E5FC>❄</color> {text}"
+        icon: BLUE_ICE
+      neon:
+        text: "Neon"
+        effect: flicker
+        colors: ["#00E5FF", "#00B0FF"]
+        bold: true
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: SEA_LANTERN
+      aurore:
+        text: "Aurore"
+        effect: wave
+        colors: ["#00F5A0", "#00D9F5", "#7F00FF", "#00D9F5"]
+        spread: 1.8
+        bold: true
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: PRISMARINE_CRYSTALS
+      crepuscule:
+        text: "Crépuscule"
+        style: smallcaps
+        effect: gradient
+        colors: ["#FF512F", "#DD2476", "#6A11CB"]
+        icon: ORANGE_TULIP
+
+      etincelle:
+        text: "Étincelle"
+        effect: sparkle
+        colors: ["#FFC837", "#FF8008"]
+        bold: true
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        icon: GLOWSTONE_DUST
+      brasier:
+        text: "Brasier"
+        style: smallcaps
+        effect: fire
+        colors: ["#8B0000", "#FF3D00", "#FF9100", "#FFD740"]
+        bold: true
+        motion: jump
+        format: "<color:#FF6D00>♨</color> {text}"
+        icon: CAMPFIRE
+
+  polices:
+    display: "<white><bold>Polices</bold></white>"
+    icon: WRITABLE_BOOK
+    description: ["<gray>Tous les alphabets disponibles,", "<gray>pour vérifier leur rendu en jeu."]
+    tags:
+      police_smallcaps:
+        text: "Fondamental"
+        style: smallcaps
+        colors: ["#FFD700", "#FF8C00"]
+      police_bold:
+        text: "Fondamental"
+        style: bold
+        colors: ["#FFD700", "#FF8C00"]
+      police_sans:
+        text: "Fondamental"
+        style: sans
+        colors: ["#FFD700", "#FF8C00"]
+      police_italic:
+        text: "Fondamental"
+        style: italic
+        colors: ["#FFD700", "#FF8C00"]
+      police_script:
+        text: "Fondamental"
+        style: script
+        colors: ["#FFD700", "#FF8C00"]
+      police_fraktur:
+        text: "Fondamental"
+        style: fraktur
+        colors: ["#FFD700", "#FF8C00"]
+      police_double:
+        text: "Fondamental"
+        style: double
+        colors: ["#FFD700", "#FF8C00"]
+      police_mono:
+        text: "Fondamental"
+        style: mono
+        colors: ["#FFD700", "#FF8C00"]
+      police_fullwidth:
+        text: "Fondamental"
+        style: fullwidth
+        colors: ["#FFD700", "#FF8C00"]
+      police_uniform:
+        text: "Fondamental"
+        font: uniform
+        colors: ["#FFD700", "#FF8C00"]
+      police_ombre:
+        text: "Fondamental"
+        bold: true
+        shadow: "#7A3E00"
+        colors: ["#FFE082", "#FFB300"]
+
+  # Exemples de boutique et de tags saisonniers : à adapter ou supprimer.
+  saisons:
+    display: "<gradient:#FF7B00:#FFD000>Boutique & saisons</gradient>"
+    icon: JACK_O_LANTERN
+    description: ["<gray>Tags en vente et éditions limitées"]
+    tags:
+      etoile:
+        text: "Étoile"
+        effect: shine
+        colors: ["#FFE259", "#FFA751"]
+        format: "<dark_gray>[</dark_gray>{text}<dark_gray>]</dark_gray>"
+        price: 250
+        rarity: rare
+      halloween_2026:
+        text: "Halloween"
+        effect: flicker
+        colors: ["#FF7B00", "#8B00FF"]
+        format: "<dark_gray>[</dark_gray>🎃 {text}<dark_gray>]</dark_gray>"
+        icon: JACK_O_LANTERN
+        price: 500
+        rarity: evenement
+        event:
+          name: "<gold>Halloween 2026"
+          start: "2026-10-15"
+          end: "2026-11-05"
+          after: keep
+      noel_2026:
+        text: "Noël"
+        effect: sparkle
+        colors: ["#D42426", "#FFFFFF", "#1E792C"]
+        format: "<dark_gray>[</dark_gray>❄ {text}<dark_gray>]</dark_gray>"
+        icon: SNOWBALL
+        price: 0
+        rarity: evenement
+        description: ["<gray>Offert à tous pendant les fêtes"]
+        event:
+          name: "<red>Noël 2026"
+          start: "2026-12-01"
+          end: "2027-01-06"
+          after: keep

@@ -66,7 +66,11 @@ export interface ApiError {
     | "CANNOT_MODIFY_SELF"
     | "USER_NOT_FOUND"
     | "RELEASE_NOT_FOUND"
-    | "TWO_FACTOR_ALREADY_ENABLED";
+    | "TWO_FACTOR_ALREADY_ENABLED"
+    | "CONFIG_NOT_FOUND"
+    | "CONFIG_NOT_BUYER"
+    | "CONFIG_INVALID"
+    | "CONFIG_LIMIT";
 }
 
 /** Une session ouverte du compte, dans l'export de données (jamais son jeton). */
@@ -382,4 +386,168 @@ export interface AdminStatsResponse {
   salesLast30Days: Array<{ date: string; sales: number; revenueCents: number }>;
   users: { total: number; verified: number; admins: number; blocked: number };
   recentActions: AdminActionEntry[];
+}
+
+// ─── Générateur de configuration (#30) ──────────────────────────
+
+/**
+ * Un champ du formulaire d'un fichier de configuration. `key` est la clé YAML, relative au champ
+ * parent. Le formulaire du site et la validation de l'API lisent le même schéma.
+ */
+export type ConfigField =
+  | ConfigTextField
+  | ConfigNumberField
+  | ConfigBooleanField
+  | ConfigSelectField
+  | ConfigTextListField
+  | ConfigSectionField
+  | ConfigMapField
+  | ConfigListField
+  | ConfigOneOfField
+  | ConfigLicenseField;
+
+interface ConfigFieldBase {
+  key: string;
+  label: string;
+  /** Aide sous le champ. */
+  help?: string;
+  /** Fonction de l'édition Premium du plugin (information : le générateur est réservé aux acheteurs). */
+  premium?: boolean;
+  /** N'afficher le champ que si le champ voisin `key` vaut `equals` (affichage seulement). */
+  showIf?: { key: string; equals: string | number | boolean };
+}
+
+export interface ConfigTextField extends ConfigFieldBase {
+  kind: "text";
+  /** Texte MiniMessage (couleurs, dégradés) : aperçu possible côté site. */
+  minimessage?: boolean;
+  multiline?: boolean;
+  placeholder?: string;
+  /** Expression régulière que la valeur doit respecter (ex. un nom de matériau Minecraft). */
+  pattern?: string;
+  maxLength?: number;
+  /** Valeur vide autorisée (défaut : oui). */
+  optional?: boolean;
+}
+
+export interface ConfigNumberField extends ConfigFieldBase {
+  kind: "number";
+  integer?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+}
+
+export interface ConfigBooleanField extends ConfigFieldBase {
+  kind: "boolean";
+}
+
+export interface ConfigSelectField extends ConfigFieldBase {
+  kind: "select";
+  options: Array<{ value: string; label: string; premium?: boolean }>;
+}
+
+/** Liste de textes (lignes de description, matériaux…). */
+export interface ConfigTextListField extends ConfigFieldBase {
+  kind: "textList";
+  minimessage?: boolean;
+  /** Expression régulière que chaque élément doit respecter. */
+  pattern?: string;
+  maxItems?: number;
+}
+
+/** Groupe de champs aux clés fixes (`license:`, `settings:`…). */
+export interface ConfigSectionField extends ConfigFieldBase {
+  kind: "section";
+  fields: ConfigField[];
+}
+
+/** Entrées nommées par l'utilisateur (crates, tags, paliers, quêtes…), chacune avec les mêmes champs. */
+export interface ConfigMapField extends ConfigFieldBase {
+  kind: "map";
+  /** Nom d'une entrée (« crate », « palier »…). */
+  itemLabel: string;
+  /** Expression régulière des noms d'entrée. */
+  keyPattern: string;
+  keyHelp?: string;
+  maxItems?: number;
+  /** Champs de chaque entrée (entrée = objet)… */
+  fields?: ConfigField[];
+  /** … ou valeur simple de chaque entrée (ex. `enchants: { SHARPNESS: 2 }`). */
+  value?: ConfigField;
+}
+
+/**
+ * Liste d'objets (récompenses, actions…). Avec `variants`, le champ `variants.key` (souvent `type`)
+ * choisit les autres champs de l'élément.
+ */
+export interface ConfigListField extends ConfigFieldBase {
+  kind: "list";
+  itemLabel: string;
+  maxItems?: number;
+  fields?: ConfigField[];
+  variants?: {
+    key: string;
+    options: Array<{ value: string; label: string; premium?: boolean; fields: ConfigField[] }>;
+  };
+}
+
+/**
+ * Valeur qui peut prendre plusieurs formes (ex. `amount: 3`, `amount: all` ou
+ * `amount: {facile: 2, normal: 1}`) : la première forme valide est retenue. Les `key` des formes
+ * sont ignorées (c'est celle de ce champ qui compte).
+ */
+export interface ConfigOneOfField extends ConfigFieldBase {
+  kind: "oneOf";
+  options: Array<{ label: string; field: ConfigField }>;
+}
+
+/** Clé de licence : toujours remplie par l'API avec la clé de l'acheteur, jamais saisie. */
+export interface ConfigLicenseField extends ConfigFieldBase {
+  kind: "license";
+}
+
+/** Valeurs d'un fichier, dans la forme du YAML (clés = `key` des champs). */
+export type ConfigValue = string | number | boolean | null | string[] | ConfigValues | ConfigValues[];
+export interface ConfigValues {
+  [key: string]: ConfigValue;
+}
+
+/** Un fichier configurable d'une version d'un plugin (`GET /api/configs/:slug`). */
+export interface ConfigFileSummary {
+  file: string;
+  label: string;
+  description: string;
+}
+
+/** `GET /api/configs/:slug` : versions du plugin qui ont un générateur, la plus récente en premier. */
+export interface ConfigPluginResponse {
+  slug: string;
+  versions: Array<{ version: string; files: ConfigFileSummary[] }>;
+}
+
+/** `GET /api/configs/:slug/:version/:file` : le schéma du formulaire et les valeurs livrées avec le plugin. */
+export interface ConfigSchemaResponse extends ConfigFileSummary {
+  slug: string;
+  version: string;
+  fields: ConfigField[];
+  defaults: ConfigValues;
+}
+
+/** Une configuration enregistrée (`/api/me/configs`). */
+export interface SavedConfigResponse {
+  id: string;
+  name: string;
+  slug: string;
+  version: string;
+  file: string;
+  values: ConfigValues;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** `POST /api/me/configs/render` : le fichier YAML prêt à déposer dans `plugins/<Plugin>/`. */
+export interface RenderedConfigResponse {
+  file: string;
+  yaml: string;
 }

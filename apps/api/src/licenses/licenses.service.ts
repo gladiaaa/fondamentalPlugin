@@ -55,7 +55,8 @@ export class LicensesService {
     if (status.revoked) this.claimInvalid();
 
     try {
-      await this.prisma.license.create({ data: { userId, licenseKey: key } });
+      const product = await this.prisma.product.findUnique({ where: { licenseProduct: status.product }, select: { id: true } });
+      await this.prisma.license.create({ data: { userId, licenseKey: key, productId: product?.id ?? null } });
     } catch (error) {
       // Déjà rattachée (à ce compte ou à un autre) : même réponse qu'une clé inconnue.
       if ((error as { code?: string }).code === UNIQUE_VIOLATION) this.claimInvalid();

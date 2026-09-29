@@ -1,0 +1,98 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                     FondamentalTag - config                   ║
+# ╚══════════════════════════════════════════════════════════════╝
+# Les tags se définissent dans tags.yml, les textes dans messages.yml.
+# Tout le texte utilise MiniMessage : https://docs.advntr.dev/minimessage/format.html
+# Après modification : /tag reload
+
+# ─── Licence (jar Premium uniquement) ───────────────────────────
+license:
+  key: ""                  # clé fournie à l'achat ; vide = édition Free
+  check-interval-hours: 6  # revalidation périodique
+  grace-hours: 72          # tolérance si le serveur de licences est injoignable
+
+# ─── Base de données ────────────────────────────────────────────
+# sqlite : fichier local tags.db, aucune configuration.
+# mysql  : (Premium) partage des tags entre plusieurs serveurs d'un réseau.
+database:
+  type: "sqlite"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentaltag"
+    username: "fondamentaltag"
+    password: "change-moi"
+
+# ─── Affichage dans le chat ─────────────────────────────────────
+# Laissez à false si un plugin de chat (EssentialsChat, LPC, ChatControl...)
+# gère déjà le format : ajoutez alors %fondamentaltag_tag_prefix% dans son format.
+chat:
+  enabled: true
+  # {tag} = tag-format ci-dessous (vide si le joueur n'a pas de tag)
+  # <player> = pseudo affiché, <message> = message
+  format: "{tag}<white><player></white><dark_gray> » </dark_gray><gray><message>"
+  tag-format: "{tag} "
+
+# ─── Tag au-dessus de la tête et dans la liste TAB ─────────────
+# Utilise les équipes du scoreboard principal. Un joueur déjà placé dans l'équipe
+# d'un autre plugin (Bedwars, TAB...) n'est jamais déplacé : désactivez alors cette
+# option et utilisez les placeholders dans ce plugin.
+nametag:
+  enabled: true
+  format: "{tag} "
+  cleanup-legacy-teams: true   # supprime les équipes laissées par TagsCustom 1.x
+
+# ─── PlaceholderAPI ─────────────────────────────────────────────
+placeholders:
+  no-tag: ""                   # valeur de %fondamentaltag_tag% sans tag équipé
+  legacy-identifier: false     # true = garde aussi les anciens %tags_Player_tag% / %tags_id_N%
+
+# ─── Pack de ressources (Premium) ───────────────────────────────
+# Anime les tags directement sur l'écran des joueurs grâce à des shaders de texte :
+# les animations deviennent fluides et fonctionnent PARTOUT, chat compris, sans
+# aucun paquet envoyé par le serveur. Ajoute aussi l'effet de mouvement « motion »
+# (bounce, shake). Shaders prévus pour Minecraft 1.21.11 ; les autres versions
+# reçoivent un pack vide et voient la couleur principale du tag.
+# Sans le pack (refusé ou désactivé), un tag animé s'affiche dans sa couleur principale.
+resource-pack:
+  enabled: false
+  shader-effects: true         # false = garder l'animation frame par frame du serveur
+  send-on-join: true
+  required: false              # true = kick si le joueur refuse le pack
+  prompt: "<gold>FondamentalTag</gold> <gray>: acceptez le pack pour voir les tags animés."
+  host:
+    enabled: true              # le plugin héberge lui-même le pack
+    port: 8095                 # port TCP à ouvrir dans le pare-feu
+    public-url: ""             # adresse vue par les joueurs, ex. "http://1.2.3.4:8095"
+  external-url: ""             # OU : URL d'un zip hébergé ailleurs (plugins/FondamentalTag/resourcepack.zip)
+
+# ─── Menus ──────────────────────────────────────────────────────
+menu:
+  show-locked: true            # afficher les tags non débloqués (grisés)
+  show-premium: true           # afficher les tags Premium en édition Free (grisés)
+  skip-single-category: true   # une seule catégorie : ouvrir directement ses tags
+  close-on-equip: false
+  sort-by-rarity: false        # true : les tags les plus rares en premier (rarities dans tags.yml)
+  items:                       # matériaux (https://jd.papermc.io/paper/1.21.4/org/bukkit/Material.html)
+    unlocked: NAME_TAG
+    equipped: NAME_TAG
+    locked: GRAY_DYE
+    buyable: GOLD_NUGGET       # tag en vente sans icône propre
+    premium: GRAY_DYE
+    current: NAME_TAG
+    back: ARROW
+    previous: SPECTRAL_ARROW
+    next: SPECTRAL_ARROW
+    close: BARRIER
+    border: BLACK_STAINED_GLASS_PANE  # cadre des menus (AIR = aucun cadre)
+    accent: ORANGE_STAINED_GLASS_PANE # coins du cadre
+    owned: CHEST
+    atelier: ANVIL
+    balance: SUNFLOWER
+  sounds:                      # clés de sons Minecraft, "" pour aucun son
+    open: "ui.button.click"
+    equip: "entity.experience_orb.pickup"
+    unequip: "ui.button.click"
+    error: "entity.villager.no"
+    preview: "block.amethyst_block.chime"
+    buy: "entity.player.levelup"

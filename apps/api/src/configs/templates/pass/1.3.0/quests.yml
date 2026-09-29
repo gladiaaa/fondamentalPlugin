@@ -1,0 +1,408 @@
+# ============================================================
+#  FondamentalPass - quêtes
+# ============================================================
+# DIFFICULTÉS : du plus facile au plus dur (cet ordre sert au tri dans les menus).
+#   name  : nom affiché (MiniMessage, balises de la charte)
+#   stars : nombre d'étoiles pleines
+#
+# POOLS : groupes de quêtes tirées au hasard et renouvelées ensemble.
+#   reset  : daily (chaque jour à config.yml > reset-hour), weekly (le lundi), season (jamais)
+#   amount : nombre de quêtes tirées par joueur, "all" pour toutes,
+#            ou un tirage par difficulté : {facile: 2, normal: 1, difficile: 1}
+#   completion : bonus quand toutes les quêtes de la période sont terminées
+#            {xp: 500, rewards: [...]} (mêmes récompenses que season.yml)
+#
+# QUÊTES :
+#   pool, difficulty, name, description (<amount> = quantité demandée), icon, xp,
+#   weight (chance d'être tirée, 10 par défaut)
+#   servers : serveurs où la quête progresse, motifs avec * (ex. ["bedwars-*"]).
+#             Absent ou ["*"] = tout le réseau. Nom du serveur : config.yml > server.name
+#   where   : nom affiché aux joueurs pour ces serveurs (ex. "Bedwars") ; sinon déduit des motifs
+#   rewards : récompenses en plus de l'XP (mêmes types que season.yml)
+#   objective :
+#     type : break-block | place-block | kill-mob | kill-player | craft | fish | smelt
+#            | enchant | consume | breed | playtime (minutes) | walk (blocs) | login (jours)
+#            | custom (Premium) | placeholder (Premium)
+#     amount : quantité à atteindre
+#     materials / entities / items : filtre facultatif (noms Minecraft)
+#     key : pour custom, la clé envoyée par un plugin ou /pass admin trigger
+#           FondamentalBedwars : bedwars:play, bedwars:win, bedwars:kill, bedwars:final_kill, bedwars:bed_break
+#           FondamentalCrate   : crate:open, crate:open:<id de la crate>
+#     placeholder + mode : pour placeholder, la valeur à suivre ;
+#            mode increase = compter la hausse depuis le tirage, reach = atteindre la valeur
+
+difficulties:
+  facile:
+    name: "<ok>Facile"
+    stars: 1
+  normal:
+    name: "<info>Normale"
+    stars: 2
+  difficile:
+    name: "<alerte>Difficile"
+    stars: 3
+  extreme:
+    name: "<erreur>Extrême"
+    stars: 4
+
+pools:
+  daily:
+    name: "Quêtes du jour"
+    icon: SUNFLOWER
+    reset: daily
+    amount: {facile: 2, normal: 1, difficile: 1}
+    completion:
+      xp: 500
+  weekly:
+    name: "Quêtes de la semaine"
+    icon: CLOCK
+    reset: weekly
+    amount: {normal: 1, difficile: 1, extreme: 1}
+    completion:
+      xp: 2500
+      rewards:
+        - {type: crate-key, crate: "vote", amount: 1}
+  season:
+    name: "Défis de saison"
+    icon: NETHER_STAR
+    reset: season
+    amount: all
+
+quests:
+  # ============================================================ QUOTIDIENNES
+  # --- Faciles ---
+  randonneur:
+    pool: daily
+    difficulty: facile
+    name: "Randonneur"
+    description: "<texte>Parcours <fort><amount></fort> blocs à pied."
+    icon: LEATHER_BOOTS
+    xp: 150
+    objective: {type: walk, amount: 1000}
+  assidu:
+    pool: daily
+    difficulty: facile
+    name: "Assidu"
+    description: "<texte>Joue <fort><amount></fort> minutes."
+    icon: CLOCK
+    xp: 150
+    objective: {type: playtime, amount: 20}
+  bucheron:
+    pool: daily
+    difficulty: facile
+    name: "Bûcheron"
+    description: "<texte>Coupe <fort><amount></fort> bûches."
+    icon: IRON_AXE
+    xp: 200
+    objective: {type: break-block, amount: 64, materials: [OAK_LOG, BIRCH_LOG, SPRUCE_LOG, JUNGLE_LOG, ACACIA_LOG, DARK_OAK_LOG, MANGROVE_LOG, CHERRY_LOG]}
+  gourmet:
+    pool: daily
+    difficulty: facile
+    name: "Gourmet"
+    description: "<texte>Mange <fort><amount></fort> fois."
+    icon: COOKED_BEEF
+    xp: 150
+    objective: {type: consume, amount: 10}
+  jardinier:
+    pool: daily
+    difficulty: facile
+    name: "Jardinier"
+    description: "<texte>Récolte <fort><amount></fort> cultures."
+    icon: WHEAT
+    xp: 200
+    objective: {type: break-block, amount: 64, materials: [WHEAT, CARROTS, POTATOES, BEETROOTS]}
+  echauffement-bedwars:
+    pool: daily
+    difficulty: facile
+    name: "Échauffement"
+    description: "<texte>Joue <fort><amount></fort> parties de Bedwars."
+    icon: WHITE_BED
+    xp: 200
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:play", amount: 2}
+  crate-du-jour:
+    pool: daily
+    difficulty: facile
+    name: "Petit plaisir"
+    description: "<texte>Ouvre <fort><amount></fort> crate."
+    icon: CHEST
+    xp: 150
+    servers: ["lobby"]
+    where: "Lobby"
+    objective: {type: custom, key: "crate:open", amount: 1}
+
+  # --- Normales ---
+  mineur:
+    pool: daily
+    difficulty: normal
+    name: "Mineur"
+    description: "<texte>Casse <fort><amount></fort> blocs de pierre."
+    icon: IRON_PICKAXE
+    xp: 350
+    objective: {type: break-block, amount: 200, materials: [STONE, DEEPSLATE, COBBLESTONE, COBBLED_DEEPSLATE]}
+  chasseur:
+    pool: daily
+    difficulty: normal
+    name: "Chasseur"
+    description: "<texte>Élimine <fort><amount></fort> monstres."
+    icon: IRON_SWORD
+    xp: 350
+    objective: {type: kill-mob, amount: 25, entities: [ZOMBIE, SKELETON, SPIDER, CREEPER, ENDERMAN, DROWNED, HUSK, STRAY]}
+  pecheur:
+    pool: daily
+    difficulty: normal
+    name: "Pêcheur"
+    description: "<texte>Pêche <fort><amount></fort> fois."
+    icon: FISHING_ROD
+    xp: 300
+    objective: {type: fish, amount: 10}
+  eleveur:
+    pool: daily
+    difficulty: normal
+    name: "Éleveur"
+    description: "<texte>Fais naître <fort><amount></fort> animaux."
+    icon: WHEAT_SEEDS
+    xp: 300
+    objective: {type: breed, amount: 10}
+  forgeron:
+    pool: daily
+    difficulty: normal
+    name: "Forgeron"
+    description: "<texte>Fais cuire <fort><amount></fort> objets au four."
+    icon: FURNACE
+    xp: 300
+    objective: {type: smelt, amount: 64}
+  bagarreur-bedwars:
+    pool: daily
+    difficulty: normal
+    name: "Bagarreur"
+    description: "<texte>Élimine <fort><amount></fort> joueurs en Bedwars."
+    icon: STONE_SWORD
+    xp: 400
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:kill", amount: 10}
+
+  # --- Difficiles ---
+  diamantaire:
+    pool: daily
+    difficulty: difficile
+    name: "Diamantaire"
+    description: "<texte>Mine <fort><amount></fort> minerais de diamant."
+    icon: DIAMOND_PICKAXE
+    xp: 700
+    objective: {type: break-block, amount: 5, materials: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE]}
+  chasseur-d-endermen:
+    pool: daily
+    difficulty: difficile
+    name: "Chasseur d'Endermen"
+    description: "<texte>Élimine <fort><amount></fort> Endermen."
+    icon: ENDER_PEARL
+    xp: 700
+    objective: {type: kill-mob, amount: 15, entities: [ENDERMAN]}
+  marathon:
+    pool: daily
+    difficulty: difficile
+    name: "Marathon"
+    description: "<texte>Parcours <fort><amount></fort> blocs à pied."
+    icon: DIAMOND_BOOTS
+    xp: 600
+    objective: {type: walk, amount: 5000}
+  victoire-bedwars:
+    pool: daily
+    difficulty: difficile
+    name: "Victorieux"
+    description: "<texte>Gagne <fort><amount></fort> partie de Bedwars."
+    icon: GOLDEN_HELMET
+    xp: 800
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:win", amount: 1}
+  saboteur-bedwars:
+    pool: daily
+    difficulty: difficile
+    name: "Saboteur"
+    description: "<texte>Détruis <fort><amount></fort> lits ennemis."
+    icon: RED_BED
+    xp: 800
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:bed_break", amount: 3}
+
+  # ============================================================ HEBDOMADAIRES
+  # --- Normales ---
+  artisan:
+    pool: weekly
+    difficulty: normal
+    name: "Artisan"
+    description: "<texte>Fabrique <fort><amount></fort> objets."
+    icon: CRAFTING_TABLE
+    xp: 1000
+    objective: {type: craft, amount: 200}
+  fidele:
+    pool: weekly
+    difficulty: normal
+    name: "Fidèle"
+    description: "<texte>Connecte-toi <fort><amount></fort> jours cette semaine."
+    icon: CAKE
+    xp: 1200
+    objective: {type: login, amount: 5}
+  habitue-bedwars:
+    pool: weekly
+    difficulty: normal
+    name: "Habitué"
+    description: "<texte>Joue <fort><amount></fort> parties de Bedwars."
+    icon: WHITE_BED
+    xp: 1200
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:play", amount: 10}
+  collection-semaine:
+    pool: weekly
+    difficulty: normal
+    name: "Chanceux"
+    description: "<texte>Ouvre <fort><amount></fort> crates."
+    icon: TRIPWIRE_HOOK
+    xp: 1000
+    servers: ["lobby"]
+    where: "Lobby"
+    objective: {type: custom, key: "crate:open", amount: 5}
+
+  # --- Difficiles ---
+  enchanteur:
+    pool: weekly
+    difficulty: difficile
+    name: "Enchanteur"
+    description: "<texte>Enchante <fort><amount></fort> objets."
+    icon: ENCHANTING_TABLE
+    xp: 2000
+    objective: {type: enchant, amount: 10}
+  terreur-nocturne:
+    pool: weekly
+    difficulty: difficile
+    name: "Terreur nocturne"
+    description: "<texte>Élimine <fort><amount></fort> monstres."
+    icon: NETHERITE_SWORD
+    xp: 2000
+    objective: {type: kill-mob, amount: 150, entities: [ZOMBIE, SKELETON, SPIDER, CREEPER, ENDERMAN, DROWNED, HUSK, STRAY, WITCH]}
+  terrassier:
+    pool: weekly
+    difficulty: difficile
+    name: "Terrassier"
+    description: "<texte>Casse <fort><amount></fort> blocs."
+    icon: IRON_SHOVEL
+    xp: 1800
+    objective: {type: break-block, amount: 2000}
+  finisseur-bedwars:
+    pool: weekly
+    difficulty: difficile
+    name: "Finisseur"
+    description: "<texte>Réalise <fort><amount></fort> kills finaux en Bedwars."
+    icon: DIAMOND_SWORD
+    xp: 2200
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:final_kill", amount: 15}
+
+  # --- Extrêmes ---
+  tueur-de-wither:
+    pool: weekly
+    difficulty: extreme
+    name: "Tueur de Wither"
+    description: "<texte>Vaincs <fort><amount></fort> Wither."
+    icon: WITHER_SKELETON_SKULL
+    xp: 4000
+    objective: {type: kill-mob, amount: 1, entities: [WITHER]}
+  champion-hebdo-bedwars:
+    pool: weekly
+    difficulty: extreme
+    name: "Série de victoires"
+    description: "<texte>Gagne <fort><amount></fort> parties de Bedwars."
+    icon: GOLDEN_HELMET
+    xp: 4000
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:win", amount: 10}
+  noctambule:
+    pool: weekly
+    difficulty: extreme
+    name: "Noctambule"
+    description: "<texte>Joue <fort><amount></fort> minutes cette semaine."
+    icon: RECOVERY_COMPASS
+    xp: 3500
+    objective: {type: playtime, amount: 600}
+
+  # ============================================================ SAISON
+  fidele-de-saison:
+    pool: season
+    difficulty: normal
+    name: "Fidèle de la saison"
+    description: "<texte>Connecte-toi <fort><amount></fort> jours pendant la saison."
+    icon: CAKE
+    xp: 3000
+    objective: {type: login, amount: 30}
+  collectionneur:
+    pool: season
+    difficulty: normal
+    name: "Collectionneur"
+    description: "<texte>Ouvre <fort><amount></fort> crates."
+    icon: CHEST
+    xp: 2500
+    servers: ["lobby"]
+    where: "Lobby"
+    objective: {type: custom, key: "crate:open", amount: 30}
+  champion-bedwars:
+    pool: season
+    difficulty: difficile
+    name: "Champion Bedwars"
+    description: "<texte>Gagne <fort><amount></fort> parties de Bedwars."
+    icon: RED_BED
+    xp: 4000
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:win", amount: 25}
+  briseur-de-lits:
+    pool: season
+    difficulty: difficile
+    name: "Briseur de lits"
+    description: "<texte>Casse <fort><amount></fort> lits ennemis."
+    icon: WOODEN_AXE
+    xp: 3500
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:bed_break", amount: 50}
+  explorateur:
+    pool: season
+    difficulty: difficile
+    name: "Explorateur"
+    description: "<texte>Parcours <fort><amount></fort> blocs à pied."
+    icon: FILLED_MAP
+    xp: 4000
+    objective: {type: walk, amount: 100000}
+  legende-bedwars:
+    pool: season
+    difficulty: extreme
+    name: "Légende du Bedwars"
+    description: "<texte>Gagne <fort><amount></fort> parties de Bedwars."
+    icon: NETHERITE_HELMET
+    xp: 8000
+    servers: ["bedwars*"]
+    where: "Bedwars"
+    objective: {type: custom, key: "bedwars:win", amount: 100}
+  veteran:
+    pool: season
+    difficulty: extreme
+    name: "Vétéran"
+    description: "<texte>Joue <fort><amount></fort> minutes pendant la saison."
+    icon: TOTEM_OF_UNDYING
+    xp: 8000
+    objective: {type: playtime, amount: 3000}
+  tueur-de-dragon:
+    pool: season
+    difficulty: extreme
+    name: "Tueur de dragon"
+    description: "<texte>Vaincs l'Ender Dragon."
+    icon: DRAGON_HEAD
+    xp: 6000
+    objective: {type: kill-mob, amount: 1, entities: [ENDER_DRAGON]}

@@ -151,7 +151,9 @@ export class OrdersService {
     });
     try {
       await this.prisma.$transaction([
-        this.prisma.license.create({ data: { userId: order.userId, licenseKey: created.key, orderId: order.id } }),
+        this.prisma.license.create({
+          data: { userId: order.userId, licenseKey: created.key, orderId: order.id, productId: order.productId },
+        }),
         this.prisma.order.update({ where: { id: order.id }, data: { status: 'LICENSED' } }),
       ]);
     } catch (error) {

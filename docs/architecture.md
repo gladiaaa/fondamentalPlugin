@@ -46,7 +46,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `licenses` | Client du serveur de licences (`LicenseServerClient` : `get`, `create`, `revoke`, `releaseActivation`) ; rattacher une clé existante, statut détaillé et installations | fait (#22, #45, #25) |
 | `orders` | `POST /api/checkout` (session Stripe Checkout), `GET /api/orders/by-session/:id`, `POST /api/stripe/webhook` (licence créée une seule fois, remboursement → révocation) | fait (#23, #24, #96, #99) ; **en service sur dev** (Stripe en mode test) ; prod : clés live et prix à configurer, voir [runbook.md](runbook.md) |
 | `support` | `POST /api/support` : formulaire de contact, e-mail transmis à l'équipe (`SUPPORT_EMAIL`, à confirmer) | fait (#81) |
-| `configs` | Générateur de `config.yml` réservé aux acheteurs | #30 |
+| `configs` | Générateur de configuration réservé aux acheteurs : schéma par fichier et par version (`configs/schemas/`), YAML livré avec le plugin comme base (`configs/templates/`, commentaires gardés), clé de licence pré-remplie, configurations enregistrées | API faite (#30) : config.yml des 4 plugins, `crates.yml`, `tags.yml`, `season.yml`, `quests.yml` |
 | OAuth (dans `auth`) | Connexion Microsoft, Discord, Google | #18 |
 | `admin` | Back-office : 2FA (TOTP) obligatoire, commandes (recherche, détail, remboursement, renvoi d'e-mail), licences (statut, révocation, recréation), produits (liste, prix, description, disponibilité), utilisateurs (recherche, détail, blocage, rôle), versions publiées (masquer, canal, changelog), tableau de bord (`/admin/stats`) et journal (`/admin/actions`). Toutes les actions sont journalisées (`admin_actions`). Hors `openapi.json` public | API faite (#32, #105) ; pages `/admin` : #106 |
 
@@ -65,7 +65,8 @@ Règles communes (détaillées dans [CLAUDE.md](../CLAUDE.md)) : entrées valid�
 | `licenses` | Clés rattachées à un compte (une seule ligne par clé, jamais deux comptes) ; `order_id` présent pour une clé créée par un achat |
 | `orders` | Commandes Stripe : statut (`pending` → `paid` → `licensed`/`refunded`), montant et devise au moment de l'achat |
 | `admin_actions` | Journal des actions sensibles du back-office (qui, quoi, quand) : remboursement, révocation, changement de prix… (#32) |
-| `saved_configs`, `oauth_accounts` | Configurations enregistrées (#30) et comptes tiers (#18) (à venir) |
+| `saved_configs` | Configurations enregistrées du générateur (#30) : plugin, version, fichier, valeurs du formulaire |
+| `oauth_accounts` | Comptes tiers (#18) (à venir) |
 
 Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiquement au déploiement. Elles doivent rester **compatibles avec la version précédente** de l'API (retour arrière automatique). Le catalogue est semé **dans une migration** : l'image de déploiement n'exécute que les migrations.
 

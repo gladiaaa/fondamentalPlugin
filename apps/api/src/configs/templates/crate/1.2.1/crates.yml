@@ -1,0 +1,468 @@
+# ============================================================
+#  FondamentalCrate - definition des crates
+#
+#  Placeholders utilisables dans les textes :
+#    <crate>   nom de la crate      <keys>    cles du joueur
+#    <player>  pseudo du joueur     <chance>  probabilite de la recompense
+#    <reward>  nom de la recompense
+#
+#  Par recompense (optionnel) :
+#    permission: "vip.gold"     # requis pour pouvoir tirer ce lot
+#    permission-negated: true   # au contraire, reserve a ceux qui NE l'ont PAS
+#    limit:                     # limites de gain (0 ou absent = illimite)
+#      global: 100              #   nb total de fois gagnable, tous joueurs confondus
+#      per-player: 1            #   nb de fois qu'un meme joueur peut le gagner
+#      # Un lot epuise est exclu du tirage et masque dans le menu "au choix".
+# ============================================================
+
+# Note : les lignes d'hologramme sont communes a tous les joueurs (une seule
+# entite dans le monde). N'y mets donc pas <keys>, qui est personnel : ce
+# compteur est disponible dans les messages, dans /crate keys, et via le
+# placeholder %fondamentalcrate_keys_<crate>% si PlaceholderAPI est installe.
+
+# Item custom (ItemsAdder / Oraxen / Nexo) : dans un 'display' ou une action
+# 'item', remplace/complete 'material' par :
+#     custom-item: "itemsadder:ruby"   # ou oraxen:<id>, nexo:<id>
+# Si le plugin n'est pas installe, on retombe sur 'material'.
+
+# Les raretes servent a colorer la bordure de la roulette, choisir le son
+# de gain et decider si la recompense est annoncee au serveur.
+rarities:
+  common:
+    display: "<gray>Commun"
+    color: GRAY_STAINED_GLASS_PANE
+    firework: "#AAAAAA"     # couleur des feux d'artifice (anim firework, Premium)
+    broadcast: false
+  rare:
+    display: "<aqua>Rare"
+    color: LIGHT_BLUE_STAINED_GLASS_PANE
+    firework: "#00BFFF"
+    broadcast: false
+  epic:
+    display: "<light_purple>Epique"
+    color: PURPLE_STAINED_GLASS_PANE
+    firework: "#AA00FF"
+    broadcast: true
+  legendary:
+    display: "<gradient:#FFD700:#FF8C00>Legendaire</gradient>"
+    color: ORANGE_STAINED_GLASS_PANE
+    firework: "#FFD700"
+    broadcast: true
+
+# Options facultatives par crate (a placer directement sous 'crates.<id>') :
+#   cooldown: 5          # delai mini entre deux ouvertures, en secondes (-1 = valeur globale)
+#   permission: "vip.vote"  # permission requise pour ouvrir cette crate (absent = aucune)
+#   max-bulk: 20         # nb max de cles ouvrables d'un coup en shift+clic droit (defaut 54)
+#   rewards-per-open: 3  # nb de lots gagnes en UNE ouverture (defaut 1, max 9)
+#   pity:                # pitie : garantit un lot rare apres N ouvertures sans
+#     threshold: 50      #   nb d'ouvertures sans lot de la rarete visee
+#     rarity: legendary  #   rarete garantie au seuil (doit exister dans la crate)
+#   cost: 500            # cout en argent (Vault) pour ouvrir la crate (0 = gratuit)
+#   keys-required: 3     # nombre de cles consommees par ouverture (1 par defaut)
+#   ambient-particle: FLAME   # particule affichee autour du bloc pose
+#   ambient-effect: helix     # forme animee : puff, halo, helix, vortex, fountain, spiral
+#   floating-item: NETHER_STAR  # objet 3D flottant au-dessus du bloc (defaut : la cle)
+#   double-or-nothing: true     # apres un gain simple, propose de miser le lot
+#   double-or-nothing-chance: 0.5  # probabilite de reussir un doublage (0.05 a 0.95)
+#   double-or-nothing-max: 8       # multiplicateur maximum atteignable
+#   milestones:          # paliers : lot bonus garanti a la Nieme ouverture
+#     '25':              #   au bout de 25 ouvertures cumulees par le joueur
+#       repeat: true     #   true = a chaque multiple (25, 50, 75...) ; false = une fois
+#       display: { material: DIAMOND_BLOCK, name: "<aqua>Recompense de fidelite" }
+#       actions:
+#         - { type: item, material: DIAMOND_BLOCK, amount: 4 }
+#   selection: true      # ouverture "au choix" : le joueur choisit lui-meme ses
+#                        #   lots dans un menu (sans hasard). Le nombre a choisir
+#                        #   est 'rewards-per-open'. (alias : open-type: selection)
+#   quad-themes: [ocean, end]  # (animation 'quad' seulement) restreint les themes
+#                        #   du decor tires au hasard. Themes : classic, nether,
+#                        #   ocean, soul, end, forest. Absent = les 6 au hasard.
+#
+crates:
+
+  # ----------------------------------------------------------
+  #  Crate Vote - animation roulette facon CS:GO
+  # ----------------------------------------------------------
+  vote:
+    display: "<gradient:#00FFFF:#1E90FF><bold>Crate Vote</bold></gradient>"
+    # animation : roulette | cascade | wheel (GUI, Free)
+    #             spiral | firework | tornado (3D, Premium)
+    animation: cascade
+    block: CHEST
+
+    hologram:
+      enabled: true
+      # Hauteur au-dessus du bloc, en blocs.
+      offset: 1.4
+      lines:
+        - "<gradient:#00FFFF:#1E90FF><bold>Crate Vote</bold></gradient>"
+        - "<gray>Clic droit <white>ouvrir</white> <dark_gray>|</dark_gray> <gray>Clic gauche <white>apercu</white>"
+
+    key:
+      material: TRIPWIRE_HOOK
+      name: "<gradient:#00FFFF:#1E90FF>Cle Vote</gradient>"
+      lore:
+        - "<dark_gray>Crate Vote"
+        - ""
+        - "<gray>Clic droit sur une <white>Crate Vote</white>"
+        - "<gray>pour l'ouvrir."
+      glow: true
+
+    preview:
+      title: "<dark_gray>Apercu <gray>|</gray> <white>Crate Vote"
+      rows: 3
+
+    rewards:
+
+      diamants:
+        weight: 35
+        rarity: common
+        display:
+          material: DIAMOND
+          amount: 8
+          name: "<aqua>8 Diamants"
+        actions:
+          - type: item
+            material: DIAMOND
+            amount: 8
+
+      xp:
+        weight: 30
+        rarity: common
+        display:
+          material: EXPERIENCE_BOTTLE
+          amount: 16
+          name: "<green>16 Bouteilles d'XP"
+        actions:
+          - type: item
+            material: EXPERIENCE_BOTTLE
+            amount: 16
+
+      pioche:
+        weight: 20
+        rarity: rare
+        display:
+          material: DIAMOND_PICKAXE
+          name: "<aqua>Pioche du mineur"
+          lore:
+            - "<gray>Efficacite V, Solidite III"
+        actions:
+          - type: item
+            material: DIAMOND_PICKAXE
+            name: "<aqua>Pioche du mineur"
+            enchants:
+              DIG_SPEED: 5
+              DURABILITY: 3
+
+      argent:
+        weight: 12
+        rarity: rare
+        display:
+          material: GOLD_INGOT
+          name: "<gold>5 000 pieces"
+        actions:
+          # 'as: console' execute la commande depuis la console du serveur.
+          - type: command
+            as: console
+            command: "eco give %player% 5000"
+          - type: message
+            message: "<gold>+5 000 pieces sur ton compte."
+
+      tag_frost:
+        weight: 3
+        rarity: legendary
+        display:
+          material: NAME_TAG
+          # <tag> affiche le rendu reel du tag (FondamentalTag).
+          name: "<white>Tag <tag>"
+          lore:
+            - "<gray>Un tag exclusif, debloque a vie."
+        actions:
+          # Donne le tag 'frost' de FondamentalTag, enregistre dans sa base.
+          # Sans 'rarity' sur le lot, la rarete du tag est reprise (config.yml > tagcustom).
+          # duration: 7d  -> tag temporaire (12h, 7d, 1d12h...) ; absent = permanent
+          - type: tag
+            tag: frost
+
+  # ----------------------------------------------------------
+  #  Crate Legendaire - animation spirale 3D dans le monde
+  # ----------------------------------------------------------
+  legendaire:
+    display: "<gradient:#FFD700:#FF8C00><bold>Crate Legendaire</bold></gradient>"
+    animation: spiral
+    block: ENDER_CHEST
+
+    hologram:
+      enabled: true
+      offset: 1.4
+      lines:
+        - "<gradient:#FFD700:#FF8C00><bold>Crate Legendaire</bold></gradient>"
+        - "<gray>Clic droit <white>ouvrir</white> <dark_gray>|</dark_gray> <gray>Clic gauche <white>apercu</white>"
+
+    key:
+      material: TRIPWIRE_HOOK
+      name: "<gradient:#FFD700:#FF8C00>Cle Legendaire</gradient>"
+      lore:
+        - "<dark_gray>Crate Legendaire"
+        - ""
+        - "<gray>Clic droit sur une <white>Crate Legendaire</white>"
+      glow: true
+      custom-model-data: 1001
+
+    preview:
+      title: "<dark_gray>Apercu <gray>|</gray> <white>Crate Legendaire"
+      rows: 3
+
+    rewards:
+
+      netherite:
+        weight: 40
+        rarity: rare
+        display:
+          material: NETHERITE_INGOT
+          amount: 2
+          name: "<red>2 Lingots de Netherite"
+        actions:
+          - type: item
+            material: NETHERITE_INGOT
+            amount: 2
+
+      elytra:
+        weight: 25
+        rarity: epic
+        display:
+          material: ELYTRA
+          name: "<light_purple>Elytra"
+          lore:
+            - "<gray>Solidite III"
+        actions:
+          - type: item
+            material: ELYTRA
+            enchants:
+              DURABILITY: 3
+
+      tag_galaxy:
+        weight: 20
+        rarity: legendary
+        display:
+          material: NAME_TAG
+          name: "<white>Tag <tag>"
+          lore:
+            - "<gray>Le tag le plus rare du serveur."
+        actions:
+          - type: tag
+            tag: galaxy
+
+      tag_king:
+        weight: 15
+        rarity: legendary
+        display:
+          material: GOLDEN_HELMET
+          name: "<white>Tag <tag>"
+        actions:
+          - type: tag
+            tag: king
+          - type: command
+            as: console
+            command: "eco give %player% 10000"
+
+  # ----------------------------------------------------------
+  #  Crate Mythique - animation firework 3D (PREMIUM)
+  #  En edition Free : ignoree (quota de 2 crates) ; si elle
+  #  passait le quota, son animation retomberait sur roulette.
+  # ----------------------------------------------------------
+  mythic:
+    display: "<gradient:#FF00CC:#8000FF><bold>Crate Mythique</bold></gradient>"
+    animation: firework
+    block: ENDER_CHEST
+    pity:
+      threshold: 10
+      rarity: legendary
+
+    hologram:
+      enabled: true
+      offset: 1.4
+      lines:
+        - "<gradient:#FF00CC:#8000FF><bold>Crate Mythique</bold></gradient>"
+        - "<gray>Clic droit <white>ouvrir</white> <dark_gray>|</dark_gray> <gray>Clic gauche <white>apercu</white>"
+
+    key:
+      material: TRIPWIRE_HOOK
+      name: "<gradient:#FF00CC:#8000FF>Cle Mythique</gradient>"
+      lore:
+        - "<dark_gray>Crate Mythique"
+      glow: true
+      custom-model-data: 1002
+
+    preview:
+      title: "<dark_gray>Apercu <gray>|</gray> <white>Crate Mythique"
+      rows: 3
+
+    rewards:
+      etoiles:
+        weight: 50
+        rarity: epic
+        display:
+          material: NETHER_STAR
+          name: "<light_purple>Etoile du Nether"
+        actions:
+          - type: item
+            material: NETHER_STAR
+
+      tag_rainbow:
+        weight: 30
+        rarity: legendary
+        display:
+          material: NAME_TAG
+          name: "<white>Tag <tag>"
+        actions:
+          - type: tag
+            tag: rainbow
+
+      tag_queen:
+        weight: 20
+        rarity: legendary
+        display:
+          material: NAME_TAG
+          name: "<white>Tag <tag>"
+        actions:
+          - type: tag
+            tag: queen
+
+  # ----------------------------------------------------------
+  #  Crate Tempete - animation tornado 3D (PREMIUM)
+  # ----------------------------------------------------------
+  storm:
+    display: "<gradient:#00E5FF:#0055FF><bold>Crate Tempete</bold></gradient>"
+    animation: tornado
+    block: CHEST
+
+    hologram:
+      enabled: true
+      offset: 1.4
+      lines:
+        - "<gradient:#00E5FF:#0055FF><bold>Crate Tempete</bold></gradient>"
+        - "<gray>Clic droit <white>ouvrir</white> <dark_gray>|</dark_gray> <gray>Clic gauche <white>apercu</white>"
+
+    key:
+      material: TRIPWIRE_HOOK
+      name: "<gradient:#00E5FF:#0055FF>Cle Tempete</gradient>"
+      lore:
+        - "<dark_gray>Crate Tempete"
+      glow: true
+
+    preview:
+      title: "<dark_gray>Apercu <gray>|</gray> <white>Crate Tempete"
+      rows: 3
+
+    rewards:
+      diamants:
+        weight: 55
+        rarity: rare
+        display:
+          material: DIAMOND
+          amount: 16
+          name: "<aqua>16 Diamants"
+        actions:
+          - type: item
+            material: DIAMOND
+            amount: 16
+
+      tag_thunder:
+        weight: 30
+        rarity: epic
+        display:
+          material: NAME_TAG
+          name: "<white>Tag <tag>"
+        actions:
+          - type: tag
+            tag: thunder
+
+      tag_galaxy:
+        weight: 15
+        rarity: legendary
+        display:
+          material: NAME_TAG
+          name: "<white>Tag <tag>"
+        actions:
+          - type: tag
+            tag: galaxy
+
+  # ----------------------------------------------------------
+  #  Crate au Choix - le joueur selectionne ses lots (sans hasard)
+  #  'selection: true' + 'rewards-per-open' = nombre a choisir.
+  #  Les poids/raretes ne servent qu'a l'affichage (tri, couleur).
+  # ----------------------------------------------------------
+  choix:
+    display: "<gradient:#7CFC00:#00B140><bold>Crate au Choix</bold></gradient>"
+    selection: true
+    rewards-per-open: 2
+    block: CHEST
+
+    hologram:
+      enabled: true
+      offset: 1.4
+      lines:
+        - "<gradient:#7CFC00:#00B140><bold>Crate au Choix</bold></gradient>"
+        - "<gray>Clic droit <white>choisir tes lots</white>"
+
+    key:
+      material: TRIPWIRE_HOOK
+      name: "<gradient:#7CFC00:#00B140>Cle au Choix</gradient>"
+      lore:
+        - "<dark_gray>Crate au Choix"
+        - ""
+        - "<gray>Choisis toi-meme tes recompenses."
+      glow: true
+
+    preview:
+      title: "<dark_gray>Apercu <gray>|</gray> <white>Crate au Choix"
+      rows: 3
+
+    rewards:
+      diamants:
+        weight: 40
+        rarity: common
+        display:
+          material: DIAMOND
+          amount: 16
+          name: "<aqua>16 Diamants"
+        actions:
+          - type: item
+            material: DIAMOND
+            amount: 16
+
+      netherite:
+        weight: 30
+        rarity: rare
+        display:
+          material: NETHERITE_INGOT
+          amount: 1
+          name: "<red>1 Lingot de Netherite"
+        actions:
+          - type: item
+            material: NETHERITE_INGOT
+            amount: 1
+
+      totem:
+        weight: 20
+        rarity: epic
+        display:
+          material: TOTEM_OF_UNDYING
+          name: "<light_purple>Totem d'immortalite"
+        actions:
+          - type: item
+            material: TOTEM_OF_UNDYING
+
+      argent:
+        weight: 10
+        rarity: rare
+        display:
+          material: GOLD_INGOT
+          name: "<gold>10 000 pieces"
+        actions:
+          - type: command
+            as: console
+            command: "eco give %player% 10000"
+          - type: message
+            message: "<gold>+10 000 pieces sur ton compte."

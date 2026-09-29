@@ -139,6 +139,22 @@ Le paiement est confirmé par un webhook côté serveur (`/api/stripe/webhook`, 
 
 **Utilisable sur dev** (Stripe en mode test, carte `4242 4242 4242 4242`) depuis #101 : bouton `features/checkout/BuyButton`, page `/merci`. **Pas encore en prod** : `POST /checkout` y répond `503 PAYMENT_UNAVAILABLE` tant que les clés Stripe live et les prix ne sont pas configurés.
 
+### Générateur de configuration : `/configs`, `/me/configs` (#30)
+
+| Route | Accès | Corps | Réponse |
+|---|---|---|---|
+| `GET /configs/:slug` | public | (vide) | `200` : `{ slug, versions: [{ version, files: [{ file, label, description }] }] }`, la version la plus récente en premier ; `404 CONFIG_NOT_FOUND` |
+| `GET /configs/:slug/:version/:file` | public | (vide) | `200` : `{ slug, version, file, label, description, fields, defaults }` : le schéma du formulaire (`ConfigField` dans `@fondamental/shared`) et les valeurs livrées avec le plugin ; `404 CONFIG_NOT_FOUND` |
+| `POST /me/configs/render` | session | `{ slug, version, file, values }` | `200` : `{ file, yaml }`, le fichier complet avec `license.key` = la clé de l'acheteur ; `400 CONFIG_INVALID` (un texte par champ dans `message`) ; `403 CONFIG_NOT_BUYER` sans licence de ce plugin |
+| `GET /me/configs` | session | (vide) | `200` : configurations enregistrées `{ id, name, slug, version, file, values, createdAt, updatedAt }[]` |
+| `POST /me/configs` | session | `{ slug, version, file, name, values }` | `201` : la configuration ; `400 CONFIG_INVALID` / `CONFIG_LIMIT` (50 par compte) ; `403 CONFIG_NOT_BUYER` |
+| `GET /me/configs/:id` | session | (vide) | `200` ; `404 CONFIG_NOT_FOUND` (inconnue **ou d'un autre compte**) |
+| `PATCH /me/configs/:id` | session | `{ name, values }` | `200` ; mêmes erreurs |
+| `DELETE /me/configs/:id` | session | (vide) | `204` ; `404 CONFIG_NOT_FOUND` |
+| `POST /me/configs/:id/upgrade` | session | `{ version }` | `200` : les valeurs encore valides pour la nouvelle version sont gardées |
+
+**Principe** : chaque fichier part du YAML livré avec la version du plugin. `values` n'a pas besoin d'être complet : un champ absent garde la valeur livrée, et tout ce qui n'est pas dans le schéma (commentaires compris) reste tel quel dans le fichier généré. Une entrée nommée (une crate, un tag, un palier…) ou une liste se remplace en entier. Rendu à la demande, pour l'aperçu comme pour le téléchargement : la clé n'est jamais stockée dans les configurations enregistrées.
+
 ### Contact : `/support` (#81)
 
 | Route | Accès | Corps | Réponse |
@@ -178,12 +194,6 @@ Les autres codes n'ont pas de `code` : afficher `message`. Quand un `401` arrive
 Chaque groupe a une issue GitHub : les détails et décisions y sont.
 
 Achat (#23, #24) et espace client détaillé (#25) : maintenant dans la section 4 (`## 4. Routes disponibles`), ce sont de vraies routes.
-
-### Générateur de configuration (#30), acheteurs uniquement
-- `GET /configs/:slug/:version/files` : fichiers configurables (ex. `crates.yml`, `tags.yml`, `season.yml`, `quests.yml`).
-- `GET /configs/:slug/:version/:file/schema?minecraft=1.21.4` : schéma de formulaire (libellés, valeurs par défaut, options `premium`).
-- `GET/POST/PUT/DELETE /me/configs` : configurations enregistrées (plugin, version, fichier, nom, valeurs).
-- `POST /me/configs/:id/render` : renvoie le YAML à télécharger, avec `license.key` pré-remplie. Non-acheteur : `403`.
 
 ### Connexion OAuth (#18)
 - `GET /auth/oauth/:provider` (`microsoft`, `discord`, `google`) : redirection vers le fournisseur ; retour sur `GET /auth/oauth/:provider/callback` qui ouvre la session et redirige vers le site. Boutons « Continuer avec … » à prévoir, en plus du formulaire e-mail.

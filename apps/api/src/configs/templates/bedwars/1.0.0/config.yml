@@ -1,0 +1,201 @@
+# Licence en ligne — détermine automatiquement l'édition (FREE ou PREMIUM).
+license:
+  key: ""                  # clé fournie à l'achat. Vide = édition FREE, aucun appel réseau.
+  check-interval-hours: 6   # fréquence de revalidation auprès du serveur de licences
+  grace-hours: 72           # tolérance hors-ligne avant repli sur FREE si le serveur ne répond plus
+
+# Temps avant le démarrage de la partie (en secondes)
+countdown: 30
+
+# Nombre minimum de joueurs pour démarrer
+min-players: 2
+
+# Matchmaking (files d'attente) — démarrage souple
+matchmaking:
+  countdown: 30      # secondes avant lancement une fois la file lancée
+  min-players: 2     # joueurs requis pour démarrer le compte à rebours
+
+# Équilibrage
+balance:
+  # Délai (secondes) avant de pouvoir reboire une potion du même type. 0 = désactivé.
+  potion-cooldown-seconds: 30
+
+# Nombre maximum de joueurs par équipe
+max-players-per-team: 4
+
+# Options de partie
+game:
+  # Délai (secondes) pendant lequel un joueur déconnecté peut revenir dans sa partie
+  rejoin-grace: 120
+
+# Nombre maximum d'instances simultanées par arène
+max-instances-per-arena: 5
+
+# Intervalles des générateurs (en ticks, 20 ticks = 1 seconde)
+generators:
+  iron: 20        # 1s
+  gold: 60        # 3s
+  diamond: 1200   # 60s
+  emerald: 2400   # 120s
+
+# Hologrammes au-dessus des générateurs
+holograms:
+  enabled: true
+  use-text-display: false
+
+# Configuration BungeeCord
+bungee:
+  # true  = renvoie vers le serveur lobby BungeeCord en fin de partie
+  # false = téléporte au spawn du serveur bedwars (recommandé)
+  send-to-lobby: false
+  lobby-server: lobby
+
+# Matchmaking
+matchmaking:
+  # Durée du compte à rebours avant lancement (secondes)
+  countdown: 30
+  # Nombre minimum de joueurs pour démarrer le countdown
+  min-players-to-start: 2
+
+# Base de données MySQL (stats joueurs) — pool de connexions HikariCP
+database:
+  # false = désactive complètement la persistance des stats (aucune connexion MySQL)
+  enabled: true
+  host: localhost
+  port: 3306
+  name: bedwars
+  username: bedwars
+  password: change-me
+
+# Timeline d'événements (temps en secondes depuis le début de la partie, façon Hypixel)
+events:
+  diamond_ii: 360        # 6:00  — générateurs de diamant accélérés
+  emerald_ii: 720        # 12:00 — générateurs d'émeraude accélérés
+  diamond_iii: 1080      # 18:00
+  emerald_iii: 1440      # 24:00
+  bed_destruction: 1800  # 30:00 — tous les lits sont détruits
+  sudden_death: 2100     # 35:00 — mort subite
+  game_end: 2400         # 40:00 — fin forcée
+
+# Scoreboard
+scoreboard:
+  # Pied de page affiché en bas des scoreboards (couleurs avec &)
+  footer: "&aFondamentalBedwars"
+
+# Gains de coins en jeu (monnaie cosmétique, stockée en meta LuckPerms partagée réseau)
+coins:
+  kill: 10
+  final-kill: 25
+  bed: 30
+  win: 100
+  play: 15        # participation, crédité à tous en fin de partie
+
+# Rang Bedwars ([Fer], [Or]...) ajouté en suffixe LuckPerms, affiché en chat et en tab.
+#   scope = server : uniquement sur ce serveur. Nécessite un nom de serveur dans la
+#           config de LuckPerms (server: "bedwars" au lieu de "global").
+#   scope = global : sur tous les serveurs qui partagent la base LuckPerms (lobby compris).
+rank-suffix:
+  enabled: true
+  scope: server
+
+# Apparence des PNJ marchands (mob choisi par joueur en cosmétique, nécessite ProtocolLib)
+npc-skins:
+  enabled: true
+
+# Resource pack (cosmétiques). Envoyé au joueur à la connexion.
+#   url   = URL publique directe du .zip (héberge-le où tu veux)
+#   sha1  = hash SHA-1 hexadécimal du .zip (40 caractères) — vivement recommandé pour le cache client
+#   force = true : le pack est obligatoire côté client
+resource-pack:
+  enabled: false
+  url: ""
+  sha1: ""
+  force: false
+  kick-on-decline: false
+  prompt: "&bPack de textures FondamentalBedwars"
+
+# Effondrement de l'île à l'élimination d'une équipe (façon Hypixel : l'île se fige)
+island-collapse:
+  enabled: true
+  style: random          # ice | scorch | obsidian | crumble | random
+  radius: 8              # rayon autour du spawn de l'équipe
+  depth: 4               # profondeur figée sous le spawn
+  height: 3              # hauteur figée au-dessus du spawn
+  blocks-per-tick: 25    # vitesse de la vague de gel
+
+# Messages de jeu à thèmes.
+#   theme  = thème actif (doit exister dans themes:)
+#   Chaque clé accepte plusieurs variantes (une est tirée au hasard).
+#   Placeholders : {victim} {killer} {breaker} {team}
+#   Couleurs avec &. Le proprio peut ajouter ses propres thèmes.
+messages:
+  theme: classic
+  themes:
+    classic:
+      killed:
+        - "{victim} &7a été tué par {killer}"
+      void:
+        - "{victim} &7est tombé dans le vide"
+      death:
+        - "{victim} &7est mort"
+      bed-broken:
+        - "&6★ {breaker} &7a détruit le lit de l'équipe {team}&7 !"
+      elimination:
+        - "&c☠ L'équipe {team} &7a été éliminée !"
+      final-kill-tag: "&c&lKILL FINAL"
+    savage:
+      killed:
+        - "{killer} &7a envoyé {victim} &7six pieds sous terre"
+        - "{victim} &7n'a pas fait le poids face à {killer}"
+        - "{killer} &7a démonté {victim}"
+      void:
+        - "{victim} &7a découvert le vide de trop près"
+        - "{victim} &7s'est jeté dans l'abîme"
+      death:
+        - "{victim} &7a rendu l'âme"
+        - "{victim} &7n'a pas survécu"
+      bed-broken:
+        - "&6★ {breaker} &7a réduit en miettes le lit {team}&7 !"
+      elimination:
+        - "&c☠ {team} &7ne se relèvera pas. Éliminée !"
+      final-kill-tag: "&4&lELIMINÉ"
+    fun:
+      killed:
+        - "{killer} &7a fait un câlin mortel à {victim}"
+        - "{victim} &7a été chatouillé à mort par {killer}"
+      void:
+        - "{victim} &7teste la gravité... échec"
+      death:
+        - "{victim} &7a pris une pause définitive"
+      bed-broken:
+        - "&6★ {breaker} &7a fait un gros dodo au lit {team}&7 !"
+      elimination:
+        - "&c☠ Bye bye l'équipe {team} &7!"
+      final-kill-tag: "&d&lFINITO"
+    ecureuil:
+      killed:
+        - "&6🐿 {killer} &7a enterré {victim} &7sous un tas de noisettes"
+        - "&6🐿 {victim} &7s'est fait grignoter par {killer}"
+      void:
+        - "&6🐿 {victim} &7est tombé du grand chêne"
+      death:
+        - "&6🐿 {victim} &7a fini en réserve pour l'hiver"
+      bed-broken:
+        - "&6🐿 {breaker} &7a grignoté les pieds du lit de l'équipe {team}&7 et l'a détruit !"
+      elimination:
+        - "&6🐿 &7L'équipe {team} &7a été chassée de la forêt !"
+      final-kill-tag: "&6&lCROC FINAL"
+
+# Couleurs des messages (chat et console) : utilisées par messages.yml via les balises
+# <texte>, <fort>, <accent>, <discret>, <ok>, <erreur>, <alerte>, <info> et <degrade>.
+# Par défaut : charte Fondamental. Les couleurs d'équipe restent celles du jeu.
+colors:
+  texte: "#9A90B3"             # texte courant
+  fort: "#F0ECF8"              # noms, nombres, valeurs
+  accent: "#B7A0FF"            # actions, annonces, commandes
+  discret: "#6A5D94"           # séparateurs
+  ok: "#7ED6A0"                # succès
+  erreur: "#F07A7A"            # erreur
+  alerte: "#F0C36A"            # avertissement
+  info: "#8FB8FF"              # information
+  degrade: ["#B7A0FF", "#6A5D94"]  # préfixe [FBedwars]

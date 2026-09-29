@@ -58,6 +58,7 @@ model User {
   emailTokens EmailToken[]
   licenses License[]
   orders Order[]
+  savedConfigs SavedConfig[]
   adminActions AdminAction[]
 
   @@map("users")
@@ -132,9 +133,14 @@ model License {
   /// Vide pour une clé rattachée à la main (#45). Présent pour une clé créée par un achat (#24).
   orderId String? @unique @map("order_id") @db.Uuid
   order Order? @relation(fields: [orderId], references: [id])
+  /// Plugin de la clé (#30) : connu à l'achat, lu sur le serveur de licences au rattachement. Vide pour
+  /// une clé rattachée avant cette colonne, complété à la première demande du générateur.
+  productId String? @map("product_id") @db.Uuid
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   claimedAt DateTime @default(now()) @map("claimed_at")
 
   @@index([userId])
+  @@index([productId])
   @@map("licenses")
 }
 
@@ -175,6 +181,7 @@ model Product {
 
   releases Release[]
   orders Order[]
+  licenses License[]
 
   @@map("products")
 }
@@ -294,4 +301,25 @@ model ReleaseFile {
   @@unique([releaseId, fileName])
   @@index([releaseId])
   @@map("release_files")
+}
+
+// ─── Générateur de configuration (#30) ──────────────────────────
+
+/// Une configuration enregistrée par un acheteur : les valeurs du formulaire d'un fichier d'un plugin.
+model SavedConfig {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String
+  /// Plugin (`Product.slug`), version et fichier : voir `configs/config-registry.ts`.
+  productSlug String @map("product_slug")
+  version String
+  file String
+  /// Valeurs du formulaire, dans la forme du YAML.
+  values Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("saved_configs")
 }
