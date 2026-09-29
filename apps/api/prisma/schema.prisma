@@ -126,8 +126,9 @@ model EmailToken {
 /// clés créées à la main, ou clé créée par un achat : voir `orderId`).
 model License {
   id String @id @default(uuid()) @db.Uuid
-  userId String @map("user_id") @db.Uuid
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// `null` : compte supprimé. La ligne reste, pour qu'un remboursement ultérieur révoque encore la clé.
+  userId String? @map("user_id") @db.Uuid
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   /// Clé telle que sur le serveur de licences. Une seule ligne par clé : jamais rattachée à deux comptes.
   licenseKey String @unique @map("license_key")
   /// Vide pour une clé rattachée à la main (#45). Présent pour une clé créée par un achat (#24).
@@ -202,10 +203,10 @@ enum OrderStatus {
 /// jamais donner deux licences, même si Stripe rejoue son webhook (#24).
 model Order {
   id String @id @default(uuid()) @db.Uuid
-  userId String @map("user_id") @db.Uuid
-  /// Restrict : une commande ne disparaît jamais avec le compte (obligation comptable). La suppression
-  /// de compte (RGPD) devra anonymiser ses commandes plutôt que les supprimer — pas encore fait.
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// `null` : compte supprimé (RGPD). La commande reste, sans lien avec personne (obligation comptable :
+  /// les factures sont chez Stripe, conservées 10 ans).
+  userId String? @map("user_id") @db.Uuid
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   productId String @map("product_id") @db.Uuid
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
   stripeCheckoutSessionId String @unique @map("stripe_checkout_session_id")

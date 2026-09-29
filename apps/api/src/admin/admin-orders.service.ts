@@ -17,13 +17,13 @@ function toSummary(order: {
   currency: string;
   createdAt: Date;
   product: { slug: string };
-  user: { email: string };
+  user: { email: string } | null;
 }): AdminOrderSummary {
   return {
     id: order.id,
     status: order.status,
     productSlug: order.product.slug,
-    userEmail: order.user.email,
+    userEmail: order.user?.email ?? null,
     amountCents: order.amountCents,
     currency: order.currency,
     createdAt: order.createdAt.toISOString(),
@@ -79,6 +79,7 @@ export class AdminOrdersService {
     });
     if (!order) throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: MESSAGES.orderNotFound });
     if (!order.license) throw new BadRequestException(MESSAGES.noLicenseYet);
+    if (!order.user) throw new BadRequestException(MESSAGES.accountDeleted);
     if (!this.mailer.isConfigured) throw new ServiceUnavailableException(MESSAGES.mailUnavailable);
 
     const locale: MailLocale = order.user.locale === 'EN' ? 'en' : 'fr';

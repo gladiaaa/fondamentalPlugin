@@ -19,6 +19,7 @@ export const MESSAGES = {
   licenseNoOrder: "Cette licence n'est pas liée à une commande : impossible de la recréer.",
   mailUnavailable: 'Envoi des e-mails momentanément indisponible. Réessayez plus tard.',
   noLicenseYet: "Cette commande n'a pas encore de licence.",
+  accountDeleted: "Le compte de cette commande a été supprimé : plus d'adresse à laquelle écrire.",
   productNotFound: 'Produit introuvable.',
   userNotFound: 'Compte introuvable.',
   cannotModifySelf: 'Vous ne pouvez ni bloquer votre propre compte ni changer votre propre rôle.',

@@ -270,7 +270,8 @@ export interface AdminOrderSummary {
   id: string;
   status: OrderStatus;
   productSlug: string;
-  userEmail: string;
+  /** `null` : compte supprimé depuis la commande. */
+  userEmail: string | null;
   amountCents: number;
   currency: string;
   createdAt: string;
@@ -278,7 +279,7 @@ export interface AdminOrderSummary {
 
 /** `GET /api/admin/orders/:id` : le détail d'une commande. */
 export interface AdminOrderDetail extends AdminOrderSummary {
-  userId: string;
+  userId: string | null;
   stripeCheckoutSessionId: string;
   stripePaymentIntentId: string | null;
   licenseKey: string | null;

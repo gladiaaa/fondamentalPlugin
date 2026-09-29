@@ -160,6 +160,39 @@ describe('Mes données : export et suppression du compte (e2e)', () => {
       expect(mails[0]!.subject).toContain('supprimé');
     });
 
+    it('garde les commandes et licences d’un acheteur, détachées du compte', async () => {
+      await createVerifiedUser();
+      const { b, csrf } = await loginBrowser();
+      const user = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
+      const product = await prisma.product.findFirstOrThrow();
+      const order = await prisma.order.create({
+        data: {
+          userId: user.id,
+          productId: product.id,
+          stripeCheckoutSessionId: `cs_e2e_${randomUUID()}`,
+          stripePaymentIntentId: `pi_e2e_${randomUUID()}`,
+          amountCents: 999,
+          currency: 'eur',
+          status: 'LICENSED',
+        },
+      });
+      const license = await prisma.license.create({
+        data: { userId: user.id, licenseKey: `E2E-${randomUUID()}`, orderId: order.id, productId: product.id },
+      });
+
+      try {
+        await b.delete('/api/me', { password: STRONG_PASSWORD }, { csrf }).expect(204);
+
+        expect(await userCount(EMAIL)).toBe(0);
+        // Obligation comptable et révocation possible en cas de remboursement : rien n'est effacé.
+        expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).userId).toBeNull();
+        expect((await prisma.license.findUniqueOrThrow({ where: { id: license.id } })).userId).toBeNull();
+      } finally {
+        await prisma.license.deleteMany({ where: { id: license.id } });
+        await prisma.order.deleteMany({ where: { id: order.id } });
+      }
+    });
+
     it('ne touche pas aux autres comptes', async () => {
       await createVerifiedUser();
       await createVerifiedUser(OTHER_EMAIL, OTHER_PASSWORD);

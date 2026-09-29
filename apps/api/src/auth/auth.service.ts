@@ -256,8 +256,9 @@ export class AuthService {
    * Supprime le compte et tout ce qui s'y rattache (sessions, liens en attente). Le mot de passe est redemandé :
    * une session volée ne suffit pas à détruire un compte. Les échecs comptent comme à la connexion (blocage).
    *
-   * Quand les commandes existeront (#23), elles seront **anonymisées et conservées** (obligation comptable) dans
-   * la même transaction, et les licences resteront valides.
+   * Les commandes et les licences restent, **détachées du compte** (clé étrangère `ON DELETE SET NULL`) :
+   * obligation comptable pour les unes, révocation possible en cas de remboursement pour les autres. Les
+   * clés restent valides dans les plugins.
    */
   async deleteAccount(user: User, password: string): Promise<void> {
     if (!user.passwordHash) throw new BadRequestException({ code: 'NO_PASSWORD', message: MESSAGES.noPassword });
