@@ -40,7 +40,7 @@ Un module par domaine, branché dans `app.module.ts`. Les routes sont toutes sou
 | `auth` | Comptes : inscription, confirmation d'e-mail, connexion, mot de passe oublié, sessions, protections (CSRF, blocage, limites) ; export et suppression du compte (RGPD) ; nettoyage horaire des sessions et liens expirés | fait |
 | `catalog` | `GET /api/products` : les plugins, leurs prérequis et leur prix | fait |
 | `releases` | Versions et jars : liste par version de Minecraft, téléchargement public, publication par la CI (`/api/admin/releases`) | fait |
-| `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests), bilingues FR/EN (langue choisie à l'inscription) | fait ; modèles React Email soignés et e-mails de commande (reçu, remboursement) : suite de #26 |
+| `mail` | Envoi d'e-mails derrière une abstraction `Mailer` (Resend en ligne, journal en local, boîte en mémoire dans les tests), bilingues FR/EN (langue choisie à l'inscription) | fait (#26) : chaque e-mail part en HTML (gabarit `mail/layout.ts`, données échappées) et en texte brut ; reçu avec la clé après paiement, e-mail de remboursement. Un envoi raté ne bloque jamais la licence (renvoi possible depuis `/admin`) |
 | `prisma` | Accès à la base | fait |
 | `common`, `config` | Documentation OpenAPI partagée, variables d'environnement validées au démarrage, logs, erreurs inattendues remontées à Sentry | fait |
 | `licenses` | Client du serveur de licences (`LicenseServerClient` : `get`, `create`, `revoke`, `releaseActivation`) ; rattacher une clé existante, statut détaillé et installations | fait (#22, #45, #25) |
@@ -92,7 +92,7 @@ Les migrations sont dans `apps/api/prisma/migrations`, appliquées automatiqueme
    (paid, ou no_payment_required avec un code promo à 100 %) :
      commande → paid (déjà « licensed » : on répond 200 sans rien faire)
      POST /api/v1/admin/licenses sur le serveur de licences → clé
-     commande → licensed (l'e-mail avec la clé viendra avec la suite de #26)
+     commande → licensed, e-mail au client avec la clé (#26 ; un échec d'envoi ne bloque rien)
    serveur de licences indisponible : réponse 500, Stripe réessaie, aucune clé en double
    paiement différé (SEPA, virement) : completed arrive unpaid (rien n'est livré),
      puis async_payment_succeeded livre ; async_payment_failed : commande laissée pending

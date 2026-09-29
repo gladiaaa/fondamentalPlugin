@@ -2,6 +2,8 @@ export interface MailMessage {
   to: string;
   subject: string;
   text: string;
+  /** Version HTML (#26), envoyée avec le texte brut quand elle existe. */
+  html?: string;
 }
 
 /**
