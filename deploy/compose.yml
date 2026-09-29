@@ -67,7 +67,7 @@ services:
     # et les migrations joignent la base.
     networks: [db]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fondamental -d fondamental"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U fondamental -d fondamental"]
       interval: 5s
       timeout: 3s
       retries: 20
