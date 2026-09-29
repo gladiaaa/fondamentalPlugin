@@ -183,8 +183,13 @@ export interface ReleaseFileResponse {
 
 // ─── Licences ───────────────────────────────────────────────────
 
-/** Une licence rattachée au compte (`GET /api/me/licenses`). Son statut détaillé : `GET /api/me/licences/:key`. */
+/** Une licence rattachée au compte (`GET /api/me/licenses`). Son statut détaillé : `GET /api/me/licenses/:id`. */
 export interface OwnedLicenseResponse {
+  /**
+   * Identifiant interne, à mettre dans les URL (`/compte/licences/:id`, `/api/me/licenses/:id`) à la
+   * place de la clé : une clé dans une URL finit dans l'historique, les journaux et l'en-tête Referer (#91).
+   */
+  id: string;
   /** Clé de licence, propre au titulaire du compte : jamais affichée à quelqu'un d'autre. */
   key: string;
   /** Date ISO 8601 du rattachement (pas forcément celle de l'achat). */
@@ -193,7 +198,7 @@ export interface OwnedLicenseResponse {
 
 /**
  * Une installation (un serveur Minecraft) qui consomme une activation de la licence.
- * `installationId` : à repasser tel quel à `DELETE /api/me/licenses/:key/activations/:installationId`
+ * `installationId` : à repasser tel quel à `DELETE /api/me/licenses/:id/activations/:installationId`
  * pour la libérer.
  */
 export interface LicenseActivation {
@@ -203,8 +208,10 @@ export interface LicenseActivation {
   lastSeenAt: string;
 }
 
-/** Statut détaillé d'une licence (`GET /api/me/licenses/:key`), #25. */
+/** Statut détaillé d'une licence (`GET /api/me/licenses/:id`), #25. */
 export interface LicenseDetailResponse extends OwnedLicenseResponse {
+  /** Plugin de la boutique correspondant à la clé ; `null` si aucun produit du catalogue ne lui correspond. */
+  product: { slug: string; name: string } | null;
   edition: string;
   revoked: boolean;
   /** Date ISO 8601, ou `null` : licence sans limite de durée. */
@@ -270,7 +277,7 @@ export interface AdminOrderDetail extends AdminOrderSummary {
   licenseKey: string | null;
 }
 
-/** `GET /api/admin/licenses/:key` : vue admin, sans filtre par compte (contrairement à `/me/licenses/:key`). */
+/** `GET /api/admin/licenses/:key` : vue admin, sans filtre par compte (contrairement à `/me/licenses/:id`). */
 export interface AdminLicenseResponse {
   key: string;
   edition: string;

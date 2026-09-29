@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import type { LicenseActivation, LicenseDetailResponse, OwnedLicenseResponse } from '@fondamental/shared';
 
 export class OwnedLicenseApiResponse implements OwnedLicenseResponse {
+  @ApiProperty({ type: String, format: 'uuid', description: 'À mettre dans les URL à la place de la clé (#91).' })
+  id!: string;
+
   @ApiProperty({ type: String })
   key!: string;
 
@@ -10,7 +13,7 @@ export class OwnedLicenseApiResponse implements OwnedLicenseResponse {
 }
 
 export class LicenseActivationApiResponse implements LicenseActivation {
-  @ApiProperty({ type: String, description: 'À repasser à DELETE /me/licenses/:key/activations/:installationId.' })
+  @ApiProperty({ type: String, description: 'À repasser à DELETE /me/licenses/:id/activations/:installationId.' })
   installationId!: string;
 
   @ApiProperty({ type: String, format: 'date-time' })
@@ -20,7 +23,22 @@ export class LicenseActivationApiResponse implements LicenseActivation {
   lastSeenAt!: string;
 }
 
+export class LicenseProductApiResponse {
+  @ApiProperty({ type: String })
+  slug!: string;
+
+  @ApiProperty({ type: String })
+  name!: string;
+}
+
 export class LicenseDetailApiResponse extends OwnedLicenseApiResponse implements LicenseDetailResponse {
+  @ApiProperty({
+    type: LicenseProductApiResponse,
+    nullable: true,
+    description: 'Vide si aucun plugin du catalogue ne correspond à la clé.',
+  })
+  product!: { slug: string; name: string } | null;
+
   @ApiProperty({ type: String })
   edition!: string;
 

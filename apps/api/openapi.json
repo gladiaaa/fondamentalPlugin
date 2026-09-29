@@ -1066,7 +1066,7 @@
     },
     "/api/me/licenses": {
       "get": {
-        "description": "Les clés rattachées au compte. Statut détaillé et installations : `GET /me/licenses/:key`.",
+        "description": "Les clés rattachées au compte. Statut détaillé et installations : `GET /me/licenses/:id`.",
         "operationId": "LicensesController_list",
         "parameters": [],
         "responses": {
@@ -1118,13 +1118,13 @@
         ]
       }
     },
-    "/api/me/licenses/{key}": {
+    "/api/me/licenses/{id}": {
       "get": {
-        "description": "Édition, révocation et installations actives. Une clé qui ne vous appartient pas répond la **même erreur** (404) qu'une clé inconnue.",
+        "description": "Édition, révocation et installations actives. `:id` est l'identifiant interne donné par `GET /me/licenses`, jamais la clé (#91). Une licence d'un autre compte répond la **même erreur** (404) qu'une licence inconnue.",
         "operationId": "LicensesController_getDetail",
         "parameters": [
           {
-            "name": "key",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -1198,13 +1198,13 @@
         ]
       }
     },
-    "/api/me/licenses/{key}/activations/{installationId}": {
+    "/api/me/licenses/{id}/activations/{installationId}": {
       "delete": {
         "description": "Après une réinstallation de serveur, pour libérer un emplacement d’activation.",
         "operationId": "LicensesController_releaseActivation",
         "parameters": [
           {
-            "name": "key",
+            "name": "id",
             "required": true,
             "in": "path",
             "schema": {
@@ -2163,6 +2163,11 @@
       "OwnedLicenseApiResponse": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "À mettre dans les URL à la place de la clé (#91)."
+          },
           "key": {
             "type": "string"
           },
@@ -2172,8 +2177,24 @@
           }
         },
         "required": [
+          "id",
           "key",
           "claimedAt"
+        ]
+      },
+      "LicenseProductApiResponse": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
         ]
       },
       "LicenseActivationApiResponse": {
@@ -2181,7 +2202,7 @@
         "properties": {
           "installationId": {
             "type": "string",
-            "description": "À repasser à DELETE /me/licenses/:key/activations/:installationId."
+            "description": "À repasser à DELETE /me/licenses/:id/activations/:installationId."
           },
           "firstSeenAt": {
             "type": "string",
@@ -2202,12 +2223,27 @@
       "LicenseDetailApiResponse": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "À mettre dans les URL à la place de la clé (#91)."
+          },
           "key": {
             "type": "string"
           },
           "claimedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "product": {
+            "nullable": true,
+            "description": "Vide si aucun plugin du catalogue ne correspond à la clé.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LicenseProductApiResponse"
+              }
+            ]
           },
           "edition": {
             "type": "string"
@@ -2233,8 +2269,10 @@
           }
         },
         "required": [
+          "id",
           "key",
           "claimedAt",
+          "product",
           "edition",
           "revoked",
           "expiresAt",

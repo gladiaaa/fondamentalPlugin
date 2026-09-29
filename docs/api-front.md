@@ -106,9 +106,9 @@ La suppression est **définitive** : demander une confirmation claire et le mot 
 
 | Route | Accès | Corps | Réponse |
 |---|---|---|---|
-| `GET /me/licenses` | session | (vide) | `200` : tableau `{ key, claimedAt }[]`, les plus récentes en premier |
-| `GET /me/licenses/:key` | session | (vide) | `200` : `{ key, claimedAt, edition, revoked, activations: { installationId }[] }` ; `404 LICENSE_NOT_FOUND` (clé inconnue **ou d'un autre compte** — même réponse) ; `503 LICENSE_SERVER_UNAVAILABLE` |
-| `DELETE /me/licenses/:key/activations/:installationId` | session | (vide) | `204` : installation libérée ; `404 LICENSE_NOT_FOUND` (clé ou installation inconnue, ou clé d'un autre compte) ; `503 LICENSE_SERVER_UNAVAILABLE` |
+| `GET /me/licenses` | session | (vide) | `200` : tableau `{ id, key, claimedAt }[]`, les plus récentes en premier |
+| `GET /me/licenses/:id` | session | (vide) | `:id` = identifiant interne donné par `GET /me/licenses`, **jamais la clé** (#91). `200` : `{ id, key, claimedAt, product: { slug, name } \| null, edition, revoked, expiresAt, maxActivations, activations: { installationId, firstSeenAt, lastSeenAt }[] }` ; `404 LICENSE_NOT_FOUND` (licence inconnue **ou d'un autre compte** — même réponse) ; `503 LICENSE_SERVER_UNAVAILABLE` |
+| `DELETE /me/licenses/:id/activations/:installationId` | session | (vide) | `204` : installation libérée ; `404 LICENSE_NOT_FOUND` (licence ou installation inconnue, ou licence d'un autre compte) ; `503 LICENSE_SERVER_UNAVAILABLE` |
 | `POST /me/licenses/claim` | session | `{ key }` | `204` : la clé est rattachée au compte ; `400 LICENSE_CLAIM_INVALID` (clé inconnue, révoquée, **ou déjà rattachée** — même réponse dans les trois cas, ne pas essayer de deviner laquelle) ; `503 LICENSE_SERVER_UNAVAILABLE` |
 
 Réservé aux clés qui existaient déjà **avant** la boutique (anciens clients, clés faites à la main) : une clé achetée sur le site sera rattachée automatiquement (#24), pas besoin de ce formulaire. Prévoir un champ simple (« Vous avez déjà une clé de licence ? ») plutôt qu'une page dédiée. Limite stricte : 5 tentatives par minute.

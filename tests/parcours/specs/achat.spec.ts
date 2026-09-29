@@ -52,4 +52,11 @@ test("achat avec la carte de test : paiement Stripe, clé affichée sur /merci e
   await page.goto("/compte/licences");
   await expect(page.getByRole("heading", { name: "Mes licences" })).toBeVisible();
   await expect(page.getByText("Aucune licence")).toHaveCount(0);
+
+  // Détail de la licence la plus récente (celle qu'on vient d'acheter) : identifiant interne dans
+  // l'URL, jamais la clé (#91), statut lu sur le serveur de licences.
+  await page.getByRole("link", { name: "Voir le détail" }).first().click();
+  await expect(page).toHaveURL(/\/compte\/licences\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  await expect(page.getByRole("heading", { level: 1, name: "FondamentalTag" })).toBeVisible();
+  await expect(page.getByText("Active", { exact: true })).toBeVisible();
 });

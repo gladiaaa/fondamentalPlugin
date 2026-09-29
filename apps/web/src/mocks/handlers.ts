@@ -1,4 +1,4 @@
-import { http, HttpResponse } from "msw";
+import type { RequestHandler } from "msw";
 
 /**
  * Mocks des routes « prévues » de docs/api-front.md §7 (pas encore livrées
@@ -17,31 +17,7 @@ import { http, HttpResponse } from "msw";
 // plus simulé ici (#99). En local, tester avec les clés Stripe de test et
 // `stripe listen --forward-to localhost:4000/api/stripe/webhook`.
 
-// Détail d'une licence et libération d'installation : toujours « prévues »
-// (#25 complet). `GET /me/licenses` (liste) et `POST /me/licenses/claim`
-// sont livrées depuis #65 (docs/api-front.md §4) : plus mockées ici, elles
-// passent par la vraie API (lib/api/account.ts).
-const licenseHandlers = [
-  http.get("/api/me/licenses/:key", ({ params }) =>
-    HttpResponse.json({
-      key: params.key,
-      product: { slug: "bedwars", name: "FondamentalBedwars" },
-      status: "ACTIVE",
-      purchasedAt: "2026-01-15T10:00:00.000Z",
-      activationsUsed: 1,
-      activationsMax: 3,
-      activations: [
-        {
-          id: "act-demo-1",
-          firstSeenAt: "2026-01-15T10:05:00.000Z",
-          lastSeenAt: "2026-09-27T08:00:00.000Z",
-        },
-      ],
-    }),
-  ),
-  http.delete("/api/me/licenses/:key/activations/:installationId", () =>
-    new HttpResponse(null, { status: 204 }),
-  ),
-];
+// Licences (liste, détail, libération, rattachement) : livrées (#25, #45, #91),
+// plus simulées ici.
 
-export const handlers = [...licenseHandlers];
+export const handlers: RequestHandler[] = [];

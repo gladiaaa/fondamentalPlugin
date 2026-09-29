@@ -19,7 +19,7 @@ export class LicensesController {
   @Get()
   @ApiOperation({
     summary: 'Mes licences',
-    description: 'Les clés rattachées au compte. Statut détaillé et installations : `GET /me/licenses/:key`.',
+    description: 'Les clés rattachées au compte. Statut détaillé et installations : `GET /me/licenses/:id`.',
   })
   @ApiSession()
   @ApiResponse({ status: 200, type: [OwnedLicenseApiResponse] })
@@ -27,21 +27,22 @@ export class LicensesController {
     return this.licenses.list(auth.user.id);
   }
 
-  @Get(':key')
+  @Get(':id')
   @ApiOperation({
     summary: "Statut d'une licence",
     description:
-      'Édition, révocation et installations actives. Une clé qui ne vous appartient pas répond la ' +
-      '**même erreur** (404) qu\'une clé inconnue.',
+      "Édition, révocation et installations actives. `:id` est l'identifiant interne donné par " +
+      "`GET /me/licenses`, jamais la clé (#91). Une licence d'un autre compte répond la **même erreur** " +
+      "(404) qu'une licence inconnue.",
   })
   @ApiSession()
   @ApiErrors(404, 503)
   @ApiResponse({ status: 200, type: LicenseDetailApiResponse })
-  getDetail(@Auth() auth: AuthContext, @Param('key') key: string): Promise<LicenseDetailResponse> {
-    return this.licenses.getDetail(auth.user.id, key);
+  getDetail(@Auth() auth: AuthContext, @Param('id') id: string): Promise<LicenseDetailResponse> {
+    return this.licenses.getDetail(auth.user.id, id);
   }
 
-  @Delete(':key/activations/:installationId')
+  @Delete(':id/activations/:installationId')
   @HttpCode(204)
   @ApiOperation({
     summary: 'Libérer une installation',
@@ -51,10 +52,10 @@ export class LicensesController {
   @ApiErrors(404, 503)
   async releaseActivation(
     @Auth() auth: AuthContext,
-    @Param('key') key: string,
+    @Param('id') id: string,
     @Param('installationId') installationId: string,
   ): Promise<void> {
-    await this.licenses.releaseActivation(auth.user.id, key, installationId);
+    await this.licenses.releaseActivation(auth.user.id, id, installationId);
   }
 
   @Post('claim')
