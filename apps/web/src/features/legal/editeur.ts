@@ -14,7 +14,7 @@ export const EDITEUR = {
   adresse: ["2 avenue Franklin Roosevelt", "77210 Avon", "France"],
   email: "support@fondamentalplugin.fr",
   /** Obligatoire pour la vente à distance (art. R111-1 du code de la consommation). */
-  telephone: null as string | null,
+  telephone: "06 52 18 42 20" as string | null,
   tva: "TVA non applicable, art. 293 B du CGI",
 } as const;
 
