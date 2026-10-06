@@ -11,7 +11,7 @@ export const VALID_SIGNATURE = 'signature-de-test-valide';
  * Remplace `StripeClient` via `overrideProvider`.
  */
 export class FakeStripeClient
-  implements Pick<StripeClient, 'isConfigured' | 'createCheckoutSession' | 'constructWebhookEvent' | 'refund'>
+  implements Pick<StripeClient, 'isConfigured' | 'createCheckoutSession' | 'constructWebhookEvent' | 'refund' | 'getInvoiceUrl'>
 {
   isConfigured = true;
   /** `false` : `createCheckoutSession` échoue, comme une panne Stripe. */
@@ -20,6 +20,8 @@ export class FakeStripeClient
   lastSession?: Stripe.Checkout.Session;
   /** `payment_intent` remboursés par `refund`, dans l'ordre d'appel. */
   readonly refunded: string[] = [];
+  /** `'absente'` : Stripe n'a pas encore créé la facture ; `'panne'` : l'appel échoue. */
+  invoice: 'prete' | 'absente' | 'panne' = 'prete';
 
   async createCheckoutSession(input: CreateCheckoutSessionInput): Promise<Stripe.Checkout.Session> {
     if (!this.createsSession) throw new Error('Stripe indisponible (simulé).');
@@ -35,6 +37,11 @@ export class FakeStripeClient
   async refund(paymentIntentId: string): Promise<Stripe.Refund> {
     this.refunded.push(paymentIntentId);
     return { id: `re_test_${randomUUID()}`, payment_intent: paymentIntentId } as Stripe.Refund;
+  }
+
+  async getInvoiceUrl(checkoutSessionId: string): Promise<string | null> {
+    if (this.invoice === 'panne') throw new Error('Stripe indisponible (simulé).');
+    return this.invoice === 'prete' ? `https://invoice.stripe.test/${checkoutSessionId}` : null;
   }
 
   /** Accepte tout corps si la signature vaut `VALID_SIGNATURE`, comme un vrai secret correct le ferait. */

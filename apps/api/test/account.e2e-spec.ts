@@ -70,7 +70,50 @@ describe('Mes données : export et suppression du compte (e2e)', () => {
           hasPassword: true,
         },
         sessions: [{ createdAt: expect.any(String), expiresAt: expect.any(String), current: true }],
+        orders: [],
+        licenses: [],
+        savedConfigs: [],
       });
+    });
+
+    it('contient les commandes payées, les clés de licence et les configurations enregistrées', async () => {
+      await createVerifiedUser();
+      const { b } = await loginBrowser();
+      const user = await prisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
+      const product = await prisma.product.findFirstOrThrow();
+      const order = (status: 'LICENSED' | 'PENDING') =>
+        prisma.order.create({
+          data: {
+            userId: user.id,
+            productId: product.id,
+            stripeCheckoutSessionId: `cs_e2e_${randomUUID()}`,
+            amountCents: 999,
+            currency: 'eur',
+            status,
+          },
+        });
+      const paid = await order('LICENSED');
+      const abandoned = await order('PENDING');
+      const key = `E2E-${randomUUID()}`;
+      await prisma.license.create({ data: { userId: user.id, licenseKey: key, orderId: paid.id, productId: product.id } });
+      await prisma.savedConfig.create({
+        data: { userId: user.id, name: 'Ma config', productSlug: product.slug, version: '1.0.0', file: 'config.yml', values: { a: 1 } },
+      });
+
+      try {
+        const body = (await b.get('/api/me/export').expect(200)).body;
+        expect(body.orders).toEqual([
+          { id: paid.id, createdAt: expect.any(String), productSlug: product.slug, amountCents: 999, currency: 'eur', status: 'LICENSED' },
+        ]);
+        expect(JSON.stringify(body)).not.toContain(abandoned.id);
+        expect(body.licenses).toEqual([{ key, productSlug: product.slug, claimedAt: expect.any(String), orderId: paid.id }]);
+        expect(body.savedConfigs).toEqual([
+          expect.objectContaining({ name: 'Ma config', productSlug: product.slug, file: 'config.yml', values: { a: 1 } }),
+        ]);
+      } finally {
+        await prisma.license.deleteMany({ where: { licenseKey: key } });
+        await prisma.order.deleteMany({ where: { id: { in: [paid.id, abandoned.id] } } });
+      }
     });
 
     it('ne contient jamais de secret', async () => {

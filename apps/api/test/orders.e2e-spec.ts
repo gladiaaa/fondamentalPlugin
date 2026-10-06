@@ -37,6 +37,7 @@ describe('Commandes : achat Stripe (e2e)', () => {
     licenseServer.reset();
     stripe.isConfigured = true;
     stripe.createsSession = true;
+    stripe.invoice = 'prete';
   });
 
   async function loggedInUser(email = EMAIL, password = STRONG_PASSWORD) {
@@ -104,6 +105,7 @@ describe('Commandes : achat Stripe (e2e)', () => {
     session: { id: string; client_reference_id: string | null },
     paymentStatus: 'paid' | 'unpaid' | 'no_payment_required',
     paymentIntent: string | null,
+    amountTotal?: number,
   ) {
     return {
       type,
@@ -114,6 +116,7 @@ describe('Commandes : achat Stripe (e2e)', () => {
           payment_status: paymentStatus,
           payment_intent: paymentIntent,
           customer_email: EMAIL,
+          amount_total: amountTotal,
         },
       },
     };
@@ -126,7 +129,7 @@ describe('Commandes : achat Stripe (e2e)', () => {
     await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
     const session = stripe.lastSession!;
     await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'paid', paymentIntent)).expect(200);
-    return { b, session };
+    return { b, csrf, session };
   }
 
   describe('POST /api/checkout', () => {
@@ -416,6 +419,81 @@ describe('Commandes : achat Stripe (e2e)', () => {
 
     it('événement non géré : accusé de réception (200), rien à faire', async () => {
       await sendWebhook(app, { type: 'customer.created', data: { object: {} } }).expect(200);
+    });
+
+    it('code promo : la commande garde le montant réellement payé, pas le prix du catalogue', async () => {
+      await createProduct();
+      const { b, csrf } = await loggedInUser();
+      await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201);
+      const session = stripe.lastSession!;
+      await sendWebhook(app, checkoutEvent('checkout.session.completed', session, 'paid', 'pi_test_promo', 999)).expect(200);
+
+      const order = await prisma.order.findUnique({ where: { stripeCheckoutSessionId: session.id } });
+      expect(order?.amountCents).toBe(999);
+    });
+  });
+
+  describe('GET /api/me/orders', () => {
+    it('exige une session', async () => {
+      await newBrowser(app).get('/api/me/orders').expect(401);
+    });
+
+    it('liste les commandes payées du compte, sans les paiements abandonnés', async () => {
+      const { b, csrf } = await paidOrder('pi_test_liste');
+      await b.post('/api/checkout', { productSlug: TEST_SLUG }, { csrf }).expect(201); // abandonné : reste pending
+
+      const res = await b.get('/api/me/orders').expect(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0]).toMatchObject({
+        product: { slug: TEST_SLUG, name: 'Plugin de test' },
+        amountCents: 1999,
+        currency: 'eur',
+        status: 'LICENSED',
+      });
+    });
+
+    it('ne montre jamais les commandes d’un autre compte', async () => {
+      await paidOrder('pi_test_autre');
+      const grace = await loggedInUser('grace@example.com', STRONG_PASSWORD);
+      expect((await grace.b.get('/api/me/orders').expect(200)).body).toEqual([]);
+    });
+  });
+
+  describe('GET /api/me/orders/:id/invoice', () => {
+    async function myOrderId(b: Awaited<ReturnType<typeof paidOrder>>['b']) {
+      return (await b.get('/api/me/orders').expect(200)).body[0].id as string;
+    }
+
+    it('renvoie l’adresse de la facture Stripe', async () => {
+      const { b, session } = await paidOrder('pi_test_facture');
+      const res = await b.get(`/api/me/orders/${await myOrderId(b)}/invoice`).expect(200);
+      expect(res.body).toEqual({ url: `https://invoice.stripe.test/${session.id}` });
+    });
+
+    it('même erreur (404) pour la commande d’un autre compte, une commande inconnue ou un identifiant invalide', async () => {
+      const { b } = await paidOrder('pi_test_facture_autre');
+      const id = await myOrderId(b);
+      const grace = await loggedInUser('grace@example.com', STRONG_PASSWORD);
+      for (const path of [id, '00000000-0000-4000-8000-000000000000', 'pas-un-uuid']) {
+        const res = await grace.b.get(`/api/me/orders/${path}/invoice`).expect(404);
+        expect(res.body.code).toBe('ORDER_NOT_FOUND');
+      }
+    });
+
+    it('facture pas encore créée par Stripe : 404 INVOICE_NOT_FOUND', async () => {
+      const { b } = await paidOrder('pi_test_facture_absente');
+      stripe.invoice = 'absente';
+      const res = await b.get(`/api/me/orders/${await myOrderId(b)}/invoice`).expect(404);
+      expect(res.body.code).toBe('INVOICE_NOT_FOUND');
+    });
+
+    it('Stripe en panne ou non configuré : 503', async () => {
+      const { b } = await paidOrder('pi_test_facture_panne');
+      const id = await myOrderId(b);
+      stripe.invoice = 'panne';
+      expect((await b.get(`/api/me/orders/${id}/invoice`).expect(503)).body.code).toBe('PAYMENT_UNAVAILABLE');
+      stripe.isConfigured = false;
+      await b.get(`/api/me/orders/${id}/invoice`).expect(503);
     });
   });
 });

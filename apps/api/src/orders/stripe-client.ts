@@ -70,6 +70,18 @@ export class StripeClient {
     return this.stripe.refunds.create({ payment_intent: paymentIntentId });
   }
 
+  /**
+   * Adresse de la facture Stripe d'une commande (« Mes commandes »), lue à la demande : elle n'est jamais
+   * stockée. `null` tant que Stripe n'a pas encore créé la facture (quelques secondes après le paiement).
+   */
+  async getInvoiceUrl(checkoutSessionId: string): Promise<string | null> {
+    if (!this.stripe) throw new Error('Stripe non configuré.');
+    const session = await this.stripe.checkout.sessions.retrieve(checkoutSessionId, { expand: ['invoice'] });
+    const invoice = session.invoice;
+    if (!invoice || typeof invoice === 'string') return null;
+    return invoice.hosted_invoice_url ?? null;
+  }
+
   /** @throws StripeWebhookSignatureError si la signature ou le corps ne correspondent pas au secret configuré. */
   constructWebhookEvent(rawBody: Buffer, signature: string): Stripe.Event {
     if (!this.stripe || !this.webhookSecret) throw new Error('Stripe non configuré.');

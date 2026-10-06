@@ -97,10 +97,19 @@ Préfixe : `/api`. « Session » = cookie de session + `X-CSRF-Token` sur les re
 
 | Route | Accès | Corps | Réponse |
 |---|---|---|---|
-| `GET /me/export` | session | (vide) | `200` : JSON de toutes les données du compte (`AccountExport`), servi en téléchargement `mes-donnees-fondamental.json`. Jamais de mot de passe ni de jeton |
+| `GET /me/export` | session | (vide) | `200` : JSON de toutes les données du compte (`AccountExport`) : compte, sessions, commandes payées, clés de licence, configurations enregistrées. Servi en téléchargement `mes-donnees-fondamental.json`. Jamais de mot de passe ni de jeton de connexion |
 | `DELETE /me` | session | `{ password }` | `204` : compte supprimé, cookie effacé, e-mail de confirmation envoyé ; `400 CURRENT_PASSWORD_INVALID` (mot de passe faux, l'échec compte pour le blocage) ; `400 NO_PASSWORD` (compte sans mot de passe) |
 
 La suppression est **définitive** : demander une confirmation claire et le mot de passe dans le formulaire, puis renvoyer le visiteur vers l'accueil (plus aucune session). Pour l'export, appeler la route avec `fetch` puis proposer le fichier au téléchargement (ou ouvrir l'adresse dans un nouvel onglet : c'est un `GET`).
+
+### Commandes : `/me/orders`
+
+| Route | Accès | Corps | Réponse |
+|---|---|---|---|
+| `GET /me/orders` | session | (vide) | `200` : `MyOrder[]` = `{ id, createdAt, product: { slug, name }, amountCents, currency, status }`, la plus récente d'abord. Seulement les commandes payées (`PAID`, `LICENSED`, `REFUNDED`) : un paiement abandonné n'apparaît jamais. `amountCents` = montant réellement payé, code promo compris |
+| `GET /me/orders/:id/invoice` | session | (vide) | `200` : `{ url }`, la facture Stripe (lue à la demande, jamais stockée) ; `404 ORDER_NOT_FOUND` (commande inconnue, non payée **ou d'un autre compte** — même réponse) ; `404 INVOICE_NOT_FOUND` (Stripe n'a pas encore créé la facture, quelques secondes après le paiement) ; `503 PAYMENT_UNAVAILABLE` |
+
+Pour la facture : ouvrir l'onglet **dans le clic** (sinon le navigateur bloque la fenêtre), puis lui donner l'adresse une fois la réponse reçue.
 
 ### Licences : `/me/licenses`
 

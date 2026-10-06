@@ -10,4 +10,5 @@ export const MESSAGES = {
   productNotPurchasable: "Ce produit n'est pas disponible à l'achat.",
   orderNotFound: 'Commande introuvable.',
   orderNotPaid: "Cette commande n'a pas encore été payée.",
+  invoiceNotFound: "La facture n'est pas encore prête : réessayez dans quelques minutes.",
 } as const;
