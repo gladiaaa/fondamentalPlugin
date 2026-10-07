@@ -1,4 +1,4 @@
-import type { CheckoutResponse, OrderResponse } from "@fondamental/shared";
+import type { CheckoutResponse, InvoiceLinkResponse, MyOrder, OrderResponse } from "@fondamental/shared";
 import { apiFetch } from "./client";
 
 /**
@@ -13,4 +13,14 @@ export function checkout(productSlug: string, csrfToken: string): Promise<Checko
 /** Statut de la commande, interrogé par /merci jusqu'à `LICENSED` (§4). Dépend de la session. */
 export function getOrderBySession(sessionId: string): Promise<OrderResponse> {
   return apiFetch<OrderResponse>(`/orders/by-session/${encodeURIComponent(sessionId)}`);
+}
+
+/** « Mes commandes » : commandes payées du compte, la plus récente d'abord. Dépend de la session. */
+export function getMyOrders(): Promise<MyOrder[]> {
+  return apiFetch<MyOrder[]>("/me/orders");
+}
+
+/** Adresse de la facture Stripe d'une commande (§4). Dépend de la session. */
+export function getInvoiceLink(orderId: string): Promise<InvoiceLinkResponse> {
+  return apiFetch<InvoiceLinkResponse>(`/me/orders/${encodeURIComponent(orderId)}/invoice`);
 }

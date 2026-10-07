@@ -35,7 +35,7 @@ export class AccountController {
   @ApiOperation({
     summary: 'Télécharger mes données',
     description:
-      'Toutes les données que la boutique détient sur le compte, en JSON (téléchargement `mes-donnees-fondamental.json`). Jamais de mot de passe, d’empreinte ni de jeton. Les commandes et licences s’y ajouteront.',
+      'Toutes les données que la boutique détient sur le compte, en JSON (téléchargement `mes-donnees-fondamental.json`). Commandes payées, clés de licence et configurations enregistrées comprises. Jamais de mot de passe, d’empreinte ni de jeton de connexion.',
   })
   @ApiSession()
   @ApiResponse({ status: 200, type: AccountExportApiResponse })

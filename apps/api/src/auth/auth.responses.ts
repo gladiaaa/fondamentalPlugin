@@ -80,6 +80,63 @@ export class AccountExportAccountResponse {
   hasPassword!: boolean;
 }
 
+export class AccountExportOrderResponse {
+  @ApiProperty({ type: String, format: 'uuid' })
+  id!: string;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt!: string;
+
+  @ApiProperty({ type: String })
+  productSlug!: string;
+
+  @ApiProperty({ type: Number })
+  amountCents!: number;
+
+  @ApiProperty({ type: String })
+  currency!: string;
+
+  @ApiProperty({ type: String, enum: ['PAID', 'LICENSED', 'REFUNDED'] })
+  status!: AccountExport['orders'][number]['status'];
+}
+
+export class AccountExportLicenseResponse {
+  @ApiProperty({ type: String })
+  key!: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  productSlug!: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  claimedAt!: string;
+
+  @ApiProperty({ type: String, format: 'uuid', nullable: true })
+  orderId!: string | null;
+}
+
+export class AccountExportSavedConfigResponse {
+  @ApiProperty({ type: String })
+  name!: string;
+
+  @ApiProperty({ type: String })
+  productSlug!: string;
+
+  @ApiProperty({ type: String })
+  version!: string;
+
+  @ApiProperty({ type: String })
+  file!: string;
+
+  @ApiProperty({ type: Object, description: 'Valeurs du formulaire, dans la forme du YAML.' })
+  values!: unknown;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt!: string;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  updatedAt!: string;
+}
+
 export class AccountExportApiResponse implements AccountExport {
   @ApiProperty({ type: String, format: 'date-time' })
   exportedAt!: string;
@@ -89,4 +146,13 @@ export class AccountExportApiResponse implements AccountExport {
 
   @ApiProperty({ type: [AccountExportSessionResponse] })
   sessions!: AccountExportSessionResponse[];
+
+  @ApiProperty({ type: [AccountExportOrderResponse], description: 'Commandes payées.' })
+  orders!: AccountExportOrderResponse[];
+
+  @ApiProperty({ type: [AccountExportLicenseResponse] })
+  licenses!: AccountExportLicenseResponse[];
+
+  @ApiProperty({ type: [AccountExportSavedConfigResponse] })
+  savedConfigs!: AccountExportSavedConfigResponse[];
 }

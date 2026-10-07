@@ -235,6 +235,19 @@ export class AuthService {
       orderBy: { createdAt: 'asc' },
       select: { id: true, createdAt: true, expiresAt: true },
     });
+    const [orders, licenses, savedConfigs] = await Promise.all([
+      this.prisma.order.findMany({
+        where: { userId: user.id, status: { not: 'PENDING' } },
+        include: { product: { select: { slug: true } } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.license.findMany({
+        where: { userId: user.id },
+        include: { product: { select: { slug: true } } },
+        orderBy: { claimedAt: 'asc' },
+      }),
+      this.prisma.savedConfig.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'asc' } }),
+    ]);
     return {
       exportedAt: new Date().toISOString(),
       account: {
@@ -248,6 +261,29 @@ export class AuthService {
         createdAt: s.createdAt.toISOString(),
         expiresAt: s.expiresAt.toISOString(),
         current: s.id === currentSessionId,
+      })),
+      orders: orders.map((o) => ({
+        id: o.id,
+        createdAt: o.createdAt.toISOString(),
+        productSlug: o.product.slug,
+        amountCents: o.amountCents,
+        currency: o.currency,
+        status: o.status,
+      })),
+      licenses: licenses.map((l) => ({
+        key: l.licenseKey,
+        productSlug: l.product?.slug ?? null,
+        claimedAt: l.claimedAt.toISOString(),
+        orderId: l.orderId,
+      })),
+      savedConfigs: savedConfigs.map((c) => ({
+        name: c.name,
+        productSlug: c.productSlug,
+        version: c.version,
+        file: c.file,
+        values: c.values,
+        createdAt: c.createdAt.toISOString(),
+        updatedAt: c.updatedAt.toISOString(),
       })),
     };
   }

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type Stripe from 'stripe';
-import type { CheckoutResponse, OrderResponse } from '@fondamental/shared';
+import type { CheckoutResponse, InvoiceLinkResponse, MyOrder, OrderResponse } from '@fondamental/shared';
 import type { Env } from '../config/env.js';
 import { LicenseServerClient } from '../licenses/license-server-client.js';
 import type { MailLocale } from '../auth/locale.js';
@@ -17,6 +17,9 @@ const UNIQUE_VIOLATION = 'P2002';
 
 /** Ne montre jamais la clé en entier dans un log : seuls ses 4 derniers caractères. */
 const redact = (key: string) => `…${key.slice(-4)}`;
+
+/** Forme d'un UUID : tout autre identifiant répond 404 sans interroger la base. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Langue des e-mails du client (`FR`/`EN` en base). */
 const mailLocale = (locale: string): MailLocale => (locale === 'EN' ? 'en' : 'fr');
@@ -93,6 +96,44 @@ export class OrdersService {
     return { url: session.url };
   }
 
+  /** « Mes commandes » : les commandes payées du compte, la plus récente d'abord. */
+  async listMine(userId: string): Promise<MyOrder[]> {
+    const orders = await this.prisma.order.findMany({
+      where: { userId, status: { not: 'PENDING' } },
+      include: { product: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return orders.map((order) => ({
+      id: order.id,
+      createdAt: order.createdAt.toISOString(),
+      product: { slug: order.product.slug, name: order.product.name },
+      amountCents: order.amountCents,
+      currency: order.currency,
+      status: order.status as MyOrder['status'],
+    }));
+  }
+
+  /**
+   * Facture Stripe d'une commande du compte. Une commande d'un autre compte, inconnue ou non payée répond la
+   * même erreur (404) : on ne révèle pas qu'elle existe.
+   */
+  async invoiceUrl(userId: string, orderId: string): Promise<InvoiceLinkResponse> {
+    const order = UUID.test(orderId) ? await this.prisma.order.findUnique({ where: { id: orderId } }) : null;
+    if (!order || order.userId !== userId || order.status === 'PENDING') {
+      throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: MESSAGES.orderNotFound });
+    }
+    if (!this.stripe.isConfigured) this.paymentUnavailable();
+    let url: string | null;
+    try {
+      url = await this.stripe.getInvoiceUrl(order.stripeCheckoutSessionId);
+    } catch {
+      this.logger.warn(`Lecture de la facture Stripe échouée (commande ${order.id})`);
+      this.paymentUnavailable();
+    }
+    if (!url) throw new NotFoundException({ code: 'INVOICE_NOT_FOUND', message: MESSAGES.invoiceNotFound });
+    return { url };
+  }
+
   /** Lu par la page /merci jusqu'à ce que la clé soit prête. */
   async getBySessionId(userId: string, sessionId: string): Promise<OrderResponse> {
     const order = await this.prisma.order.findUnique({
@@ -138,7 +179,13 @@ export class OrdersService {
         typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
       await this.prisma.order.update({
         where: { id: order.id },
-        data: { status: 'PAID', stripeCheckoutSessionId: session.id, stripePaymentIntentId: paymentIntentId },
+        data: {
+          status: 'PAID',
+          stripeCheckoutSessionId: session.id,
+          stripePaymentIntentId: paymentIntentId,
+          // Montant réellement payé (code promo compris), pas le prix du catalogue copié à la commande.
+          amountCents: session.amount_total ?? order.amountCents,
+        },
       });
     }
 

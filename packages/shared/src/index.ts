@@ -60,6 +60,7 @@ export interface ApiError {
     | "PAYMENT_UNAVAILABLE"
     | "ORDER_NOT_FOUND"
     | "ORDER_NOT_PAID"
+    | "INVOICE_NOT_FOUND"
     | "TWO_FACTOR_REQUIRED"
     | "TOTP_INVALID_CODE"
     | "ACCOUNT_BLOCKED"
@@ -83,8 +84,8 @@ export interface AccountExportSession {
 
 /**
  * Toutes les données que la boutique détient sur un compte (`GET /api/me/export`).
- * Ne contient jamais de secret : ni mot de passe, ni empreinte, ni jeton. Les commandes, licences et
- * configurations s'ajouteront ici quand elles existeront.
+ * Ne contient jamais de secret de connexion : ni mot de passe, ni empreinte, ni jeton. Les clés de
+ * licence y figurent : elles appartiennent au titulaire.
  */
 export interface AccountExport {
   /** Date ISO 8601. */
@@ -98,6 +99,19 @@ export interface AccountExport {
     hasPassword: boolean;
   };
   sessions: AccountExportSession[];
+  /** Commandes payées (les paiements abandonnés n'y figurent pas). */
+  orders: { id: string; createdAt: string; productSlug: string; amountCents: number; currency: string; status: OrderStatus }[];
+  licenses: { key: string; productSlug: string | null; claimedAt: string; orderId: string | null }[];
+  /** Configurations enregistrées dans le configurateur, avec leurs valeurs. */
+  savedConfigs: {
+    name: string;
+    productSlug: string;
+    version: string;
+    file: string;
+    values: unknown;
+    createdAt: string;
+    updatedAt: string;
+  }[];
 }
 
 // ─── Catalogue ──────────────────────────────────────────────────
@@ -244,6 +258,24 @@ export interface OrderResponse {
   productSlug: string;
   /** Présente seulement quand `status` vaut `LICENSED`. */
   licenseKey: string | null;
+}
+
+/**
+ * Une commande dans `GET /api/me/orders` (« Mes commandes »). Les paiements abandonnés (`PENDING`)
+ * n'y figurent jamais. `amountCents` est le montant réellement payé, code promo compris.
+ */
+export interface MyOrder {
+  id: string;
+  createdAt: string;
+  product: { slug: string; name: string };
+  amountCents: number;
+  currency: string;
+  status: Exclude<OrderStatus, "PENDING">;
+}
+
+/** Réponse de `GET /api/me/orders/:id/invoice` : la facture Stripe, à ouvrir dans un nouvel onglet. */
+export interface InvoiceLinkResponse {
+  url: string;
 }
 
 /** Réponse de `POST /api/checkout` : l'adresse à laquelle rediriger le client (Stripe Checkout). */

@@ -655,7 +655,7 @@
     },
     "/api/me/export": {
       "get": {
-        "description": "Toutes les données que la boutique détient sur le compte, en JSON (téléchargement `mes-donnees-fondamental.json`). Jamais de mot de passe, d’empreinte ni de jeton. Les commandes et licences s’y ajouteront.",
+        "description": "Toutes les données que la boutique détient sur le compte, en JSON (téléchargement `mes-donnees-fondamental.json`). Commandes payées, clés de licence et configurations enregistrées comprises. Jamais de mot de passe, d’empreinte ni de jeton de connexion.",
         "operationId": "AccountController_exportData",
         "parameters": [],
         "responses": {
@@ -2049,6 +2049,140 @@
         ]
       }
     },
+    "/api/me/orders": {
+      "get": {
+        "description": "Les commandes payées du compte, la plus récente d’abord. Les paiements abandonnés n’y figurent pas.",
+        "operationId": "OrdersController_myOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyOrderApiResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Mes commandes",
+        "tags": [
+          "commandes"
+        ]
+      }
+    },
+    "/api/me/orders/{id}/invoice": {
+      "get": {
+        "description": "L’adresse de la facture Stripe, lue à la demande. Une commande d’un autre compte répond la **même erreur** (404 `ORDER_NOT_FOUND`) qu’une commande inconnue. `INVOICE_NOT_FOUND` : Stripe n’a pas encore créé la facture.",
+        "operationId": "OrdersController_invoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceLinkApiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service momentanément indisponible (envoi d’e-mails, base de données).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Facture d’une commande",
+        "tags": [
+          "commandes"
+        ]
+      }
+    },
     "/api/orders/by-session/{sessionId}": {
       "get": {
         "description": "Pour la page /merci, jusqu'à ce que la clé soit prête (le webhook Stripe est asynchrone).",
@@ -2532,6 +2666,109 @@
           "current"
         ]
       },
+      "AccountExportOrderResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "productSlug": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PAID",
+              "LICENSED",
+              "REFUNDED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "productSlug",
+          "amountCents",
+          "currency",
+          "status"
+        ]
+      },
+      "AccountExportLicenseResponse": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "productSlug": {
+            "type": "string",
+            "nullable": true
+          },
+          "claimedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "key",
+          "productSlug",
+          "claimedAt",
+          "orderId"
+        ]
+      },
+      "AccountExportSavedConfigResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "productSlug": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "description": "Valeurs du formulaire, dans la forme du YAML."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "name",
+          "productSlug",
+          "version",
+          "file",
+          "values",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "AccountExportApiResponse": {
         "type": "object",
         "properties": {
@@ -2547,12 +2784,34 @@
             "items": {
               "$ref": "#/components/schemas/AccountExportSessionResponse"
             }
+          },
+          "orders": {
+            "description": "Commandes payées.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountExportOrderResponse"
+            }
+          },
+          "licenses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountExportLicenseResponse"
+            }
+          },
+          "savedConfigs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountExportSavedConfigResponse"
+            }
           }
         },
         "required": [
           "exportedAt",
           "account",
-          "sessions"
+          "sessions",
+          "orders",
+          "licenses",
+          "savedConfigs"
         ]
       },
       "DeleteAccountDto": {
@@ -3201,6 +3460,75 @@
           "url": {
             "type": "string",
             "description": "Adresse Stripe Checkout à laquelle rediriger le client."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "MyOrderProductApiResponse": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "tag"
+          },
+          "name": {
+            "type": "string",
+            "example": "FondamentalTag"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
+        ]
+      },
+      "MyOrderApiResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "product": {
+            "$ref": "#/components/schemas/MyOrderProductApiResponse"
+          },
+          "amountCents": {
+            "type": "number",
+            "description": "Montant réellement payé, en centimes (code promo compris)."
+          },
+          "currency": {
+            "type": "string",
+            "example": "eur"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PAID",
+              "LICENSED",
+              "REFUNDED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "product",
+          "amountCents",
+          "currency",
+          "status"
+        ]
+      },
+      "InvoiceLinkApiResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Facture Stripe (page hébergée par Stripe, téléchargeable en PDF)."
           }
         },
         "required": [
