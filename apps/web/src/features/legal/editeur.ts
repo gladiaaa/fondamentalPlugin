@@ -26,8 +26,11 @@ export const HEBERGEUR = {
 
 /**
  * Médiateur de la consommation (art. L612-1 du code de la consommation), obligatoire pour vendre à des
- * particuliers. À désigner avant la mise en production.
+ * particuliers. Adhésion CM2C (3 ans) : à renouveler avant échéance, sinon repasser à `null`.
  */
-export const MEDIATEUR: { nom: string; site: string } | null = null;
+export const MEDIATEUR: { nom: string; site: string } | null = {
+  nom: "CM2C, Centre de la médiation de la consommation de conciliateurs de justice",
+  site: "https://www.cm2c.net",
+};
 
 export const SITE = "fondamentalplugin.fr";
