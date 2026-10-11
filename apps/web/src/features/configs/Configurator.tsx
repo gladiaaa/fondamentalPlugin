@@ -394,7 +394,7 @@ function FileNavigation({
   const root = path[0] ?? "";
 
   return (
-    <nav aria-label="Parties du fichier" className="grid gap-2 lg:sticky lg:top-4">
+    <nav aria-label="Parties du fichier" className="grid grid-cols-[minmax(0,1fr)] gap-2 lg:sticky lg:top-4">
       <div className="lg:hidden">
         <Select aria-label="Partie du fichier" value={root} onChange={(e) => onNavigate(e.target.value ? [e.target.value] : [])}>
           {items.map((item) => (
@@ -404,7 +404,7 @@ function FileNavigation({
           ))}
         </Select>
       </div>
-      <ul className="hidden gap-0.5 rounded-card border border-line bg-surface p-2 lg:grid">
+      <ul className="hidden grid-cols-[minmax(0,1fr)] gap-0.5 rounded-card border border-line bg-surface p-2 lg:grid">
         {items.map((item) => {
           const field = screens.find((f) => f.key === item.key);
           const entries = field?.kind === "map" && isValues(values[field.key]) ? Object.keys(values[field.key] as ConfigValues) : [];
@@ -419,7 +419,7 @@ function FileNavigation({
                   active && path.length <= 1 ? "bg-surface-2 font-medium text-text" : "text-muted hover:bg-surface-2 hover:text-text",
                 )}
               >
-                <span className="truncate">
+                <span className="min-w-0 truncate" title={item.label}>
                   {item.label}
                   {field?.premium && <span className="ml-1 text-[.7rem] text-accent-text">Premium</span>}
                 </span>
