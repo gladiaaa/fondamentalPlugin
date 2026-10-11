@@ -22,6 +22,7 @@ import {
   updateSavedConfig,
 } from "@/lib/api/configs";
 import { ConfigFields } from "../ConfigFields";
+import { DeliveryCard, Section, SectionFields } from "./ArticleSettings";
 import { Segments } from "../MiniMessagePreview";
 import { parseMiniMessage, plainText } from "../minimessage";
 import { Chest, McItem, type DragData } from "../minecraft/Chest";
@@ -310,6 +311,7 @@ export function ShopEditor() {
     selection?.kind === "category"
       ? (selection.via ?? commandIds.find((id) => menuOf(id).some((n) => n.toLowerCase() === selection.name.toLowerCase())))
       : undefined;
+  const byKeys = (...keys: string[]) => keys.flatMap((k) => fields.article.filter((f) => f.key === k));
   const label = (doc: Doc) => plainText(String(doc.values.display ?? "")) || doc.name;
   const articles = category ? asValues(category.values.items) : {};
   const current = article && isValues(articles[article]) ? (articles[article] as ConfigValues) : undefined;
@@ -481,7 +483,7 @@ export function ShopEditor() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:h-[calc(100dvh-9.5rem)] lg:min-h-[560px] lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(400px,1fr)_minmax(0,1.25fr)]">
         {/* Objets */}
-        <aside aria-label="Objets Minecraft" className="min-h-0 overflow-y-auto rounded-card border border-line bg-surface p-2.5">
+        <aside aria-label="Objets Minecraft" className="order-last max-h-[60vh] min-h-0 overflow-y-auto rounded-card lg:order-none lg:max-h-none border border-line bg-surface p-2.5">
           {category ? (
             <ItemPalette
               items={items}
@@ -594,20 +596,33 @@ export function ShopEditor() {
                     setArticle(undefined);
                   }}
                 />
-                <ConfigFields
-                  fields={fields.article.filter((f) => SHOWN_GROUPS.includes(f.group ?? ""))}
-                  values={current}
-                  inEntry
-                  onChange={(values) => setArticles({ ...articles, [article!]: values })}
-                />
+                <Section title="Affichage dans le menu" hint="nom, description, icône, case" open>
+                  <SectionFields
+                    fields={byKeys("name", "lore", "icon", "slot")}
+                    values={current}
+                    onChange={(values) => setArticles({ ...articles, [article!]: values })}
+                  />
+                </Section>
               </Panel>
               <Panel title="Vente">
-                <ConfigFields
-                  fields={fields.article.filter((f) => !SHOWN_GROUPS.includes(f.group ?? ""))}
-                  values={current}
-                  inEntry
-                  onChange={(values) => setArticles({ ...articles, [article!]: values })}
-                />
+                <div className="grid gap-1.5">
+                  <h3 className="text-[.78rem] font-medium text-muted">Au clic, le joueur reçoit</h3>
+                  <DeliveryCard
+                    article={current}
+                    fields={fields.article}
+                    items={items}
+                    onChange={(values) => setArticles({ ...articles, [article!]: values })}
+                  />
+                </div>
+                {SALE_SECTIONS.map((section) => (
+                  <Section key={section.group} title={section.title} hint={section.hint} open={section.open}>
+                    <SectionFields
+                      fields={fields.article.filter((f) => f.group === section.group)}
+                      values={current}
+                      onChange={(values) => setArticles({ ...articles, [article!]: values })}
+                    />
+                  </Section>
+                ))}
               </Panel>
             </>
           ) : category ? (
@@ -684,8 +699,12 @@ export function ShopEditor() {
   );
 }
 
-/** Groupes du formulaire d'article montrés dans « Objet affiché » ; le reste va dans « Vente ». */
-const SHOWN_GROUPS = ["Article", "Ce qui est livré"];
+/** Sections repliables de « Vente », dans l'ordre (groupes du schéma de l'article). */
+const SALE_SECTIONS = [
+  { group: "Prix", title: "Prix", hint: "achat, revente, monnaie", open: true },
+  { group: "Règles", title: "Règles d’achat", hint: "quantité, limites, délai, permission", open: false },
+  { group: "Premium", title: "Stock et promotion", hint: "Premium", open: false },
+];
 
 const downloadHint = (category: boolean) =>
   category
