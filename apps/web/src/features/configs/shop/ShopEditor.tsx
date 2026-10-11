@@ -6,9 +6,8 @@ import { toast } from "sonner";
 import type { ConfigField, ConfigSchemaResponse, ConfigValues, SavedConfigResponse } from "@fondamental/shared";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select } from "@/components/ui/Field";
+import { Input, Select } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { cn } from "@/lib/cn";
 import { useSession } from "@/lib/session/SessionContext";
 import { getLicenses } from "@/lib/api/account";
@@ -34,6 +33,7 @@ import {
   articleProblem,
   CATEGORY_FILE,
   CATEGORY_ID,
+  clampRows,
   categoryLayout,
   commandLayout,
   DEFAULT_PANES,
@@ -93,7 +93,7 @@ export function ShopEditor() {
   const [categories, setCategories] = useState<Doc[]>([]);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [article, setArticle] = useState<string | undefined>();
-  const [panel, setPanel] = useState("article");
+  const [creating, setCreating] = useState(false);
   const [page, setPage] = useState(0);
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -174,7 +174,6 @@ export function ShopEditor() {
   function select(next: Selection) {
     setSelection(next);
     setArticle(undefined);
-    setPanel("article");
     setPage(0);
     setErrors([]);
   }
@@ -311,28 +310,161 @@ export function ShopEditor() {
     selection?.kind === "category"
       ? (selection.via ?? commandIds.find((id) => menuOf(id).some((n) => n.toLowerCase() === selection.name.toLowerCase())))
       : undefined;
-  const fileName = category ? `shops/${category.name}.yml` : CONFIG_FILE;
+  const label = (doc: Doc) => plainText(String(doc.values.display ?? "")) || doc.name;
+  const articles = category ? asValues(category.values.items) : {};
+  const current = article && isValues(articles[article]) ? (articles[article] as ConfigValues) : undefined;
+  const setArticles = (next: ConfigValues) => category && editCategory(category.name, { ...category.values, items: next });
+  // Sélecteur de menu : « c:<nom> » une catégorie, « m:<commande> » une commande, « a:<commande>:<nom> » une catégorie à ajouter.
+  const menuValue = selection?.kind === "command" ? `m:${selection.id}` : category ? `c:${category.name}` : "";
+
+  function chooseMenu(value: string) {
+    const [kind, a, b] = value.split(":");
+    if (kind === "m") select({ kind: "command", id: a });
+    else if (kind === "c") select({ kind: "category", name: a });
+    else if (kind === "a") addCategory(b, a);
+    else if (kind === "new") setCreating(true);
+  }
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
-      {/* Fichier en cours, enregistrement, téléchargement */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-card-lg border border-line bg-surface px-4 py-3">
-        <div className="grid min-w-0">
-          <span className="truncate font-mono text-[.95rem]">{selection ? fileName : "Aucun menu choisi"}</span>
-          <span className="text-[.8rem] text-muted">
-            À déposer dans <span className="font-mono">plugins/FondamentalShop/{category ? "shops/" : ""}</span>, puis{" "}
-            <span className="font-mono">/fshop reload</span>.
-          </span>
-        </div>
+    <div className="atelier grid grid-cols-[minmax(0,1fr)] gap-2.5 text-[.85rem]">
+      {/* Barre d'outils */}
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-2 rounded-card border border-line bg-surface px-3 py-2">
+        <ToolGroup label="Menu">
+          {creating ? (
+            <form
+              className="flex gap-1.5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                addCategory(newName.trim());
+                setCreating(false);
+              }}
+            >
+              <Input
+                autoFocus
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="nom du fichier, ex. armes"
+                aria-label="Nom de la nouvelle catégorie (shops/<nom>.yml)"
+                aria-invalid={newName.trim() !== "" && !CATEGORY_ID.test(newName.trim())}
+                className="w-48"
+                maxLength={64}
+              />
+              <Button type="submit" size="sm" disabled={!CATEGORY_ID.test(newName.trim())}>
+                Créer
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setCreating(false)}>
+                Annuler
+              </Button>
+            </form>
+          ) : (
+            <Select aria-label="Menu affiché" value={menuValue} onChange={(e) => chooseMenu(e.target.value)} className="w-60">
+              {menuValue === "" && <option value="">Choisir un menu</option>}
+              {commandIds.map((id) => (
+                <optgroup key={id} label={`/${id}`}>
+                  <option value={`m:${id}`}>/{id} (menu de la commande)</option>
+                  {menuOf(id).map((name) => {
+                    const doc = findCategory(name);
+                    return doc ? (
+                      <option key={name} value={`c:${doc.name}`}>
+                        › {label(doc)}
+                        {doc.dirty ? " •" : ""}
+                      </option>
+                    ) : (
+                      <option key={name} value={`a:${id}:${name}`}>
+                        › {name} ({presetOf(name) ? "ajouter depuis le plugin" : "créer"})
+                      </option>
+                    );
+                  })}
+                </optgroup>
+              ))}
+              {orphans.length > 0 && (
+                <optgroup label="Dans aucune commande">
+                  {orphans.map((c) => (
+                    <option key={c.name} value={`c:${c.name}`}>
+                      {label(c)}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              <option value="new">+ Nouvelle catégorie…</option>
+            </Select>
+          )}
+        </ToolGroup>
+        {savedConfigs.length > 1 && (
+          <ToolGroup label="config.yml">
+            <Select aria-label="Configuration générale" value={config.savedId ?? ""} onChange={(e) => switchConfig(e.target.value)} className="w-44">
+              {savedConfigs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </ToolGroup>
+        )}
+        {category && (
+          <>
+            <ToolGroup label="Nom dans le menu">
+              <Input
+                value={String(category.values.display ?? "")}
+                onChange={(e) => editCategory(category.name, { ...category.values, display: e.target.value })}
+                className="w-56 font-mono"
+                aria-label="Nom de la catégorie dans le menu (MiniMessage)"
+              />
+            </ToolGroup>
+            <ToolGroup label="Lignes">
+              <Select
+                aria-label="Lignes du menu"
+                value={String(clampRows(category.values.rows, 6))}
+                onChange={(e) => editCategory(category.name, { ...category.values, rows: Number(e.target.value) })}
+                className="w-20"
+              >
+                {[3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </ToolGroup>
+          </>
+        )}
+        {command && selection?.kind === "command" && (
+          <>
+            <ToolGroup label="Titre du menu">
+              <Input
+                value={String(command.title ?? "")}
+                placeholder="<degrade>Boutique</degrade>"
+                onChange={(e) => editConfig({ ...config.values, commands: { ...commands, [selection.id]: { ...command, title: e.target.value } } })}
+                className="w-56 font-mono"
+                aria-label="Titre du menu (MiniMessage)"
+              />
+            </ToolGroup>
+            <ToolGroup label="Lignes">
+              <Select
+                aria-label="Lignes du menu"
+                value={String(clampRows(command.rows, 5))}
+                onChange={(e) =>
+                  editConfig({ ...config.values, commands: { ...commands, [selection.id]: { ...command, rows: Number(e.target.value) } } })
+                }
+                className="w-20"
+              >
+                {[3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </ToolGroup>
+          </>
+        )}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <span className={cn("flex items-center gap-1.5 text-[.85rem]", dirty > 0 ? "text-warning" : "text-muted")} aria-live="polite">
+          <span className={cn("flex items-center gap-1.5 text-[.8rem]", dirty > 0 ? "text-warning" : "text-muted")} aria-live="polite">
             <span aria-hidden className={cn("h-2 w-2 rounded-full", dirty > 0 ? "bg-warning" : "bg-success")} />
             {dirty > 0 ? `${dirty} fichier${dirty > 1 ? "s" : ""} à enregistrer` : "Tout est enregistré"}
           </span>
-          <Button variant="secondary" onClick={downloadCurrent} disabled={!selection}>
+          <Button size="sm" variant="secondary" onClick={downloadCurrent} disabled={!selection} title={downloadHint(!!category)}>
             Télécharger {category ? `${category.name}.yml` : CONFIG_FILE}
           </Button>
-          <Button onClick={saveAll} loading={saving} disabled={dirty === 0}>
+          <Button size="sm" onClick={saveAll} loading={saving} disabled={dirty === 0}>
             Enregistrer
           </Button>
         </div>
@@ -347,113 +479,38 @@ export function ShopEditor() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[230px_minmax(0,1fr)] xl:grid-cols-[230px_minmax(0,1fr)_minmax(0,380px)]">
-        {/* Arborescence : chaque commande et les catégories de son menu */}
-        <nav
-          aria-label="Menus de la boutique"
-          className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 rounded-card border border-line bg-surface p-3 lg:sticky lg:top-4"
-        >
-          {savedConfigs.length > 1 && (
-            <Field label="Configuration générale" htmlFor="shop-config">
-              <Select id="shop-config" value={config.savedId ?? ""} onChange={(e) => switchConfig(e.target.value)}>
-                {savedConfigs.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:h-[calc(100dvh-9.5rem)] lg:min-h-[560px] lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(400px,1fr)_minmax(0,1.25fr)]">
+        {/* Objets */}
+        <aside aria-label="Objets Minecraft" className="min-h-0 overflow-y-auto rounded-card border border-line bg-surface p-2.5">
+          {category ? (
+            <ItemPalette
+              items={items}
+              tall
+              onPick={current ? (material) => setArticles({ ...articles, [article!]: withMaterial(current, material) }) : undefined}
+              pickLabel={
+                current
+                  ? `Cliquez un objet pour l’appliquer à « ${article} », ou glissez-le dans le coffre.`
+                  : "Glissez un objet dans une case vide du coffre : l’article est créé."
+              }
+            />
+          ) : (
+            <p className="p-2 text-muted">
+              Les objets se glissent dans le menu d’une catégorie. Entrez dans une catégorie depuis le menu de la commande.
+            </p>
           )}
-          <MenuGroup title="Ce que le joueur ouvre">
-            {commandIds.map((id) => (
-              <div key={id} className="grid min-w-0 gap-0.5">
-                <MenuButton
-                  active={selection?.kind === "command" && selection.id === id}
-                  dirty={config.dirty}
-                  onClick={() => select({ kind: "command", id })}
-                >
-                  <span className="font-mono text-[.88rem]">/{id}</span>
-                </MenuButton>
-                <ul className="ml-3 grid min-w-0 gap-0.5 border-l border-line pl-2">
-                  {menuOf(id).map((name) => {
-                    const doc = findCategory(name);
-                    return (
-                      <li key={name} className="min-w-0">
-                        {doc ? (
-                          <MenuButton
-                            active={category === doc}
-                            dirty={doc.dirty}
-                            onClick={() => select({ kind: "category", name: doc.name, via: id })}
-                          >
-                            <McItem material={String(doc.values.icon ?? "CHEST")} items={items} size={22} />
-                            <span className="truncate" title={`shops/${doc.name}.yml`}>
-                              {plainText(String(doc.values.display ?? "")) || doc.name}
-                            </span>
-                          </MenuButton>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => addCategory(name, id)}
-                            className="flex w-full min-w-0 items-center gap-2 rounded-field px-2 py-1.5 text-left text-[.88rem] text-muted hover:bg-surface-2 hover:text-text"
-                          >
-                            <span aria-hidden className="h-[22px] w-[22px] shrink-0 rounded-[4px] border border-dashed border-line" />
-                            <span className="truncate">{name}</span>
-                            <span className="ml-auto shrink-0 text-[.75rem] font-medium text-accent-text">
-                              {presetOf(name) ? "Ajouter" : "Créer"}
-                            </span>
-                          </button>
-                        )}
-                      </li>
-                    );
-                  })}
-                  {menuOf(id).length === 0 && <li className="px-2 py-1 text-[.8rem] text-muted">Aucune catégorie</li>}
-                </ul>
-              </div>
-            ))}
-          </MenuGroup>
-          {orphans.length > 0 && (
-            <MenuGroup title="Dans aucune commande" hint="Ajoutez leur nom aux catégories d’une commande pour qu’un joueur les voie.">
-              {orphans.map((c) => (
-                <MenuButton key={c.name} active={category === c} dirty={c.dirty} onClick={() => select({ kind: "category", name: c.name })}>
-                  <McItem material={String(c.values.icon ?? "CHEST")} items={items} size={22} />
-                  <span className="truncate">{plainText(String(c.values.display ?? "")) || c.name}</span>
-                </MenuButton>
-              ))}
-            </MenuGroup>
-          )}
-          <form
-            className="grid min-w-0 gap-1.5 border-t border-line pt-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              addCategory(newName.trim());
-            }}
-          >
-            <label htmlFor="shop-new-category" className="px-1 text-[.8rem] font-medium text-muted">
-              Nouvelle catégorie
-            </label>
-            <div className="flex min-w-0 gap-1.5">
-              <Input
-                id="shop-new-category"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="armes"
-                className="min-w-0 flex-1"
-                maxLength={64}
-              />
-              <Button type="submit" size="sm" variant="secondary" disabled={!CATEGORY_ID.test(newName.trim())}>
-                Créer
-              </Button>
-            </div>
-            <small className={cn("px-1 text-[.75rem]", newName.trim() !== "" && !CATEGORY_ID.test(newName.trim()) ? "text-error" : "text-muted")}>
-              Nom du fichier shops/&lt;nom&gt;.yml : lettres, chiffres, - et _.
-            </small>
-          </form>
-        </nav>
+        </aside>
 
-        {/* Scène : le menu tel que le joueur le voit */}
-        <section aria-label="Aperçu du menu" className="grid min-w-0 content-start gap-4 rounded-card-lg border border-line bg-surface p-4 sm:p-5">
+        {/* Plan de travail : le menu tel que le joueur le voit */}
+        <section
+          aria-label="Aperçu du menu"
+          className="relative grid min-h-[420px] min-w-0 content-center justify-items-center gap-4 overflow-auto rounded-card border border-line p-4"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--color-accent-3) 22%, transparent), transparent 70%), repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--color-line) 55%, transparent) 31px 32px), repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in srgb, var(--color-line) 55%, transparent) 31px 32px), var(--color-bg)",
+          }}
+        >
           {selection && (
-            <ol aria-label="Chemin du joueur" className="flex flex-wrap items-center gap-1.5 text-[.95rem]">
+            <ol aria-label="Chemin du joueur" className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5 text-[.82rem]">
               <li className="text-muted">{via || selection.kind === "command" ? "Le joueur tape" : "Aucune commande n’ouvre"}</li>
               {(selection.kind === "command" || via) && (
                 <li>
@@ -461,7 +518,7 @@ export function ShopEditor() {
                     type="button"
                     disabled={selection.kind === "command"}
                     onClick={() => via && select({ kind: "command", id: via })}
-                    className="rounded-pill bg-surface-2 px-3 py-1 font-mono text-[.88rem] enabled:hover:text-accent-text disabled:cursor-default"
+                    className="rounded-pill bg-surface-2 px-2.5 py-0.5 font-mono enabled:hover:text-accent-text disabled:cursor-default"
                   >
                     /{selection.kind === "command" ? selection.id : via}
                   </button>
@@ -474,9 +531,9 @@ export function ShopEditor() {
                       ›
                     </li>
                   )}
-                  <li className="flex items-center gap-1.5 rounded-pill bg-surface-2 px-3 py-1 text-[.88rem]">
-                    <McItem material={String(category.values.icon ?? "CHEST")} items={items} size={18} />
-                    {plainText(String(category.values.display ?? "")) || category.name}
+                  <li className="flex items-center gap-1.5 rounded-pill bg-surface-2 px-2.5 py-0.5">
+                    <McItem material={String(category.values.icon ?? "CHEST")} items={items} size={16} />
+                    {label(category)}
                   </li>
                 </>
               )}
@@ -484,13 +541,16 @@ export function ShopEditor() {
           )}
 
           {categories.length === 0 ? (
-            <div className="grid justify-items-start gap-3 rounded-card border border-dashed border-line p-6 sm:p-8">
-              <h2 className="font-display text-[1.25rem] font-semibold tracking-[-.02em]">Votre boutique n’a encore aucune catégorie</h2>
-              <p className="max-w-[56ch] text-muted">
+            <div className="grid max-w-[46ch] justify-items-center gap-3 rounded-card border border-line bg-surface p-6 text-center">
+              <h2 className="font-display text-[1.15rem] font-semibold">Votre boutique n’a encore aucune catégorie</h2>
+              <p className="text-muted">
                 Partez des catégories livrées avec le plugin ({(categorySchema.presets ?? []).map((p) => p.name).join(", ")}), puis changez les
-                articles, les prix et les cases à votre goût. Vous pouvez aussi créer une catégorie vide à gauche.
+                articles, les prix et les cases à votre goût.
               </p>
               {presets.length > 0 && <Button onClick={importPresets}>Partir des catégories du plugin</Button>}
+              <button type="button" className="text-[.82rem] text-accent-text hover:underline" onClick={() => setCreating(true)}>
+                ou créer une catégorie vide
+              </button>
             </div>
           ) : category ? (
             <CategoryChest
@@ -501,10 +561,7 @@ export function ShopEditor() {
               selected={article}
               onPage={setPage}
               onBack={via ? () => select({ kind: "command", id: via }) : undefined}
-              onSelect={(key) => {
-                setArticle(key);
-                setPanel("article");
-              }}
+              onSelect={(key) => setArticle(key)}
               onChange={(values) => editCategory(category.name, values)}
             />
           ) : command && selection?.kind === "command" ? (
@@ -517,101 +574,147 @@ export function ShopEditor() {
               onMove={moveCategory}
             />
           ) : (
-            <p className="py-10 text-center text-muted">Choisissez une commande ou une catégorie à gauche.</p>
+            <p className="text-muted">Choisissez un menu dans la barre du haut.</p>
           )}
         </section>
 
-        {/* Réglages de ce qui est choisi */}
-        <aside className="grid min-w-0 content-start gap-4 rounded-card-lg border border-line bg-surface p-4 sm:p-5 lg:col-span-2 xl:sticky xl:top-4 xl:col-span-1 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto">
-          {category ? (
-            <Tabs value={panel} onValueChange={setPanel}>
-              <TabsList>
-                <TabsTrigger value="article">Article</TabsTrigger>
-                <TabsTrigger value="category">Réglages de la catégorie</TabsTrigger>
-              </TabsList>
-              <TabsContent value="article" className="pt-4">
-                {article && isValues(asValues(category.values.items)[article]) ? (
-                  <ArticlePanel
-                    id={article}
-                    values={asValues(asValues(category.values.items)[article])}
-                    fields={fields.article}
-                    items={items}
-                    onChange={(values) =>
-                      editCategory(category.name, { ...category.values, items: { ...asValues(category.values.items), [article]: values } })
-                    }
-                    onRemove={() => {
-                      const rest = { ...asValues(category.values.items) };
-                      delete rest[article];
-                      editCategory(category.name, { ...category.values, items: rest });
-                      setArticle(undefined);
-                    }}
-                  />
-                ) : (
-                  <Gestures items={items} />
-                )}
-              </TabsContent>
-              <TabsContent value="category" className="grid gap-4 pt-4">
-                <ConfigFields fields={fields.category} values={category.values} onChange={(values) => editCategory(category.name, values)} />
-                <Button variant="ghost" className="justify-self-start text-error" onClick={() => removeCategory(category)}>
+        {/* Réglages : deux colonnes, comme « Item stack » et « Button » */}
+        <div className="grid min-h-0 min-w-0 gap-2.5 lg:col-span-2 xl:col-span-1 2xl:grid-cols-2">
+          {category && current ? (
+            <>
+              <Panel title="Objet affiché" onClose={() => setArticle(undefined)}>
+                <ArticleHead
+                  id={article!}
+                  values={current}
+                  items={items}
+                  onRemove={() => {
+                    const rest = { ...articles };
+                    delete rest[article!];
+                    setArticles(rest);
+                    setArticle(undefined);
+                  }}
+                />
+                <ConfigFields
+                  fields={fields.article.filter((f) => SHOWN_GROUPS.includes(f.group ?? ""))}
+                  values={current}
+                  inEntry
+                  onChange={(values) => setArticles({ ...articles, [article!]: values })}
+                />
+              </Panel>
+              <Panel title="Vente">
+                <ConfigFields
+                  fields={fields.article.filter((f) => !SHOWN_GROUPS.includes(f.group ?? ""))}
+                  values={current}
+                  inEntry
+                  onChange={(values) => setArticles({ ...articles, [article!]: values })}
+                />
+              </Panel>
+            </>
+          ) : category ? (
+            <>
+              <Panel title="Article">
+                <Gestures items={items} />
+              </Panel>
+              <Panel title="Réglages de la catégorie">
+                <ConfigFields
+                  fields={fields.category.filter((f) => f.key !== "display" && f.key !== "rows")}
+                  values={category.values}
+                  onChange={(values) => editCategory(category.name, values)}
+                />
+                <Button size="sm" variant="ghost" className="justify-self-start text-error" onClick={() => removeCategory(category)}>
                   Supprimer la catégorie
                 </Button>
-              </TabsContent>
-            </Tabs>
+              </Panel>
+            </>
           ) : command && selection?.kind === "command" ? (
-            <div className="grid gap-4">
-              <div className="grid gap-1">
-                <h2 className="font-display text-[1.15rem] font-semibold">
-                  Commande <span className="font-mono">/{selection.id}</span>
-                </h2>
-                <p className="text-[.88rem] text-muted">
-                  Ouvre ce menu. Il montre les catégories de la liste « Catégories » ci-dessous, dans cet ordre ; liste vide, il les montre toutes.
+            <>
+              <Panel title={`Catégories de /${selection.id}`}>
+                <p className="text-muted">Dans l’ordre du menu. Cliquez pour y entrer ; une catégorie pas encore créée s’ajoute d’un clic.</p>
+                <ul className="grid gap-0.5">
+                  {menuOf(selection.id).map((name) => {
+                    const doc = findCategory(name);
+                    return (
+                      <li key={name}>
+                        <button
+                          type="button"
+                          onClick={() => (doc ? select({ kind: "category", name: doc.name, via: selection.id }) : addCategory(name, selection.id))}
+                          className="flex w-full items-center gap-2 rounded-field px-2 py-1.5 text-left hover:bg-surface-2"
+                        >
+                          {doc ? (
+                            <McItem material={String(doc.values.icon ?? "CHEST")} items={items} size={20} />
+                          ) : (
+                            <span aria-hidden className="h-5 w-5 rounded-[4px] border border-dashed border-line" />
+                          )}
+                          <span className={cn("truncate", !doc && "text-muted")}>{doc ? label(doc) : name}</span>
+                          <span className="ml-auto text-[.75rem] text-muted">
+                            {doc ? `shops/${doc.name}.yml` : presetOf(name) ? "Ajouter" : "Créer"}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {presets.length > 0 && categories.length > 0 && (
+                  <Button size="sm" variant="secondary" className="justify-self-start" onClick={importPresets}>
+                    Ajouter toutes les catégories du plugin
+                  </Button>
+                )}
+              </Panel>
+              <Panel title={`Commande /${selection.id}`}>
+                <ConfigFields
+                  fields={fields.command.filter((f) => f.key !== "title" && f.key !== "rows")}
+                  values={command}
+                  inEntry
+                  onChange={(values) => editConfig({ ...config.values, commands: { ...commands, [selection.id]: values } })}
+                />
+                <p className="text-[.78rem] text-muted">
+                  Ajouter ou renommer une commande :{" "}
+                  <Link href="/configurateur" className="text-accent-text hover:underline">
+                    le configurateur
+                  </Link>
+                  .
                 </p>
-              </div>
-              <ConfigFields
-                fields={fields.command}
-                values={command}
-                inEntry
-                onChange={(values) => editConfig({ ...config.values, commands: { ...commands, [selection.id]: values } })}
-              />
-              <p className="text-[.82rem] text-muted">
-                Pour ajouter ou renommer une commande, et pour le reste du fichier :{" "}
-                <Link href="/configurateur" className="text-accent-text hover:underline">
-                  le configurateur
-                </Link>
-                .
-              </p>
-            </div>
+              </Panel>
+            </>
           ) : null}
-        </aside>
+        </div>
       </div>
+      <p className="px-1 text-[.78rem] text-muted">{downloadHint(!!category)}</p>
     </div>
   );
 }
 
-function MenuGroup({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+/** Groupes du formulaire d'article montrés dans « Objet affiché » ; le reste va dans « Vente ». */
+const SHOWN_GROUPS = ["Article", "Ce qui est livré"];
+
+const downloadHint = (category: boolean) =>
+  category
+    ? "Fichier à déposer dans plugins/FondamentalShop/shops/, puis /fshop reload."
+    : "Fichier à déposer dans plugins/FondamentalShop/, puis /fshop reload.";
+
+function ToolGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1">
-      <h2 className="px-1 text-[.8rem] font-medium text-muted">{title}</h2>
+    <div className="grid gap-0.5">
+      <span className="text-[.72rem] font-medium text-muted">{label}</span>
       {children}
-      {hint && <p className="px-1 text-[.75rem] text-muted">{hint}</p>}
     </div>
   );
 }
 
-function MenuButton({ active, dirty, onClick, children }: { active: boolean; dirty: boolean; onClick: () => void; children: React.ReactNode }) {
+/** Colonne de réglages (« Item stack », « Button » sur MIB). */
+function Panel({ title, onClose, children }: { title: string; onClose?: () => void; children: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      aria-current={active ? "true" : undefined}
-      onClick={onClick}
-      className={cn(
-        "flex w-full min-w-0 items-center gap-2 rounded-field px-2 py-1.5 text-left text-[.9rem] transition-colors",
-        active ? "bg-surface-2 font-medium text-text shadow-[inset_2px_0_0_var(--color-accent)]" : "text-muted hover:bg-surface-2 hover:text-text",
-      )}
-    >
-      {children}
-      {dirty && <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-label="modifié, pas encore enregistré" />}
-    </button>
+    <section className="flex min-h-0 min-w-0 flex-col rounded-card border border-line bg-surface">
+      <header className="flex items-center justify-between border-b border-line px-3 py-2">
+        <h2 className="text-[.8rem] font-semibold">{title}</h2>
+        {onClose && (
+          <button type="button" onClick={onClose} aria-label="Fermer l’article" className="text-muted hover:text-text">
+            ×
+          </button>
+        )}
+      </header>
+      <div className="grid min-h-0 content-start gap-3 overflow-y-auto p-3">{children}</div>
+    </section>
   );
 }
 
@@ -652,20 +755,16 @@ function Gestures({ items }: { items: ReturnType<typeof useMcItems> }) {
   );
 }
 
-/** En-tête d'un article (son icône et son nom comme en jeu, ses prix) et son formulaire. */
-function ArticlePanel({
+/** En-tête d'un article : son icône et son nom comme en jeu, ses prix, et ce qui lui manque pour être en vente. */
+function ArticleHead({
   id,
   values,
-  fields,
   items,
-  onChange,
   onRemove,
 }: {
   id: string;
   values: ConfigValues;
-  fields: ConfigField[];
   items: ReturnType<typeof useMcItems>;
-  onChange: (values: ConfigValues) => void;
   onRemove: () => void;
 }) {
   const problem = articleProblem(values);
@@ -673,14 +772,14 @@ function ArticlePanel({
     Boolean,
   );
   return (
-    <div className="grid gap-4">
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-card bg-surface-2 p-3">
-        <McItem material={articleIcon(values)} items={items} size={40} />
+    <>
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 rounded-field bg-surface-2 p-2">
+        <McItem material={articleIcon(values)} items={items} size={32} />
         <div className="grid min-w-0">
-          <span className="truncate text-[1.02rem] font-medium">
+          <span className="truncate font-medium">
             <Segments segments={parseMiniMessage(String(values.name ?? id))} />
           </span>
-          <span className="truncate text-[.8rem] text-muted">
+          <span className="truncate text-[.75rem] text-muted">
             <span className="font-mono">{id}</span>
             {prices.length > 0 ? `, ${prices.join(", ")}` : ""}
           </span>
@@ -689,13 +788,8 @@ function ArticlePanel({
           Retirer
         </Button>
       </div>
-      {problem && (
-        <Alert variant="warning" title="Pas encore en vente">
-          Le plugin l’ignore tant qu’il manque ceci : {problem}.
-        </Alert>
-      )}
-      <ConfigFields fields={fields} values={values} inEntry onChange={onChange} />
-    </div>
+      {problem && <p className="rounded-field border border-warning/40 px-2.5 py-1.5 text-warning">Pas encore en vente : {problem}.</p>}
+    </>
   );
 }
 
@@ -745,44 +839,25 @@ function CategoryChest({
 
   return (
     <>
-      <div className="flex flex-wrap items-start gap-5">
-        <div className="grid min-w-0 max-w-full gap-2">
-          <div className="max-w-full overflow-x-auto p-0.5 xl:[zoom:1.2] 2xl:[zoom:1.45]">
-            <Chest layout={layout} items={items} selected={selected} onSelect={onSelect} onDrop={drop} onBack={onBack} />
-          </div>
-          {layout.pages > 1 && (
-            <div className="flex items-center justify-center gap-2 text-[.85rem]">
-              <Button size="sm" variant="ghost" disabled={layout.page === 0} onClick={() => onPage(layout.page - 1)}>
-                Page précédente
-              </Button>
-              <span className="tabular-nums text-muted">
-                {layout.page + 1} / {layout.pages}
-              </span>
-              <Button size="sm" variant="ghost" disabled={layout.page >= layout.pages - 1} onClick={() => onPage(layout.page + 1)}>
-                Page suivante
-              </Button>
-            </div>
-          )}
-          <Legend items={items} back={!!onBack} />
-        </div>
-        <div className="min-w-[220px] flex-1">
-          <ItemPalette
-            items={items}
-            onPick={
-              selected && isValues(articles[selected])
-                ? (material) => setItems({ ...articles, [selected]: withMaterial(articles[selected] as ConfigValues, material) })
-                : undefined
-            }
-            pickLabel={
-              selected
-                ? `Glissez un objet dans le coffre, ou cliquez-le pour l’appliquer à « ${selected} ».`
-                : "Glissez un objet dans une case vide pour créer un article, ou sur un article pour changer son objet."
-            }
-          />
-        </div>
+      <div className="max-w-full overflow-x-auto p-0.5 lg:[zoom:1.25] 2xl:[zoom:1.6]">
+        <Chest layout={layout} items={items} selected={selected} onSelect={onSelect} onDrop={drop} onBack={onBack} />
       </div>
+      {layout.pages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button size="sm" variant="ghost" disabled={layout.page === 0} onClick={() => onPage(layout.page - 1)}>
+            Page précédente
+          </Button>
+          <span className="tabular-nums text-muted">
+            {layout.page + 1} / {layout.pages}
+          </span>
+          <Button size="sm" variant="ghost" disabled={layout.page >= layout.pages - 1} onClick={() => onPage(layout.page + 1)}>
+            Page suivante
+          </Button>
+        </div>
+      )}
+      <Legend items={items} back={!!onBack} />
       {ignored.length > 0 && (
-        <div className="grid gap-1.5 rounded-field border border-warning/40 p-3 text-[.88rem]">
+        <div className="grid max-w-[60ch] gap-1 rounded-field border border-warning/40 bg-surface p-2.5">
           <p className="font-medium text-warning">Ignorés par le plugin tant qu’ils sont incomplets :</p>
           <ul className="flex flex-wrap gap-x-4 gap-y-1">
             {ignored.map(({ key, problem }) => (
@@ -837,12 +912,12 @@ function CommandChest({
           , sans ce menu.
         </p>
       ) : (
-        <div className="max-w-full overflow-x-auto p-0.5 xl:[zoom:1.2] 2xl:[zoom:1.45]">
+        <div className="max-w-full overflow-x-auto p-0.5 lg:[zoom:1.25] 2xl:[zoom:1.6]">
           <Chest layout={layout} items={items} onSelect={onOpen} onDrop={(slot, data) => data.key && onMove(data.key, slot)} />
         </div>
       )}
-      <p className="text-[.85rem] text-muted">Cliquez une catégorie pour y entrer, comme le joueur. Glissez-la pour changer sa case.</p>
-      {found.length === 0 && <p className="text-[.92rem] text-muted">Aucune catégorie créée pour ce menu : ajoutez-en depuis la liste à gauche.</p>}
+      <p className="text-muted">Cliquez une catégorie pour y entrer, comme le joueur. Glissez-la pour changer sa case.</p>
+      {found.length === 0 && <p className="text-[.92rem] text-muted">Aucune catégorie créée pour ce menu : ajoutez-en depuis la liste à droite.</p>}
     </>
   );
 }
@@ -851,7 +926,7 @@ function CommandChest({
 function Legend({ items, back }: { items: ReturnType<typeof useMcItems>; back: boolean }) {
   const slot = "relative grid h-7 w-7 shrink-0 place-items-center bg-[#8B8B8B] shadow-[inset_1px_1px_0_#373737,inset_-1px_-1px_0_#FFFFFF]";
   return (
-    <ul aria-label="Légende" className="grid max-w-[60ch] gap-2 text-[.82rem] text-muted sm:grid-cols-2">
+    <ul aria-label="Légende" className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[.78rem] text-muted">
       <li className="flex items-center gap-2">
         <span aria-hidden className={slot}>
           <McItem material="STONE" items={items} size={22} />

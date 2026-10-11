@@ -2,6 +2,7 @@
 
 import { useDeferredValue, useMemo, useState } from "react";
 import { Input } from "@/components/ui/Field";
+import { cn } from "@/lib/cn";
 import { DRAG_TYPE, McItem, type DragData } from "./Chest";
 import type { McItems } from "./items";
 
@@ -12,7 +13,19 @@ const SHOWN = 280;
  * Palette des objets Minecraft : à glisser dans le coffre, ou à cliquer pour l'appliquer à l'entrée
  * choisie. Entrée dans la recherche = le premier résultat.
  */
-export function ItemPalette({ items, onPick, pickLabel }: { items: McItems | null; onPick?: (material: string) => void; pickLabel?: string }) {
+export function ItemPalette({
+  items,
+  onPick,
+  pickLabel,
+  tall = false,
+}: {
+  items: McItems | null;
+  onPick?: (material: string) => void;
+  pickLabel?: string;
+  /** Colonne pleine hauteur (éditeur de menus) : sans hauteur maximale, deux fois plus d'objets affichés. */
+  tall?: boolean;
+}) {
+  const shown = tall ? SHOWN * 2 : SHOWN;
   const [query, setQuery] = useState("");
   const deferred = useDeferredValue(query);
   const matches = useMemo(() => {
@@ -39,10 +52,13 @@ export function ItemPalette({ items, onPick, pickLabel }: { items: McItems | nul
       />
       <p className="text-[.78rem] text-muted">{pickLabel ?? "Glissez un objet dans le coffre."}</p>
       <ul
-        className="grid max-h-[340px] grid-cols-[repeat(auto-fill,36px)] gap-0.5 overflow-y-auto rounded-field border border-line bg-bg p-1.5"
+        className={cn(
+          "grid grid-cols-[repeat(auto-fill,36px)] gap-0.5 rounded-field border border-line bg-bg p-1.5",
+          !tall && "max-h-[340px] overflow-y-auto",
+        )}
         aria-label="Objets Minecraft"
       >
-        {matches.slice(0, SHOWN).map(({ id, name }) => (
+        {matches.slice(0, shown).map(({ id, name }) => (
           <li key={id}>
             <button
               type="button"
@@ -67,7 +83,7 @@ export function ItemPalette({ items, onPick, pickLabel }: { items: McItems | nul
           </li>
         ))}
       </ul>
-      {matches.length > SHOWN && <p className="text-[.78rem] text-muted">{matches.length - SHOWN} autres : affinez la recherche.</p>}
+      {matches.length > shown && <p className="text-[.78rem] text-muted">{matches.length - shown} autres : affinez la recherche.</p>}
       {items && matches.length === 0 && <p className="text-[.85rem] text-muted">Aucun objet ne correspond.</p>}
     </div>
   );

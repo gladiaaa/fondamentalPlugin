@@ -10,6 +10,22 @@ import { ShopEditor } from "./ShopEditor";
 export function ShopEditorPage() {
   const { status } = useSession();
 
+  // Connecté : l'éditeur occupe toute la largeur, comme un logiciel ; sinon, la présentation.
+  if (status === "authenticated") {
+    return (
+      <section className="px-2 py-2.5 sm:px-3">
+        <h1 className="sr-only">Menus de FondamentalShop</h1>
+        <nav aria-label="Fil d’Ariane" className="mb-2 px-1 text-[.8rem] text-muted">
+          <Link href="/configurateur" className="hover:text-text">
+            Configurateur
+          </Link>{" "}
+          / <span className="text-text">Menus de FondamentalShop</span>
+        </nav>
+        <ShopEditor />
+      </section>
+    );
+  }
+
   return (
     <section className="px-4 py-[clamp(24px,4vw,48px)] sm:px-8">
       <div className="mx-auto grid max-w-[1560px] grid-cols-[minmax(0,1fr)] gap-6">
@@ -40,7 +56,6 @@ export function ShopEditorPage() {
             </Button>
           </div>
         )}
-        {status === "authenticated" && <ShopEditor />}
       </div>
     </section>
   );
