@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties, type DragEvent } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent } from "react";
+import { createPortal } from "react-dom";
 import { Pixelify_Sans } from "next/font/google";
 import { cn } from "@/lib/cn";
 import { parseMiniMessage, plainText, type Segment } from "../minimessage";
@@ -55,14 +56,32 @@ function titleSegments(title: string): Segment[] {
   return parseMiniMessage(title).map((s) => (s.color === "#FFFFFF" ? { ...s, color: "#404040" } : s));
 }
 
-/** Infobulle façon Minecraft (fond sombre, liseré violet). */
-function Tooltip({ slot }: { slot: Slot }) {
-  return (
+/**
+ * Infobulle façon Minecraft (fond sombre, liseré violet), au premier plan de la page : rendue hors du
+ * coffre (portail), elle passe par-dessus les panneaux voisins au lieu d'être coupée par eux.
+ */
+function Tooltip({ slot, anchor }: { slot: Slot; anchor: HTMLElement }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const a = anchor.getBoundingClientRect();
+    const t = ref.current!.getBoundingClientRect();
+    // À droite de la case, sinon à gauche ; toujours dans la fenêtre.
+    const left = a.right + 8 + t.width <= window.innerWidth - 8 ? a.right + 8 : Math.max(8, a.left - 8 - t.width);
+    setPos({ left, top: Math.max(8, Math.min(a.top, window.innerHeight - t.height - 8)) });
+  }, [anchor]);
+  return createPortal(
     <span
+      ref={ref}
       role="tooltip"
-      className="pointer-events-none absolute left-full top-0 z-20 ml-2 grid w-max max-w-[280px] justify-items-start gap-0.5 text-left rounded-[3px] px-2 py-1.5 text-[15px] leading-tight"
+      className={cn(
+        pixel.className,
+        "pointer-events-none fixed z-[1000] grid w-max max-w-[300px] justify-items-start gap-0.5 rounded-[3px] px-2 py-1.5 text-left text-[15px] leading-tight",
+      )}
       style={{
-        background: "rgba(16, 0, 16, .94)",
+        left: pos?.left ?? -9999,
+        top: pos?.top ?? 0,
+        background: "rgba(16, 0, 16, .96)",
         boxShadow: "inset 0 0 0 2px #2d0a6e, 0 0 0 1px #100010",
       }}
     >
@@ -75,7 +94,8 @@ function Tooltip({ slot }: { slot: Slot }) {
         </span>
       ))}
       {slot.problem && <span className="text-[#FF5555]">Ignoré par le plugin : {slot.problem}</span>}
-    </span>
+    </span>,
+    document.body,
   );
 }
 
@@ -102,7 +122,7 @@ export function Chest({
   onBack?: () => void;
   footer?: React.ReactNode;
 }) {
-  const [hover, setHover] = useState<number | null>(null);
+  const [hover, setHover] = useState<{ i: number; el: HTMLElement } | null>(null);
   const [target, setTarget] = useState<number | null>(null);
   const title = useMemo(() => titleSegments(layout.title), [layout.title]);
 
@@ -124,7 +144,7 @@ export function Chest({
           const cell = (
             <>
               <McItem material={slot.material} items={items} className={cn(slot.kind === "fill" && "opacity-90")} />
-              {hover === i && (slot.kind === "entry" || slot.kind === "control") && <Tooltip slot={slot} />}
+              {hover?.i === i && (slot.kind === "entry" || slot.kind === "control") && <Tooltip slot={slot} anchor={hover.el} />}
             </>
           );
           return (
@@ -139,7 +159,7 @@ export function Chest({
                 background: "#8B8B8B",
                 boxShadow: "inset 1px 1px 0 #373737, inset -1px -1px 0 #FFFFFF",
               }}
-              onMouseEnter={() => setHover(i)}
+              onMouseEnter={(e) => setHover({ i, el: e.currentTarget })}
               onMouseLeave={() => setHover(null)}
               onDragOver={(e) => {
                 if (!droppable || !e.dataTransfer.types.includes(DRAG_TYPE)) return;
@@ -163,7 +183,7 @@ export function Chest({
                   aria-pressed={selected === slot.key}
                   aria-label={`${plainText(slot.name ?? slot.key!)}, case ${i}${slot.fixed ? "" : " (placement automatique)"}${slot.problem ? `, ignoré : ${slot.problem}` : ""}`}
                   onClick={() => onSelect?.(slot.key!)}
-                  onFocus={() => setHover(i)}
+                  onFocus={(e) => setHover({ i, el: e.currentTarget })}
                   onBlur={() => setHover(null)}
                   onDragStart={(e) => {
                     e.dataTransfer.setData(DRAG_TYPE, JSON.stringify({ key: slot.key } satisfies DragData));
@@ -187,7 +207,7 @@ export function Chest({
                   type="button"
                   aria-label="Retour au menu de la commande"
                   onClick={onBack}
-                  onFocus={() => setHover(i)}
+                  onFocus={(e) => setHover({ i, el: e.currentTarget })}
                   onBlur={() => setHover(null)}
                   className="relative grid h-full w-full place-items-center hover:bg-white/25 focus-visible:bg-white/25"
                 >
