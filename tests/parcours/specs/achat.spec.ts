@@ -29,6 +29,13 @@ async function payerAvecCarteDeTest(page: Page): Promise<void> {
   const codePostal = page.locator("#billingPostalCode");
   if (await codePostal.isVisible().catch(() => false)) await codePostal.fill("75001");
 
+  // Stripe Link (« Enregistrer mes informations… ») est coché par défaut et exige alors un numéro de
+  // téléphone : on le décoche quand il apparaît, sinon le paiement ne part jamais.
+  const link = page.getByRole("checkbox", { name: /Enregistrer mes informations|Save my information/ });
+  if (await link.isChecked().catch(() => false)) {
+    await link.uncheck({ timeout: 5_000 }).catch(() => page.getByText(/Enregistrer mes informations|Save my information/).first().click());
+  }
+
   // Case obligatoire : CGV et renonciation au droit de rétractation (contenu numérique).
   // Même principe que la radio : si la case est dessinée par Stripe, on clique sur son texte.
   const cgv = page.getByRole("checkbox", { name: /renoncez expressément|droit de rétractation/ });
