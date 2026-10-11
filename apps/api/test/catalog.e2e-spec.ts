@@ -4,7 +4,7 @@ import request from 'supertest';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp, InMemoryMailer } from './support/app.js';
 
-// Les 4 plugins viennent de la migration `catalogue`. Ces tests y ajoutent, puis retirent,
+// Les 6 plugins viennent des migrations `catalogue` et `essentials_shop`. Ces tests y ajoutent, puis retirent,
 // leurs propres lignes (préfixe `e2e-`) : ils ne modifient jamais les vrais produits.
 const TEST_SLUG = 'e2e-plugin';
 
@@ -41,15 +41,17 @@ describe('Catalogue (e2e)', () => {
   }
 
   describe('GET /api/products', () => {
-    it('renvoie les 4 plugins, sans compte, dans l’ordre d’affichage', async () => {
+    it('renvoie les 6 plugins, sans compte, dans l’ordre d’affichage', async () => {
       const res = await request(app.getHttpServer()).get('/api/products').expect(200);
       const products = res.body as ProductResponse[];
-      expect(products.map((p) => p.slug)).toEqual(['bedwars', 'tag', 'crate', 'pass']);
+      expect(products.map((p) => p.slug)).toEqual(['bedwars', 'tag', 'crate', 'pass', 'shop', 'essentials']);
       expect(products.map((p) => p.name)).toEqual([
         'FondamentalBedwars',
         'FondamentalTag',
         'FondamentalCrate',
         'FondamentalPass',
+        'FondamentalShop',
+        'FondamentalEssentials',
       ]);
     });
 
@@ -58,6 +60,8 @@ describe('Catalogue (e2e)', () => {
       const bySlug = Object.fromEntries(products.map((p) => [p.slug, p]));
       expect(bySlug['bedwars']?.distribution).toBe('SINGLE_JAR');
       expect(bySlug['pass']?.distribution).toBe('SINGLE_JAR');
+      expect(bySlug['essentials']?.distribution).toBe('FREE_ONLY');
+      expect(bySlug['essentials']?.purchasable).toBe(false);
       expect(bySlug['tag']?.distribution).toBe('FREE_PREMIUM_JARS');
       expect(bySlug['crate']?.distribution).toBe('FREE_PREMIUM_JARS');
       const fawe = bySlug['bedwars']?.requirements.dependencies.find((d) => d.name === 'FastAsyncWorldEdit');

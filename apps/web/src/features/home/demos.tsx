@@ -285,3 +285,95 @@ export function BedwarsDemo() {
     </div>
   );
 }
+
+// ─── FondamentalShop : un achat dans le menu de la boutique ───────
+
+const SHOP_ITEMS = [
+  { name: "<gradient:#FFC837:#FF8008>Clé Légendaire</gradient>", price: 2500, icon: "🗝" },
+  { name: "<gradient:#B7A0FF:#6A5D94>Grade VIP</gradient>", price: 10000, icon: "★" },
+  { name: "<gradient:#00C6FF:#7A5CFF>Tag ✦ Galaxy</gradient>", price: 4000, icon: "✦" },
+  { name: "<green>Clé Vote</green>", price: 300, icon: "🗝" },
+  { name: "<aqua>Pioche en diamant</aqua>", price: 750, icon: "⛏" },
+  { name: "<yellow>Vol 30 min</yellow>", price: 1500, icon: "➶" },
+];
+
+export function ShopDemo() {
+  const tick = useTick(900);
+  const cycle = tick % 12;
+  // Le curseur parcourt les articles, puis achète la clé légendaire.
+  const selected = cycle < 6 ? cycle : 0;
+  const bought = cycle >= 8;
+  const balance = bought ? 12_450 - 2_500 : 12_450;
+
+  return (
+    <div className={cn(SCREEN, "grid gap-3")}>
+      <div className="flex items-center justify-between gap-2">
+        <MM text="<gradient:#B7A0FF:#6A5D94>Boutique</gradient> <dark_gray>·</dark_gray> <white>Clés et grades" className="text-[.9rem]" />
+        <span className="text-[.72rem] text-[#8A8199]">
+          Solde <span className="tabular-nums text-[#55FF55]">{balance.toLocaleString("fr-FR")} $</span>
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5 text-[.74rem] sm:grid-cols-3">
+        {SHOP_ITEMS.map((item, i) => (
+          <div
+            key={item.name}
+            className={cn(
+              "grid gap-0.5 rounded-[6px] border px-2 py-1.5 transition-colors",
+              i === selected ? "border-[#B7A0FF] bg-[#B7A0FF]/15" : "border-white/10 bg-black/35",
+            )}
+          >
+            <span>
+              <span aria-hidden className="mr-1">
+                {item.icon}
+              </span>
+              <MM text={item.name} />
+            </span>
+            <span className="tabular-nums text-[#AAAAAA]">{item.price.toLocaleString("fr-FR")} $</span>
+          </div>
+        ))}
+      </div>
+      <MM
+        text={
+          bought
+            ? "<gradient:#B7A0FF:#6A5D94>[Boutique]</gradient> <gray>Achat : <white>Clé Légendaire ×1</white> pour <green>2 500 $</green>."
+            : "<gray>Clic : acheter · clic droit : revendre · <white>/sell all</white> pour tout revendre."
+        }
+        className="text-[.78rem]"
+      />
+    </div>
+  );
+}
+
+// ─── FondamentalEssentials : les commandes du quotidien ──────────
+
+const ESSENTIALS_LINES = [
+  "<white>/home base",
+  "<gray>Téléportation dans <white>3 s</white>, ne bouge pas…",
+  "<green>Bienvenue à <white>base</white>.",
+  "<white>/tpa Alex",
+  "<gray>Demande envoyée à <white>Alex</white>. <dark_gray>(60 s)",
+  "<white>/pay Alex 500",
+  "<green>500 $ envoyés à <white>Alex</white>. <gray>Solde : <white>11 950 $",
+  "<white>/warps",
+  "<gray>Warps : <white>spawn</white>, <white>mine</white>, <white>bedwars:map_rome</white> <dark_gray>(autre serveur)",
+];
+
+export function EssentialsDemo() {
+  const tick = useTick(900);
+  const shown = (tick % (ESSENTIALS_LINES.length + 3)) + 1;
+
+  return (
+    <div className={cn(SCREEN, "grid gap-3")}>
+      <MM text="<gradient:#B7A0FF:#6A5D94>FondamentalEssentials</gradient> <dark_gray>·</dark_gray> <white>100 % gratuit" className="text-[.9rem]" />
+      <div className="flex min-h-[200px] flex-col justify-end gap-1 text-[.76rem]">
+        {ESSENTIALS_LINES.slice(0, Math.min(shown, ESSENTIALS_LINES.length)).map((line) => (
+          <MM
+            key={line}
+            text={line}
+            className={cn("animate-[chat-in_.45s_ease-out] rounded-[6px] px-2 py-1", line.startsWith("<white>/") ? "bg-white/10" : "bg-black/35")}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

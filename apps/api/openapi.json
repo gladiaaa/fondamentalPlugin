@@ -2912,9 +2912,10 @@
             "type": "string",
             "enum": [
               "SINGLE_JAR",
-              "FREE_PREMIUM_JARS"
+              "FREE_PREMIUM_JARS",
+              "FREE_ONLY"
             ],
-            "description": "`SINGLE_JAR` : un seul jar, la clé de licence décide de l’édition. `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`."
+            "description": "`SINGLE_JAR` : un seul jar, la clé de licence décide de l’édition. `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`. `FREE_ONLY` : un seul jar entièrement gratuit, jamais achetable."
           },
           "requirements": {
             "$ref": "#/components/schemas/ProductRequirementsApiResponse"

@@ -1,0 +1,66 @@
+---
+title: FondamentalShop
+description: Boutique en menus pour votre serveur, avec revente, limites, grades, clés de caisses et tags.
+---
+
+FondamentalShop ajoute une **boutique en menus** à votre serveur : vos joueurs achètent des objets, des clés de caisses, des grades, des tags ou des commandes avec l'argent du serveur, et revendent ce qu'ils récoltent.
+
+- **Articles** : objets (ItemsAdder, Oraxen et Nexo compris), clés FondamentalCrate, grades et permissions LuckPerms, définitifs ou temporaires, tags FondamentalTag, commandes, vitrines avec un lien vers votre boutique en ligne.
+- **Achat** : quantité 1, 8, 16, 32, 64 ou libre, confirmation au-delà d'un prix, refus si l'inventaire est plein. Un grade ou un tag définitif déjà possédé ne se rachète pas.
+- **Revente** : `/sell` (un coffre vendu à la fermeture), `/sell hand`, `/sell all`, `/worth`, bonus de revente par grade.
+- **Vos commandes** : `/boutique`, `/grades`, `/shop`… vous choisissez lesquelles existent et ce qu'elles ouvrent.
+- **Sûr** : si une livraison échoue, le joueur est remboursé.
+
+## Free ou Premium
+
+| | Free | Premium |
+|---|---|---|
+| Boutiques | catégories illimitées, commandes de boutique sur mesure | boutique du jour : articles tirés au sort chaque jour, semaine ou mois |
+| Achat | quantités, confirmation, limites par joueur, délais, permissions | promotions datées (prix barré), stock commun à tous les joueurs |
+| Monnaies | économie Vault | objets, niveaux d'expérience, n'importe quel plugin via PlaceholderAPI |
+| Stockage | SQLite | MySQL : limites et stock partagés par tout le réseau |
+
+L'édition dépend de la clé de licence (`config.yml > license.key`, voir [Activer ma licence](/wiki/licence)). Sans clé, le plugin tourne en Free, sans aucun appel réseau. Les réglages Premium présents sur un serveur Free sont ignorés et signalés au démarrage.
+
+## Prérequis
+
+| | |
+|---|---|
+| Serveur | Paper 1.21 ou plus récent (Folia compatible), Java 21 |
+| Obligatoire | Vault et une économie (FondamentalEssentials, EssentialsX, CMI…) |
+| Facultatif | LuckPerms (grades), FondamentalCrate (clés), FondamentalTag (tags), PlaceholderAPI, ItemsAdder, Oraxen, Nexo |
+| Réseau <Premium /> | MySQL |
+
+Seuls les articles qui dépendent d'un plugin facultatif en ont besoin : sans LuckPerms, la boutique fonctionne, simplement sans grades.
+
+## Installation
+
+<Steps>
+<Step>
+
+### Déposer le jar
+
+Un seul jar pour les deux éditions : déposez-le dans `plugins/` avec Vault et votre économie, puis démarrez. Les boutiques d'exemple sont créées dans `plugins/FondamentalShop/shops/`.
+
+</Step>
+<Step>
+
+### Adapter les boutiques
+
+Un fichier par catégorie : modifiez les exemples ou créez les vôtres (voir [Boutiques et articles](/wiki/shop/boutiques)), puis `/fshop reload`.
+
+</Step>
+<Step>
+
+### Activer le Premium
+
+Collez votre clé dans `config.yml > license.key` et redémarrez le serveur. `/fshop license` affiche l'édition active.
+
+</Step>
+</Steps>
+
+## Avec les autres plugins de la gamme
+
+- **FondamentalEssentials** fournit l'économie, et son journal enregistre chaque achat et chaque revente.
+- **FondamentalCrate** : vendez des clés de caisses virtuelles (type `crate-key`).
+- **FondamentalTag** : vendez des tags, à vie ou pour une durée (type `tag`).

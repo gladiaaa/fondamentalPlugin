@@ -1,0 +1,76 @@
+---
+title: Boutiques et articles
+description: Créer les commandes de boutique, les catégories et leurs articles.
+---
+
+## Commandes de boutique
+
+Chaque commande déclarée dans `config.yml > commands` ouvre un menu avec ses catégories. Une commande qui n'a qu'une catégorie l'ouvre directement. Elles sont créées et retirées à chaud par `/fshop reload`.
+
+```yaml
+commands:
+  boutique:                         # /boutique : grades et clés
+    title: "<degrade>Boutique</degrade>"
+    categories: [grades, cles]
+  shop:                             # /shop : ressources
+    aliases: [magasin]
+    categories: [blocs, ressources]
+  grades:                           # /grades : avantages et lien vers la boutique en ligne
+    permission: ""
+    categories: [vitrine]
+```
+
+| Champ | Rôle |
+|---|---|
+| `title` | titre du menu |
+| `rows` | lignes du menu, de 3 à 6 |
+| `permission` | par défaut `fondamentalshop.use` ; vide = tout le monde |
+| `aliases` | autres noms de la commande |
+| `description` | texte de l'aide de la commande |
+| `categories` | catégories proposées ; absent = toutes |
+
+Sans section `commands`, le plugin crée `/shop` avec toutes les catégories.
+
+## Catégories
+
+Un fichier par catégorie dans `shops/` : son nom est l'identifiant (`shops/cles.yml` donne `/shop cles`). Dans les commandes, un article se désigne par `catégorie:id` (`cles:cle_rare`).
+
+```yaml
+display: "<accent>Clés de caisses"
+icon: TRIPWIRE_HOOK
+slot: 24          # case dans le menu d'accueil
+rows: 4           # lignes du menu (3 à 6)
+permission: ""    # vide = tout le monde
+items:
+  cle_rare:
+    type: crate-key
+    crate: rare
+    buy: 2000
+    name: "<accent>Clé rare"
+    max-quantity: 8
+    limit: { amount: 4, period: week }
+```
+
+## Types d'articles
+
+| Type | Champs | Ce que reçoit le joueur |
+|---|---|---|
+| `item` (par défaut) | `material` (ou `itemsadder:id`, `oraxen:id`, `nexo:id`), `amount` | des objets dans l'inventaire |
+| `crate-key` | `crate`, `amount` | des clés virtuelles FondamentalCrate |
+| `rank` | `group`, `duration` | un grade LuckPerms, définitif ou temporaire |
+| `permission` | `node`, `duration` | une permission, définitive ou temporaire |
+| `tag` | `tag`, `duration` | un tag FondamentalTag |
+| `command` | `commands` (`{player}`, `{uuid}`, `{amount}`) | des commandes console, une fois par unité |
+| `info` | `link` (facultatif) | rien : une vitrine (avantages dans `lore`), le clic envoie le lien dans le chat |
+
+Champs communs : `buy`, `sell` (objets seulement), `name`, `lore`, `icon`, `slot`, `quantity`, `max-quantity`, `permission`, `limit`, `cooldown`, `confirm`. En Premium : `currency`, `stock`, `sale`. Le détail de chaque champ est commenté dans `shops/blocs.yml`.
+
+<Callout title="Le configurateur s'en charge">
+
+Le [configurateur](/configurateur) génère `config.yml` et les fichiers de catégorie avec un formulaire, sans écrire de YAML.
+
+</Callout>
+
+## Réseau (Premium)
+
+Avec `storage.type: mysql` et la même base sur chaque serveur, une limite « 1 par jour » vaut pour tout le réseau et le stock est commun. Donnez un `server.name` différent à chaque serveur. `/fshop migrate confirm` reprend la base SQLite d'un serveur.

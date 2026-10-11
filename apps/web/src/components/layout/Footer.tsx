@@ -6,6 +6,8 @@ const PLUGIN_LINKS = [
   { href: "/plugins/tag", label: "FondamentalTag" },
   { href: "/plugins/crate", label: "FondamentalCrate" },
   { href: "/plugins/pass", label: "FondamentalPass" },
+  { href: "/plugins/shop", label: "FondamentalShop" },
+  { href: "/plugins/essentials", label: "FondamentalEssentials" },
 ];
 
 const RESOURCE_LINKS = [

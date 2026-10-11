@@ -52,6 +52,7 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
   const latestVersion = files[0]?.release.version;
   const requiredDeps = product.requirements.dependencies.filter((d) => d.required);
   const recommendedDeps = product.requirements.dependencies.filter((d) => !d.required);
+  const freeOnly = product.distribution === "FREE_ONLY";
 
   // Un release peut avoir plusieurs fichiers (Gratuit + Premium) : le changelog ne se répète pas.
   const releases = useMemo(() => {
@@ -94,7 +95,11 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
               )}
               <li className="flex items-center gap-1.5">
                 <TelechargerIcon />{" "}
-                {product.distribution === "SINGLE_JAR" ? "Un seul fichier" : "Fichiers Gratuit et Premium"}
+                {freeOnly
+                  ? "Un seul fichier, gratuit"
+                  : product.distribution === "SINGLE_JAR"
+                    ? "Un seul fichier"
+                    : "Fichiers Gratuit et Premium"}
               </li>
             </ul>
           </div>
@@ -246,7 +251,12 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
 
           <aside className="grid content-start gap-4 rounded-card-lg border border-line bg-surface p-5">
             <div>
-              {product.price ? (
+              {freeOnly ? (
+                <div className="flex items-center gap-2.5">
+                  <b className="font-display text-[1.6rem] font-semibold tracking-[-.03em]">Gratuit</b>
+                  <Badge variant="success">Sans licence</Badge>
+                </div>
+              ) : product.price ? (
                 <div className="flex items-center gap-2.5">
                   <b className="font-display text-[1.6rem] font-semibold tracking-[-.03em] tabular-nums">
                     {formatPriceCents(product.price.amountCents)}
@@ -258,7 +268,7 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
               )}
             </div>
 
-            {product.purchasable ? (
+            {freeOnly ? null : product.purchasable ? (
               <BuyButton productSlug={product.slug} />
             ) : (
               <Button fullWidth size="lg" disabled>
@@ -266,17 +276,30 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
               </Button>
             )}
 
-            <Button fullWidth variant="secondary" onClick={() => setTab("dl")}>
+            <Button fullWidth size={freeOnly ? "lg" : undefined} variant={freeOnly ? undefined : "secondary"} onClick={() => setTab("dl")}>
               <TelechargerIcon width={18} height={18} /> Télécharger gratuitement
             </Button>
 
             <ul className="grid gap-2 border-t border-line pt-4 text-[.88rem] text-muted">
-              <li className="flex items-center gap-2.5">
-                <CleIcon /> Paiement sécurisé par Stripe
-              </li>
-              <li className="flex items-center gap-2.5">
-                <RapideIcon /> Clé livrée tout de suite
-              </li>
+              {freeOnly ? (
+                <>
+                  <li className="flex items-center gap-2.5">
+                    <CleIcon /> Aucune clé de licence à saisir
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <RapideIcon /> Mises à jour gratuites
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-2.5">
+                    <CleIcon /> Paiement sécurisé par Stripe
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <RapideIcon /> Clé livrée tout de suite
+                  </li>
+                </>
+              )}
               <li className="flex items-center gap-2.5">
                 <SupportIcon /> Support sur Discord
               </li>

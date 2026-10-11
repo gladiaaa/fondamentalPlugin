@@ -152,6 +152,8 @@ enum ProductDistribution {
   SINGLE_JAR
   /// Deux jars, `free` et `premium` (Tag, Crate).
   FREE_PREMIUM_JARS
+  /// Un seul jar, entièrement gratuit : ni licence ni achat (Essentials).
+  FREE_ONLY
 
   @@map("product_distribution")
 }

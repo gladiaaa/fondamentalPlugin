@@ -158,6 +158,7 @@ describe('Commandes : achat Stripe (e2e)', () => {
       ['produit désactivé', TEST_SLUG, { active: false }],
       ['prix pas fixé', TEST_SLUG, { priceCents: null }],
       ['pas de prix Stripe', TEST_SLUG, { stripePriceId: null }],
+      ['plugin entièrement gratuit', TEST_SLUG, { distribution: 'FREE_ONLY' }],
     ])('refuse (400) : %s', async (_nom, slug, overrides) => {
       if (slug === TEST_SLUG) await createProduct(overrides);
       const { b, csrf } = await loggedInUser();
