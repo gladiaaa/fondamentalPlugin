@@ -481,7 +481,7 @@ export function ShopEditor() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 lg:h-[calc(100dvh-9.5rem)] lg:min-h-[560px] lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(400px,1fr)_minmax(0,1.25fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 xl:h-[calc(100dvh-9.5rem)] xl:min-h-[560px] lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(380px,.85fr)_minmax(0,1fr)_minmax(0,1fr)]">
         {/* Objets */}
         <aside aria-label="Objets Minecraft" className="order-last max-h-[60vh] min-h-0 overflow-y-auto rounded-card lg:order-none lg:max-h-none border border-line bg-surface p-2.5">
           {category ? (
@@ -581,7 +581,7 @@ export function ShopEditor() {
         </section>
 
         {/* Réglages : deux colonnes, comme « Item stack » et « Button » */}
-        <div className="grid min-h-0 min-w-0 gap-2.5 lg:col-span-2 xl:col-span-1 2xl:grid-cols-2">
+        <div className="grid min-h-0 min-w-0 gap-2.5 md:grid-cols-2 lg:col-span-2 xl:contents">
           {category && current ? (
             <>
               <Panel title="Objet affiché" onClose={() => setArticle(undefined)}>
@@ -858,7 +858,7 @@ function CategoryChest({
 
   return (
     <>
-      <div className="max-w-full overflow-x-auto p-0.5 lg:[zoom:1.25] 2xl:[zoom:1.6]">
+      <div className="max-w-full overflow-x-auto p-0.5 2xl:[zoom:1.2]">
         <Chest layout={layout} items={items} selected={selected} onSelect={onSelect} onDrop={drop} onBack={onBack} />
       </div>
       {layout.pages > 1 && (
@@ -931,7 +931,7 @@ function CommandChest({
           , sans ce menu.
         </p>
       ) : (
-        <div className="max-w-full overflow-x-auto p-0.5 lg:[zoom:1.25] 2xl:[zoom:1.6]">
+        <div className="max-w-full overflow-x-auto p-0.5 2xl:[zoom:1.2]">
           <Chest layout={layout} items={items} onSelect={onOpen} onDrop={(slot, data) => data.key && onMove(data.key, slot)} />
         </div>
       )}
