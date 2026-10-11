@@ -30,6 +30,7 @@ import { TagPreview } from "./MiniMessagePreview";
 import { plainText } from "./minimessage";
 import { breadcrumb, generalFields, resolveNode, screenFields, setAt, type NodePath } from "./navigation";
 import { isValues } from "./values";
+import { CATEGORY_FILE, CATEGORY_ID } from "./shop/layout";
 
 /** Délai avant de régénérer le fichier après une modification. */
 const PREVIEW_DELAY_MS = 600;
@@ -131,10 +132,11 @@ export function Configurator() {
     const url = URL.createObjectURL(new Blob([preview], { type: "text/yaml;charset=utf-8" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = schema.file;
+    // Une catégorie de boutique se dépose sous son identifiant : shops/<nom>.yml.
+    link.download = schema.slug === "shop" && schema.file === CATEGORY_FILE && CATEGORY_ID.test(name.trim()) ? `${name.trim()}.yml` : schema.file;
     link.click();
     URL.revokeObjectURL(url);
-  }, [preview, schema]);
+  }, [preview, schema, name]);
 
   function switchTo(slug: string, next: string) {
     setSchema(null);
@@ -242,6 +244,9 @@ export function Configurator() {
     );
   }
 
+  const isCategory = schema?.slug === "shop" && schema.file === CATEGORY_FILE;
+  const categoryNameInvalid = isCategory && name.trim() !== "" && !CATEGORY_ID.test(name.trim());
+
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
       {/* Choix du plugin et du fichier */}
@@ -284,6 +289,11 @@ export function Configurator() {
               <span className="text-[.78rem]">{f.label}</span>
             </button>
           ))}
+          {plugin === "shop" && (
+            <Button size="sm" variant="secondary" asChild className="self-center">
+              <Link href="/configurateur/boutique">Éditeur visuel des menus</Link>
+            </Button>
+          )}
           {version && (
             <span className="ml-auto self-center text-[.8rem] text-muted">
               Version <span className="font-mono text-text">{version}</span>
@@ -339,10 +349,21 @@ export function Configurator() {
 
             <div className="grid gap-3 rounded-card border border-line bg-surface p-4">
               <div className="flex flex-wrap items-end gap-2">
-                <Field label={current ? "Nom de la configuration" : "Enregistrer sous"} htmlFor="cfg-name" className="min-w-[180px] flex-1">
-                  <Input id="cfg-name" value={name} maxLength={64} placeholder="Ex. Crates du lobby" onChange={(e) => setName(e.target.value)} />
+                <Field
+                  label={isCategory ? "Nom du fichier (shops/<nom>.yml)" : current ? "Nom de la configuration" : "Enregistrer sous"}
+                  htmlFor="cfg-name"
+                  className="min-w-[180px] flex-1"
+                  error={categoryNameInvalid ? "Lettres, chiffres, - et _ seulement : c’est l’identifiant de la catégorie (/shop ressources)." : undefined}
+                >
+                  <Input
+                    id="cfg-name"
+                    value={name}
+                    maxLength={64}
+                    placeholder={isCategory ? "ressources" : "Ex. Crates du lobby"}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </Field>
-                <Button variant="secondary" loading={saving} disabled={!name.trim() || previewErrors.length > 0} onClick={save}>
+                <Button variant="secondary" loading={saving} disabled={!name.trim() || categoryNameInvalid || previewErrors.length > 0} onClick={save}>
                   {current ? "Mettre à jour" : "Enregistrer"}
                 </Button>
               </div>
