@@ -21,6 +21,8 @@ export interface Slot {
   fixed?: boolean;
   /** Article que le plugin ignorerait (et pourquoi) : montré dans l'éditeur seulement, à sa case. */
   problem?: string;
+  /** Bouton du plugin qui ramène au menu précédent (cliquable dans l'éditeur, comme en jeu). */
+  back?: boolean;
 }
 
 export interface MenuLayout {
@@ -170,7 +172,7 @@ export function categoryLayout(category: ConfigValues, page: number, panes: Pane
     if (problem && slot !== null && slots[slot]?.kind !== "entry") slots[slot] = { ...toSlot(key, a, true), problem };
   }
 
-  slots[size - 5] = { kind: "control", ...CONTROL.back };
+  slots[size - 5] = { kind: "control", ...CONTROL.back, back: true };
   if (current > 0) slots[size - 8] = { kind: "control", ...CONTROL.previous };
   if (current < pages - 1) slots[size - 2] = { kind: "control", ...CONTROL.next };
   if (rotating) slots[size - 6] = { kind: "control", ...CONTROL.rotation };

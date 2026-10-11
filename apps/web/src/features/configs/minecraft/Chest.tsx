@@ -90,6 +90,7 @@ export function Chest({
   selected,
   onSelect,
   onDrop,
+  onBack,
   footer,
 }: {
   layout: MenuLayout;
@@ -97,6 +98,8 @@ export function Chest({
   selected?: string;
   onSelect?: (key: string) => void;
   onDrop?: (slot: number, data: DragData) => void;
+  /** Clic sur la flèche « Retour » du plugin : remonter au menu de la commande. */
+  onBack?: () => void;
   footer?: React.ReactNode;
 }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -178,6 +181,17 @@ export function Chest({
                       A
                     </span>
                   )}
+                </button>
+              ) : slot.back && onBack ? (
+                <button
+                  type="button"
+                  aria-label="Retour au menu de la commande"
+                  onClick={onBack}
+                  onFocus={() => setHover(i)}
+                  onBlur={() => setHover(null)}
+                  className="relative grid h-full w-full place-items-center hover:bg-white/25 focus-visible:bg-white/25"
+                >
+                  {cell}
                 </button>
               ) : (
                 <span aria-hidden className="relative grid h-full w-full place-items-center">
