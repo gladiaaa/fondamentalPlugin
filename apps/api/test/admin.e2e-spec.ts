@@ -228,6 +228,16 @@ describe('Back-office admin (e2e)', () => {
       expect(actions[0]?.action).toBe('product.update');
     });
 
+    it('PATCH : refuse un identifiant de produit Stripe (prod_…) à la place du prix (price_…)', async () => {
+      await createProduct({ active: true });
+      const admin = await loggedInAdmin();
+      const res = await admin.b
+        .patch(`/api/admin/products/${TEST_SLUG}`, { stripePriceId: 'prod_VQGVPqeENoK9Fo' }, { csrf: admin.csrf })
+        .expect(400);
+      expect(JSON.stringify(res.body.message)).toContain('price_');
+      await admin.b.patch(`/api/admin/products/${TEST_SLUG}`, { stripePriceId: 'price_1Abc' }, { csrf: admin.csrf }).expect(200);
+    });
+
     it('PATCH active:false retire le produit du catalogue public', async () => {
       await createProduct({ active: true });
       const admin = await loggedInAdmin();

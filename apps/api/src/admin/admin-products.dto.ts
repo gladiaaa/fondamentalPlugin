@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -13,9 +13,13 @@ export class UpdateProductDto {
   @Max(1_000_000)
   priceCents?: number;
 
+  /** L'identifiant du **prix** Stripe (`price_…`), pas celui du produit (`prod_…`) : Stripe Checkout refuse ce dernier. */
   @IsOptional()
   @IsString()
   @Length(1, 64)
+  @Matches(/^price_[A-Za-z0-9]+$/, {
+    message: 'Identifiant de prix Stripe attendu (price_…), pas celui du produit (prod_…) : Stripe → Produit → Tarifs.',
+  })
   stripePriceId?: string;
 
   @IsOptional()
