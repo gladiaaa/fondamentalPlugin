@@ -11,6 +11,7 @@ import { Table } from "@/components/ui/Table";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDate, formatFileSize, formatPriceCents } from "@/lib/format";
 import { PLUGIN_ICONS } from "@/features/plugins/icons";
+import { PITCH } from "@/features/plugins/pitch";
 import { BuyButton } from "@/features/checkout/BuyButton";
 import {
   ServeurIcon,
@@ -21,6 +22,7 @@ import {
   PanierIcon,
   CleIcon,
   SupportIcon,
+  ValiderIcon,
 } from "@/components/icons";
 
 const EDITION_LABEL: Record<ReleaseFileResponse["edition"], string> = {
@@ -67,7 +69,7 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
   return (
     <section className="px-4 py-[clamp(28px,5vw,56px)] sm:px-8">
       <div className="mx-auto grid max-w-[1120px] gap-6">
-        <nav aria-label="Fil d'Ariane" className="font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">
+        <nav aria-label="Fil d'Ariane" className="text-[.85rem] text-muted">
           <Link href="/plugins" className="hover:text-text">
             Plugins
           </Link>{" "}
@@ -80,6 +82,9 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
             <h1 className="font-display text-[clamp(1.6rem,4vw,2.3rem)] font-semibold tracking-[-.04em]">
               {product.name}
             </h1>
+            {PITCH[product.slug] && (
+              <p className="font-display text-[1.15rem] tracking-[-.01em] text-accent-text">{PITCH[product.slug].tagline}</p>
+            )}
             <p className="max-w-[62ch] text-[1.05rem] text-muted">{product.description}</p>
             <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-[.88rem] text-muted">
               <li className="flex items-center gap-1.5">
@@ -121,21 +126,32 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
 
             <TabsContent value="desc">
               <h2 className="sr-only">Description</h2>
-              <p className="text-[1.02rem]">{product.description}</p>
+              {PITCH[product.slug] ? (
+                <ul className="grid gap-2.5 pt-2">
+                  {PITCH[product.slug].points.map((point) => (
+                    <li key={point} className="flex gap-2.5 text-[1.02rem]">
+                      <ValiderIcon className="mt-1 shrink-0 text-success" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[1.02rem]">{product.description}</p>
+              )}
 
               <h3 className="mt-2 font-display text-[1.02rem] font-semibold tracking-[-.02em]">Prérequis</h3>
               <dl className="grid gap-3 rounded-card border border-line bg-surface p-4 sm:grid-cols-2">
                 <div>
-                  <dt className="font-mono text-[.7rem] uppercase tracking-[.08em] text-muted">Serveur</dt>
+                  <dt className="text-[.82rem] font-medium text-muted">Serveur</dt>
                   <dd>{product.requirements.platform}</dd>
                 </div>
                 <div>
-                  <dt className="font-mono text-[.7rem] uppercase tracking-[.08em] text-muted">Java</dt>
+                  <dt className="text-[.82rem] font-medium text-muted">Java</dt>
                   <dd>Java {product.requirements.java} ou plus</dd>
                 </div>
                 {requiredDeps.length > 0 && (
                   <div className="sm:col-span-2">
-                    <dt className="font-mono text-[.7rem] uppercase tracking-[.08em] text-warning">Obligatoire</dt>
+                    <dt className="text-[.82rem] font-medium text-warning">Obligatoire</dt>
                     <dd>
                       {requiredDeps.map((d) => d.name).join(", ")}
                       <span className="block text-muted">{requiredDeps.map((d) => d.note).join(" · ")}</span>
@@ -144,7 +160,7 @@ export function PluginFiche({ product, versions, files }: PluginFicheProps) {
                 )}
                 {recommendedDeps.length > 0 && (
                   <div className="sm:col-span-2">
-                    <dt className="font-mono text-[.7rem] uppercase tracking-[.08em] text-muted">Recommandé</dt>
+                    <dt className="text-[.82rem] font-medium text-muted">Recommandé</dt>
                     <dd>
                       {recommendedDeps.map((d) => d.name).join(", ")}
                       <span className="block text-muted">{recommendedDeps.map((d) => d.note).join(" · ")}</span>

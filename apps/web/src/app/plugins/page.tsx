@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getProducts } from "@/lib/api/products";
 import { PluginCard } from "@/features/plugins/PluginCard";
 import { PLUGIN_ICONS } from "@/features/plugins/icons";
+import { PITCH } from "@/features/plugins/pitch";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PanierIcon } from "@/components/icons";
 
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Les plugins — Fondamental Plugins",
-  description: "Quatre plugins pour votre serveur. Chacun se télécharge gratuitement, la clé de licence débloque le Premium.",
+  description: "Six plugins pour votre serveur. Chacun se télécharge gratuitement, la clé de licence débloque le Premium.",
 };
 
 /** Catalogue (`/plugins`, `#plugins.pub` de la maquette). Données publiques : lu côté serveur. */
@@ -24,7 +25,6 @@ export default async function PluginsPage() {
     <section className="px-4 py-[clamp(28px,5vw,56px)] sm:px-8">
       <div className="mx-auto grid max-w-[1120px] gap-8">
         <div className="grid gap-2.5 justify-items-start">
-          <p className="font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">Boutique</p>
           <h1 className="font-display text-[clamp(1.8rem,4.2vw,2.6rem)] font-semibold tracking-[-.04em]">
             Les plugins
           </h1>
@@ -47,6 +47,7 @@ export default async function PluginsPage() {
                 key={product.slug}
                 slug={product.slug}
                 name={product.name}
+                tagline={PITCH[product.slug]?.tagline}
                 description={product.description}
                 priceCents={product.price?.amountCents ?? null}
                 // Chaque plugin démarre en version gratuite sans clé de licence

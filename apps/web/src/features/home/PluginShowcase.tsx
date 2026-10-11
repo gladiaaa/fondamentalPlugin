@@ -7,81 +7,20 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ValiderIcon, DocumentationIcon } from "@/components/icons";
 import { PLUGIN_ICONS } from "@/features/plugins/icons";
+import { ORDER, PITCH } from "@/features/plugins/pitch";
 import { formatPriceCents } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { BedwarsDemo, CrateDemo, EssentialsDemo, PassDemo, ShopDemo, TagDemo } from "./demos";
 
-/** Accroche et points forts de chaque plugin (vérifiés dans leur code, voir le wiki). */
-const PITCH: Record<string, { tagline: string; points: string[]; Demo: ComponentType }> = {
-  bedwars: {
-    tagline: "Un Bedwars complet, prêt à jouer.",
-    points: [
-      "9 modes, jusqu’à 8 équipes, un monde neuf par partie",
-      "Matchmaking, vote de carte, party et parties privées",
-      "Classé Elo et 8 rangs, classements en hologramme (Premium)",
-      "82 cosmétiques achetés avec les coins gagnés en jouant",
-      "Boutique, pièges et améliorations d’équipe réglables",
-    ],
-    Demo: BedwarsDemo,
-  },
-  tag: {
-    tagline: "Des tags qui se voient, jusque dans le chat.",
-    points: [
-      "Dans le chat, au-dessus de la tête et dans le TAB",
-      "12 effets animés et 9 styles de lettres (Premium)",
-      "L’Atelier : chaque joueur compose son propre tag",
-      "Boutique, raretés et tags saisonniers à dates",
-      "Reprend automatiquement une installation TagsCustom",
-    ],
-    Demo: TagDemo,
-  },
-  crate: {
-    tagline: "Des crates qui donnent envie d’ouvrir.",
-    points: [
-      "9 animations, dont une chambre au trésor en 3D (Premium)",
-      "Éditeur 100 % en jeu, sans toucher un fichier",
-      "Pitié, limites de gain, paliers, « quitte ou double » (Premium)",
-      "Clés physiques et virtuelles, ouverture multiple",
-      "Chances affichées = chances réelles, aucune clé perdue",
-    ],
-    Demo: CrateDemo,
-  },
-  pass: {
-    tagline: "Un pass de saison pour tout votre réseau.",
-    points: [
-      "Piste gratuite et piste premium à vendre à vos joueurs",
-      "Quêtes du jour, de la semaine et de saison, tirées au hasard",
-      "15 objectifs, dont n’importe quel placeholder (Premium)",
-      "La même progression sur tous vos serveurs (Premium)",
-      "Parchemins, calendrier de connexion, pass événement",
-    ],
-    Demo: PassDemo,
-  },
-  shop: {
-    tagline: "Une boutique en menus, sans site à brancher.",
-    points: [
-      "Objets, clés de caisses, grades LuckPerms, tags et commandes",
-      "Revente avec /sell, /sell all et bonus par grade",
-      "Limites par joueur, délais et confirmation d’achat",
-      "Vos propres commandes : /boutique, /grades, /clés…",
-      "Boutique du jour, promotions et stock commun (Premium)",
-    ],
-    Demo: ShopDemo,
-  },
-  essentials: {
-    tagline: "Les essentiels d’un serveur, gratuits pour toujours.",
-    points: [
-      "Spawn, homes partagés, warps et téléportations",
-      "Économie Vault avec journal de chaque mouvement",
-      "Kits, coffres virtuels, courrier et format du chat",
-      "Chaque bloc se désactive, ses commandes avec",
-      "Homes, warps et soldes partagés en réseau (MySQL)",
-    ],
-    Demo: EssentialsDemo,
-  },
+/** Démonstration animée de chaque plugin. */
+const DEMOS: Record<string, ComponentType> = {
+  bedwars: BedwarsDemo,
+  tag: TagDemo,
+  crate: CrateDemo,
+  pass: PassDemo,
+  shop: ShopDemo,
+  essentials: EssentialsDemo,
 };
-
-const ORDER = ["bedwars", "tag", "crate", "pass", "shop", "essentials"];
 
 /**
  * Les plugins en action (page d'accueil) : un onglet par plugin, avec ses points forts, ses
@@ -91,6 +30,7 @@ export function PluginShowcase({ products }: { products: ProductResponse[] | nul
   const [active, setActive] = useState("bedwars");
   const product = products?.find((p) => p.slug === active);
   const pitch = PITCH[active];
+  const Demo = DEMOS[active];
   const Icon = PLUGIN_ICONS[active];
   const required = product?.requirements.dependencies.filter((d) => d.required).map((d) => d.name) ?? [];
   const freeOnly = product?.distribution === "FREE_ONLY";
@@ -148,13 +88,12 @@ export function PluginShowcase({ products }: { products: ProductResponse[] | nul
           </ul>
           {product && (
             <p className="text-[.85rem] text-muted">
-              <span className="font-mono text-[.7rem] uppercase tracking-[.1em]">Requiert</span>{" "}
-              {[product.requirements.platform, `Java ${product.requirements.java}`, ...required].join(" · ")}
+              Requiert {[product.requirements.platform, `Java ${product.requirements.java}`, ...required].join(", ")}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
             <div className="grid">
-              <span className="font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">
+              <span className="text-[.85rem] text-muted">
                 {freeOnly ? "Sans licence" : "Premium, licence à vie"}
               </span>
               <span className="font-display text-[1.5rem] font-semibold tabular-nums">
@@ -175,7 +114,7 @@ export function PluginShowcase({ products }: { products: ProductResponse[] | nul
           </div>
         </div>
         <div aria-hidden="true">
-          <pitch.Demo />
+          <Demo />
         </div>
       </div>
     </div>
