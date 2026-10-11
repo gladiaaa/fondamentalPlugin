@@ -3035,6 +3035,21 @@
           "defaults": {
             "type": "object",
             "description": "Valeurs livrées avec le plugin, dans la forme du YAML."
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Autres fichiers livrés de même forme, comme points de départ (ex. les catégories blocs, grades… de FondamentalShop)."
           }
         },
         "required": [

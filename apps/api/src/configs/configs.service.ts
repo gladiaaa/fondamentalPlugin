@@ -61,6 +61,9 @@ export class ConfigsService {
       description: def.description,
       fields: def.fields,
       defaults: this.defaultsOf(target, def),
+      ...(def.presets && {
+        presets: def.presets.map((path) => ({ name: path.replace(/^.*\//, '').replace(/\.yml$/, ''), values: this.defaultsOf(target, def, path) })),
+      }),
     };
   }
 
@@ -133,11 +136,12 @@ export class ConfigsService {
     return def;
   }
 
-  private defaultsOf(target: ConfigTarget, def: ConfigFileDefinition): ConfigValues {
-    const id = `${target.slug}/${target.version}/${def.file}`;
+  /** Valeurs d'un fichier livré : le fichier lui-même, ou l'un de ses `presets`. */
+  private defaultsOf(target: ConfigTarget, def: ConfigFileDefinition, file = def.file): ConfigValues {
+    const id = `${target.slug}/${target.version}/${file}`;
     let values = this.defaults.get(id);
     if (!values) {
-      values = extractDefaults(def.fields, readTemplate(target.slug, target.version, def.file)).values;
+      values = extractDefaults(def.fields, readTemplate(target.slug, target.version, file)).values;
       this.defaults.set(id, values);
     }
     return values;

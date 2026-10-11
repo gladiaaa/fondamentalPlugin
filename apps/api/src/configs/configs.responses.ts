@@ -55,6 +55,14 @@ export class ConfigSchemaApiResponse extends ConfigFileSummaryApiResponse implem
 
   @ApiProperty({ type: Object, description: 'Valeurs livrées avec le plugin, dans la forme du YAML.' })
   defaults!: ConfigValues;
+
+  @ApiProperty({
+    required: false,
+    type: 'array',
+    items: { type: 'object', properties: { name: { type: 'string' }, values: { type: 'object' } } },
+    description: 'Autres fichiers livrés de même forme, comme points de départ (ex. les catégories blocs, grades… de FondamentalShop).',
+  })
+  presets?: Array<{ name: string; values: ConfigValues }>;
 }
 
 export class SavedConfigApiResponse implements SavedConfigResponse {

@@ -1,0 +1,64 @@
+enabled: true
+display: "<accent>Ressources"
+icon: DIAMOND
+lore:
+  - "<texte>Minerais et récoltes"
+  - "<texte>Revendez vos ressources ici"
+slot: 22
+rows: 5
+
+items:
+  charbon:
+    material: COAL
+    buy: 4
+    sell: 1
+    name: "<fort>Charbon"
+  fer:
+    material: IRON_INGOT
+    buy: 20
+    sell: 5
+    name: "<fort>Lingot de fer"
+  or:
+    material: GOLD_INGOT
+    buy: 40
+    sell: 10
+    name: "<fort>Lingot d'or"
+  diamant:
+    material: DIAMOND
+    buy: 400
+    sell: 100
+    name: "<fort>Diamant"
+    # Exemple de limite : 16 diamants par jour et par joueur.
+    limit:
+      amount: 16
+      period: day
+  emeraude:
+    material: EMERALD
+    sell: 60
+    name: "<fort>Émeraude"
+    lore:
+      - "<texte>Rachetée seulement"
+  ble:
+    material: WHEAT
+    sell: 2
+    name: "<fort>Blé"
+  carotte:
+    material: CARROT
+    sell: 2
+    name: "<fort>Carotte"
+  pomme_de_terre:
+    material: POTATO
+    sell: 2
+    name: "<fort>Pomme de terre"
+  pioche:
+    material: DIAMOND_PICKAXE
+    buy: 2500
+    name: "<accent>Pioche du mineur"
+    item-name: "<accent>Pioche du mineur"
+    item-lore:
+      - "<texte>Vendue par la boutique"
+    enchantments:
+      efficiency: 4
+      unbreaking: 3
+    quantity: false
+    cooldown: 1d

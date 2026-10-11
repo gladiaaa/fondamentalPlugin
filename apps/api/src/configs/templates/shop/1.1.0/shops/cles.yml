@@ -1,0 +1,35 @@
+# Clés de caisses FondamentalCrate (clés virtuelles, données par la commande
+# config.yml > grants.crate-key). On paie la clé, pas l'ouverture.
+enabled: true
+display: "<accent>Clés de caisses"
+icon: TRIPWIRE_HOOK
+lore:
+  - "<texte>Clés pour les caisses du spawn"
+slot: 24
+rows: 4
+
+items:
+  cle_commune:
+    type: crate-key
+    crate: commune              # identifiant de la caisse dans FondamentalCrate
+    amount: 1                   # clés par unité achetée
+    buy: 500
+    name: "<fort>Clé commune"
+    lore:
+      - "<texte>Ouvre la caisse commune"
+    max-quantity: 16
+  cle_rare:
+    type: crate-key
+    crate: rare
+    buy: 2000
+    name: "<accent>Clé rare"
+    max-quantity: 8
+  cle_legendaire:
+    type: crate-key
+    crate: legendaire
+    buy: 10000
+    name: "<degrade>Clé légendaire</degrade>"
+    max-quantity: 4
+    limit:
+      amount: 4
+      period: week

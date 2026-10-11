@@ -19,6 +19,11 @@ export interface ConfigFileDefinition {
   label: string;
   description: string;
   fields: ConfigField[];
+  /**
+   * Autres fichiers livrés de même forme, proposés comme points de départ (chemins dans
+   * `templates/<slug>/<version>/`, ex. les catégories `shops/blocs.yml` de FondamentalShop).
+   */
+  presets?: string[];
 }
 
 export interface ConfigVersionDefinition {
@@ -78,6 +83,7 @@ export const CONFIG_REGISTRY: Record<string, ConfigVersionDefinition[]> = {
           label: 'Catégorie de boutique',
           description: 'Une catégorie et ses articles, à déposer dans shops/ sous le nom de votre choix (ex. shops/grades.yml).',
           fields: shopCategory1_1,
+          presets: ['shops/blocs.yml', 'shops/cles.yml', 'shops/grades.yml', 'shops/ressources.yml', 'shops/tags.yml'],
         },
       ],
     },

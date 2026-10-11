@@ -45,4 +45,12 @@ describe('schémas du générateur de configuration', () => {
     const rendered = renderConfig(def.fields, template, values, null, 'Généré pour le test');
     expect(parse(rendered)).toEqual(parse(template));
   });
+
+  const presets = files.flatMap(({ slug, version, def, id }) => (def.presets ?? []).map((file) => ({ slug, version, def, file, id: `${id} › ${file}` })));
+
+  it.each(presets)('$id : fichier livré proposé comme point de départ, accepté par le schéma', ({ slug, version, def, file }) => {
+    const { values, errors } = extractDefaults(def.fields, readTemplate(slug, version, file));
+    expect(errors).toEqual([]);
+    expect(walkValues(def.fields, values, 'strict').errors).toEqual([]);
+  });
 });

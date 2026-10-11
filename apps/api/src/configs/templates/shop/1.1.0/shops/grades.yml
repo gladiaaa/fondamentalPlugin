@@ -1,0 +1,48 @@
+# Grades LuckPerms, permissions et commandes. Livrés par les commandes de
+# config.yml > grants (LuckPerms par défaut, modifiables pour un autre plugin).
+enabled: true
+display: "<accent>Grades"
+icon: DIAMOND_CHESTPLATE
+lore:
+  - "<texte>Grades et avantages"
+slot: 32
+rows: 4
+
+items:
+  # Vitrine (type info) : ni achat ni revente, une description et un lien cliquable.
+  site:
+    type: info
+    name: "<accent>Grades sur la boutique en ligne"
+    icon: EMERALD
+    lore:
+      - "<fort>VIP <discret>· <texte>bonus de revente +10 %, /pv"
+      - "<fort>MVP <discret>· <texte>bonus de revente +20 %, vol"
+    link: "https://votre-serveur.fr/boutique"
+  vip_30j:
+    type: rank
+    group: vip                  # groupe LuckPerms
+    duration: 30d               # sans duration : définitif (non rachetable une fois possédé)
+    buy: 50000
+    name: "<accent>Grade VIP <discret>(30 jours)"
+    lore:
+      - "<texte>Bonus de revente +10 %"
+    icon: GOLDEN_HELMET
+  vol:
+    type: permission
+    node: fondamentalessentials.fly
+    duration: 1h
+    buy: 2000
+    name: "<fort>Vol <discret>(1 heure)"
+    icon: FEATHER
+  annonce:
+    type: command
+    commands:
+      - "broadcast {player} vient d'offrir une tournée générale !"
+      - "give {player} cake 1"
+    buy: 1000
+    name: "<fort>Tournée générale"
+    lore:
+      - "<texte>Une annonce et un gâteau"
+    icon: CAKE
+    quantity: false
+    cooldown: 1h
