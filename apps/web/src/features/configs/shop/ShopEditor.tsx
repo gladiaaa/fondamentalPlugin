@@ -296,7 +296,7 @@ export function ShopEditor() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_minmax(0,380px)]">
         {/* Menus */}
-        <nav aria-label="Menus" className="grid gap-4 rounded-card border border-line bg-surface p-3 lg:sticky lg:top-4">
+        <nav aria-label="Menus" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 rounded-card border border-line bg-surface p-3 lg:sticky lg:top-4">
           {savedConfigs.length > 1 && (
             <Field label="Configuration générale" htmlFor="shop-config">
               <Select id="shop-config" value={config.savedId ?? ""} onChange={(e) => switchConfig(e.target.value)}>
@@ -328,12 +328,15 @@ export function ShopEditor() {
               </MenuButton>
             ))}
             {presets.length > 0 && (
-              <Button size="sm" variant="secondary" className="mt-1 justify-self-start" onClick={importPresets}>
-                Importer les catégories livrées ({presets.map((p) => p.name).join(", ")})
-              </Button>
+              <div className="mt-1 grid grid-cols-[minmax(0,1fr)] gap-1">
+                <Button size="sm" variant="secondary" className="whitespace-normal! py-2" onClick={importPresets}>
+                  Importer les catégories livrées
+                </Button>
+                <small className="px-1 text-[.75rem] text-muted">{presets.map((p) => p.name).join(", ")}</small>
+              </div>
             )}
             <form
-              className="mt-1 flex gap-1.5"
+              className="mt-1 flex min-w-0 gap-1.5"
               onSubmit={(e) => {
                 e.preventDefault();
                 createCategory();
@@ -344,6 +347,7 @@ export function ShopEditor() {
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="ressources"
                 aria-label="Nom de la nouvelle catégorie"
+                className="min-w-0 flex-1"
                 maxLength={64}
               />
               <Button type="submit" size="sm" variant="secondary" disabled={!CATEGORY_ID.test(newName.trim())}>
@@ -475,7 +479,7 @@ export function ShopEditor() {
 
 function MenuGroup({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-1">
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1">
       <h2 className="px-1 text-[.8rem] font-medium text-muted">{title}</h2>
       {children}
       {hint && <p className="px-1 text-[.75rem] text-muted">{hint}</p>}
