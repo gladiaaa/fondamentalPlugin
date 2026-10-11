@@ -3,6 +3,7 @@ import type { ConfigField } from '@fondamental/shared';
 import { bedwarsConfig1_0, crateConfig1_2, passConfig1_3, tagConfig2_1 } from './schemas/config-files.js';
 import { crateCrates1_2 } from './schemas/crate.js';
 import { passQuests1_3, passSeason1_3 } from './schemas/pass.js';
+import { shopCategory1_1, shopConfig1_1 } from './schemas/shop.js';
 import { tagTags2_1 } from './schemas/tag.js';
 
 /**
@@ -64,6 +65,20 @@ export const CONFIG_REGISTRY: Record<string, ConfigVersionDefinition[]> = {
         configYml(passConfig1_3, 'Licence, serveur, stockage et réseau, temps, boosts, série, achats, couleurs.'),
         { file: 'season.yml', label: 'Saison', description: 'Dates, paliers, pistes gratuite et premium, paliers bonus, classement.', fields: passSeason1_3 },
         { file: 'quests.yml', label: 'Quêtes', description: 'Difficultés, pools et quêtes avec leurs objectifs.', fields: passQuests1_3 },
+      ],
+    },
+  ],
+  shop: [
+    {
+      version: '1.1.0',
+      files: [
+        configYml(shopConfig1_1, 'Licence, stockage, commandes de boutique (/boutique, /shop, /grades…), monnaies, livraison, revente.'),
+        {
+          file: 'categorie.yml',
+          label: 'Catégorie de boutique',
+          description: 'Une catégorie et ses articles, à déposer dans shops/ sous le nom de votre choix (ex. shops/grades.yml).',
+          fields: shopCategory1_1,
+        },
       ],
     },
   ],
