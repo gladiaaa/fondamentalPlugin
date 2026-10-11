@@ -31,10 +31,12 @@ function ProductForm({ product, onSaved }: { product: AdminProductResponse; onSa
   const [saving, setSaving] = useState(false);
   const priceCents = price.trim() === "" ? null : parsePrice(price);
   const priceInvalid = price.trim() !== "" && priceCents === null;
+  // Erreur fréquente : coller l'identifiant du produit Stripe (prod_…), que Checkout refuse.
+  const stripeInvalid = stripePriceId.trim() !== "" && !/^price_[A-Za-z0-9]+$/.test(stripePriceId.trim());
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!csrfToken || priceInvalid) return;
+    if (!csrfToken || priceInvalid || stripeInvalid) return;
     setError(null);
     setSaving(true);
     try {
@@ -65,6 +67,7 @@ function ProductForm({ product, onSaved }: { product: AdminProductResponse; onSa
           label="Identifiant de prix Stripe"
           htmlFor={`stripe-${product.slug}`}
           hint="price_… du mode (test ou live) de cet environnement. Le prix affiché doit correspondre."
+          error={stripeInvalid ? "Identifiant du prix attendu (price_…), pas celui du produit (prod_…) : Stripe → Produit → Tarifs." : undefined}
         >
           <Input id={`stripe-${product.slug}`} value={stripePriceId} onChange={(e) => setStripePriceId(e.target.value)} spellCheck={false} />
         </Field>
