@@ -1,0 +1,23 @@
+# Tags de FondamentalTag, enregistrés dans sa base (partagée en réseau MySQL).
+enabled: true
+display: "<accent>Tags"
+icon: NAME_TAG
+lore:
+  - "<texte>Un tag devant votre pseudo"
+slot: 30
+rows: 4
+
+items:
+  tag_exemple:
+    type: tag
+    tag: exemple                # identifiant du tag dans FondamentalTag
+    buy: 5000
+    name: "<accent>Tag Exemple"
+    lore:
+      - "<texte>Définitif"
+  tag_exemple_30j:
+    type: tag
+    tag: exemple
+    duration: 30d               # tag temporaire (vide = définitif)
+    buy: 1500
+    name: "<accent>Tag Exemple <discret>(30 jours)"

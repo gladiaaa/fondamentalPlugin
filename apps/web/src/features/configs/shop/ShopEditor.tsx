@@ -192,6 +192,15 @@ export function ShopEditor() {
     select({ kind: "category", name });
   }
 
+  /** Catégories livrées avec le plugin (shops/blocs.yml…) pas encore dans l'éditeur. */
+  const presets = (categorySchema.presets ?? []).filter((p) => !categories.some((c) => c.name.toLowerCase() === p.name.toLowerCase()));
+
+  function importPresets() {
+    setCategories((list) => [...list, ...presets.map((p) => ({ name: p.name, values: p.values, dirty: true }))]);
+    if (presets[0] && !selection) select({ kind: "category", name: presets[0].name });
+    toast.success(`${presets.length} catégorie${presets.length > 1 ? "s" : ""} importée${presets.length > 1 ? "s" : ""} : pensez à enregistrer.`);
+  }
+
   async function removeCategory(doc: Doc) {
     if (!window.confirm(`Supprimer la catégorie « ${doc.name} » de vos configurations ?`)) return;
     if (doc.savedId && csrfToken) {
@@ -318,6 +327,11 @@ export function ShopEditor() {
                 <span className="truncate">{c.name}</span>
               </MenuButton>
             ))}
+            {presets.length > 0 && (
+              <Button size="sm" variant="secondary" className="mt-1 justify-self-start" onClick={importPresets}>
+                Importer les catégories livrées ({presets.map((p) => p.name).join(", ")})
+              </Button>
+            )}
             <form
               className="mt-1 flex gap-1.5"
               onSubmit={(e) => {
@@ -532,7 +546,7 @@ function CategoryChest({
     <>
       <div className="flex flex-wrap items-start gap-5">
         <div className="grid min-w-0 max-w-full gap-2">
-          <div className="max-w-full overflow-x-auto p-0.5">
+          <div className="max-w-full overflow-x-auto p-0.5 xl:[zoom:1.2] 2xl:[zoom:1.45]">
             <Chest layout={layout} items={items} selected={selected} onSelect={onSelect} onDrop={drop} />
           </div>
           {layout.pages > 1 && (
@@ -548,7 +562,7 @@ function CategoryChest({
               </Button>
             </div>
           )}
-          <p className="max-w-[352px] text-[.8rem] text-muted">
+          <p className="max-w-[52ch] text-[.8rem] text-muted">
             Glissez un article pour lui donner sa propre case ; « A » = placé automatiquement. Les boutons du plugin (retour, pages, solde) gardent
             leur place.
           </p>
@@ -626,7 +640,7 @@ function CommandChest({
           , sans ce menu.
         </p>
       ) : (
-        <div className="max-w-full overflow-x-auto p-0.5">
+        <div className="max-w-full overflow-x-auto p-0.5 xl:[zoom:1.2] 2xl:[zoom:1.45]">
           <Chest layout={layout} items={items} onSelect={onOpen} onDrop={(slot, data) => data.key && onMove(data.key, slot)} />
         </div>
       )}

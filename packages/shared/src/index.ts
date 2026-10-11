@@ -571,6 +571,8 @@ export interface ConfigSchemaResponse extends ConfigFileSummary {
   version: string;
   fields: ConfigField[];
   defaults: ConfigValues;
+  /** Autres fichiers livrés de même forme, comme points de départ (ex. les catégories de FondamentalShop). */
+  presets?: Array<{ name: string; values: ConfigValues }>;
 }
 
 /** Une configuration enregistrée (`/api/me/configs`). */
