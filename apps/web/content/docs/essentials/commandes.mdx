@@ -1,0 +1,40 @@
+---
+title: Commandes et permissions
+description: Toutes les commandes de FondamentalEssentials, avec leurs permissions.
+---
+
+Les permissions commencent toutes par `fondamentalessentials.` (abrégé `.` dans le tableau). Une commande dont le bloc est coupé dans `config.yml > modules` n'existe pas sur le serveur.
+
+| Commande | Rôle | Permission |
+|---|---|---|
+| `/spawn`, `/setspawn [first]` | spawn et spawn de première connexion | `fondamentalessentials.spawn`, `.setspawn` |
+| `/home [nom]`, `/sethome`, `/delhome`, `/homes` | homes (menu avec `/homes`) | `.home`, `.sethome`, `.delhome` |
+| `/sharehome <home> <joueur>`, `/unsharehome`, `/publichome <home>`, `/visit [joueur] [home]` | partager ses homes, homes publics, visites (menu avec `/visit`) | `.home.share`, `.home.public`, `.visit` |
+| `/warp [nom]`, `/warps`, `/setwarp`, `/delwarp` | warps (menu) | `.warp`, `.setwarp`, `.delwarp` |
+| `/pv [n°]`, `/pv <joueur> [n°]` | coffres virtuels (nombre : `fondamentalessentials.pv.<n>`) | `.pv`, `.pv.others` |
+| `/tpa`, `/tpahere`, `/tpaccept`, `/tpdeny`, `/tpcancel`, `/tptoggle` | demandes de téléportation | `.tpa`, `.tpahere`, `.tptoggle` |
+| `/tp`, `/tphere`, `/tpall`, `/tppos`, `/top`, `/bottom` | téléportations du staff | `.tp`, `.tphere`... |
+| `/back`, `/rtp` | retour, téléportation aléatoire | `.back`, `.rtp` |
+| `/balance`, `/pay`, `/baltop`, `/paytoggle` | économie | `.balance`, `.pay`, `.baltop` |
+| `/eco give\|take\|set\|reset <joueur\|*> [montant]` | administration de l'économie | `.eco` |
+| `/eco history <joueur> [page]`, `/balance history [page]` | journal de l'économie (staff, joueur) | `.eco.history`, `.balance.history` |
+| `/kit [nom]`, `/createkit <nom> [délai]`, `/delkit`, `/resetkit` | kits (menu avec `/kit`) | `.kit`, `.createkit`... |
+| `/fly`, `/gamemode`, `/gmc` `/gms` `/gma` `/gmsp`, `/heal`, `/feed`, `/god`, `/speed` | états du joueur | `.fly`, `.gamemode.<mode>`... |
+| `/craft`, `/anvil`, `/enderchest`, `/stonecutter`, `/grindstone`, `/loom`, `/smithing`, `/cartography` | blocs portables | `.craft`... |
+| `/repair [all]`, `/hat`, `/more`, `/item`, `/itemname`, `/lore`, `/skull`, `/exp`, `/trash`, `/clearinventory` | objets | `.repair`... |
+| `/day` `/night` `/sun` `/rain` `/thunder`, `/ptime`, `/pweather` | heure et météo | `.time`, `.weather`... |
+| `/afk`, `/seen`, `/rules`, `/motd`, `/mail`, `/playtime`, `/near` | informations ; `/mail item <joueur>` envoie l'objet en main, `/mail items` pour les récupérer | `.afk`, `.seen`, `.mail.item`... |
+| `/flytime [joueur]`, `/flytime give\|take\|set <joueur> <durée>` | temps de vol (utilisé par `/fly` sans vol illimité) | `.flytime`, `.flytime.others`, `.flytime.admin` |
+| `/sudo <joueur> <commande\|c:message>` | faire agir un joueur | `.sudo` (`.sudo.exempt` protège) |
+| `/enchant <enchantement> [niveau\|max]` | enchanter l'objet en main (0 = retirer) | `.enchant`, `.enchant.unsafe` |
+| `/powertool [commande\|list\|clearall]`, `/powertooltoggle` | commande liée à l'objet en main, lancée au clic | `.powertool` |
+| `/fessentials reload\|import\|info` | administration | `.admin` |
+
+Pour agir sur un autre joueur : permission `<commande>.others` (ex. `fondamentalessentials.fly.others`).
+Les commandes de base des joueurs sont regroupées dans `fondamentalessentials.player` (donnée à tous).
+
+Contournements : `fondamentalessentials.bypass.warmup` et `.bypass.cooldown` (téléportations),
+`.kit.bypass-cooldown`, `.tptoggle.bypass`, `.homes.bypass-world`.
+Homes : `fondamentalessentials.homes.<nombre>`, `.homes.<palier>` (config.yml > homes.limits) ou
+`.homes.unlimited`. Chat : `.chat.color` (codes &), `.chat.item` ([item]), et la permission de
+chaque format de `chat.formats`.

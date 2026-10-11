@@ -29,8 +29,8 @@ export default async function PluginsPage() {
             Les plugins
           </h1>
           <p className="max-w-[56ch] text-[1.05rem] text-muted">
-            Quatre plugins pour votre serveur. Chacun se télécharge gratuitement, la clé de licence
-            débloque le Premium.
+            Des plugins pour votre serveur, qui se parlent entre eux. Chacun se télécharge gratuitement ;
+            la clé de licence débloque le Premium, et FondamentalEssentials est entièrement gratuit.
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export default async function PluginsPage() {
             description="La boutique se prépare : revenez bientôt."
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
               <PluginCard
                 key={product.slug}
@@ -53,6 +53,7 @@ export default async function PluginsPage() {
                 // (docs/api-front.md §4, brief §9) : toujours vrai, quel que
                 // soit le plugin.
                 freeAvailable
+                freeOnly={product.distribution === "FREE_ONLY"}
                 Icon={PLUGIN_ICONS[product.slug] ?? PanierIcon}
               />
             ))}

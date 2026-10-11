@@ -59,7 +59,7 @@ export class OrdersService {
     if (!this.stripe.isConfigured) this.paymentUnavailable();
 
     const product = await this.prisma.product.findUnique({ where: { slug: productSlug } });
-    if (!product?.active || !product.priceCents || !product.stripePriceId) {
+    if (!product?.active || !product.priceCents || !product.stripePriceId || product.distribution === 'FREE_ONLY') {
       throw new BadRequestException({ code: 'PRODUCT_NOT_PURCHASABLE', message: MESSAGES.productNotPurchasable });
     }
 

@@ -51,9 +51,9 @@ export class ProductApiResponse implements ProductResponse {
 
   @ApiProperty({
     type: String,
-    enum: ['SINGLE_JAR', 'FREE_PREMIUM_JARS'],
+    enum: ['SINGLE_JAR', 'FREE_PREMIUM_JARS', 'FREE_ONLY'],
     description:
-      '`SINGLE_JAR` : un seul jar, la clé de licence décide de l’édition. `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`.',
+      '`SINGLE_JAR` : un seul jar, la clé de licence décide de l’édition. `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`. `FREE_ONLY` : un seul jar entièrement gratuit, jamais achetable.',
   })
   distribution!: ProductDistribution;
 

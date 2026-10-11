@@ -1,0 +1,74 @@
+---
+title: FondamentalEssentials
+description: Les essentiels d'un serveur, entièrement gratuits — spawn, homes, warps, économie, kits, chat et utilitaires.
+---
+
+FondamentalEssentials regroupe les essentiels d'un serveur Minecraft, **entièrement gratuits** : pas d'édition Premium, pas de clé de licence.
+
+- **Se déplacer** : spawn, homes (partagés, publics, menu de visite), warps, demandes de téléportation, `/back`, téléportation aléatoire.
+- **Économie** Vault : `/pay`, `/baltop`, administration avec `/eco`, et un **journal** de chaque mouvement, y compris ceux des autres plugins (boutiques, caisses).
+- **Objets** : kits en menus, coffres virtuels `/pv`, courrier d'objets, power tools.
+- **Chat** : format avec les grades et les tags FondamentalTag, AFK, annonces, messages d'arrivée.
+- **Utilitaires** : vol (illimité ou temporaire), modes de jeu, blocs portables, réparation, heure et météo, commandes personnalisées (`/discord`, `/site`…).
+
+## Choisir ses fonctionnalités
+
+Chaque bloc s'active ou se coupe dans `config.yml > modules` : `spawn`, `teleport-requests`, `staff-teleport`, `back`, `random-teleport`, `homes`, `warps`, `economy`, `kits`, `chat`, `join-quit`, `motd`, `rules`, `afk`, `announcements`, `mail`, `utilities`, `info`.
+
+Un bloc coupé n'agit plus en jeu, et **ses commandes sont retirées du serveur** au redémarrage : si un autre plugin déclare la même commande (un plugin de kits pour `/kit`, par exemple), c'est le sien qui répond. `/fessentials info` rappelle les blocs coupés.
+
+## Prérequis
+
+| | |
+|---|---|
+| Serveur | Paper 1.21 ou plus récent (Folia compatible), Java 21 |
+| Dépendances | aucune obligatoire |
+| Facultatif | Vault (partager l'économie), LuckPerms (préfixes), PlaceholderAPI, FondamentalTag (tags dans le chat), FondamentalGuard (modération, pseudos) |
+| Réseau | MySQL |
+
+## Installation
+
+<Steps>
+<Step>
+
+### Déposer le jar
+
+Déposez le jar dans `plugins/` et démarrez : `config.yml`, `kits.yml` et `messages_fr.yml` sont créés.
+
+</Step>
+<Step>
+
+### Régler le serveur
+
+Dans `config.yml` : `server.name`, la langue, les blocs voulus, et pour un réseau le stockage MySQL. Puis `/fessentials reload`.
+
+</Step>
+<Step>
+
+### Poser le spawn
+
+`/setspawn` à l'endroit voulu (`/setspawn first` pour le spawn de première connexion).
+
+</Step>
+</Steps>
+
+## Remplacer Essentials ou zEssentials
+
+1. Installez FondamentalEssentials à côté de l'ancien plugin.
+2. Lancez `/fessentials import essentials` (joueurs, soldes, homes, warps, spawn) ou `/fessentials import zessentials` (joueurs, soldes, homes ; base à décrire dans `config.yml > import.zessentials`). L'import peut être relancé.
+3. Arrêtez le serveur, retirez l'ancien plugin (et EssentialsChat), redémarrez.
+
+Les kits d'Essentials ne sont pas repris : recréez-les en jeu avec `/createkit`. Les warps et le spawn de zEssentials sont à redéfinir.
+
+## Réseau
+
+Avec `storage.type: mysql` et la même base sur chaque serveur :
+
+- **partagés** : soldes, courrier, coffres virtuels, temps de vol, dernière connexion ;
+- **propres à chaque serveur** (`server.name`) : homes, warps, spawns, délais des kits.
+
+Les soldes restent justes même si un joueur est payé depuis un autre serveur. Un coffre `/pv` ne peut pas être ouvert sur deux serveurs à la fois. Sur un serveur de mini-jeu, coupez `modules.vaults` et `mail.items`, pour qu'on ne puisse pas sortir des objets d'une partie.
+
+## Placeholders
+
+`%fessentials_balance%`, `_balance_formatted`, `_balance_raw`, `_rank`, `_homes`, `_homes_max`, `_afk`, `_afk_bool`, `_god`, `_fly`, `_mail`, `_playtime`, `_baltop_name_<n>`, `_baltop_balance_<n>`.

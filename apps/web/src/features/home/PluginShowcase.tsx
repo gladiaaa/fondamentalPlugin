@@ -9,7 +9,7 @@ import { ValiderIcon, DocumentationIcon } from "@/components/icons";
 import { PLUGIN_ICONS } from "@/features/plugins/icons";
 import { formatPriceCents } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import { BedwarsDemo, CrateDemo, PassDemo, TagDemo } from "./demos";
+import { BedwarsDemo, CrateDemo, EssentialsDemo, PassDemo, ShopDemo, TagDemo } from "./demos";
 
 /** Accroche et points forts de chaque plugin (vérifiés dans leur code, voir le wiki). */
 const PITCH: Record<string, { tagline: string; points: string[]; Demo: ComponentType }> = {
@@ -57,9 +57,31 @@ const PITCH: Record<string, { tagline: string; points: string[]; Demo: Component
     ],
     Demo: PassDemo,
   },
+  shop: {
+    tagline: "Une boutique en menus, sans site à brancher.",
+    points: [
+      "Objets, clés de caisses, grades LuckPerms, tags et commandes",
+      "Revente avec /sell, /sell all et bonus par grade",
+      "Limites par joueur, délais et confirmation d’achat",
+      "Vos propres commandes : /boutique, /grades, /clés…",
+      "Boutique du jour, promotions et stock commun (Premium)",
+    ],
+    Demo: ShopDemo,
+  },
+  essentials: {
+    tagline: "Les essentiels d’un serveur, gratuits pour toujours.",
+    points: [
+      "Spawn, homes partagés, warps et téléportations",
+      "Économie Vault avec journal de chaque mouvement",
+      "Kits, coffres virtuels, courrier et format du chat",
+      "Chaque bloc se désactive, ses commandes avec",
+      "Homes, warps et soldes partagés en réseau (MySQL)",
+    ],
+    Demo: EssentialsDemo,
+  },
 };
 
-const ORDER = ["bedwars", "tag", "crate", "pass"];
+const ORDER = ["bedwars", "tag", "crate", "pass", "shop", "essentials"];
 
 /**
  * Les plugins en action (page d'accueil) : un onglet par plugin, avec ses points forts, ses
@@ -71,6 +93,7 @@ export function PluginShowcase({ products }: { products: ProductResponse[] | nul
   const pitch = PITCH[active];
   const Icon = PLUGIN_ICONS[active];
   const required = product?.requirements.dependencies.filter((d) => d.required).map((d) => d.name) ?? [];
+  const freeOnly = product?.distribution === "FREE_ONLY";
 
   return (
     <div className="grid gap-6">
@@ -131,12 +154,14 @@ export function PluginShowcase({ products }: { products: ProductResponse[] | nul
           )}
           <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
             <div className="grid">
-              <span className="font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">Premium, licence à vie</span>
+              <span className="font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">
+                {freeOnly ? "Sans licence" : "Premium, licence à vie"}
+              </span>
               <span className="font-display text-[1.5rem] font-semibold tabular-nums">
-                {product?.price ? formatPriceCents(product.price.amountCents) : "—"}
+                {freeOnly ? "Gratuit" : product?.price ? formatPriceCents(product.price.amountCents) : "—"}
               </span>
             </div>
-            <Badge variant="success">Version gratuite</Badge>
+            <Badge variant="success">{freeOnly ? "100 % gratuit" : "Version gratuite"}</Badge>
             <div className="ml-auto flex flex-wrap gap-2">
               <Button asChild>
                 <Link href={`/plugins/${active}`}>Voir le plugin</Link>

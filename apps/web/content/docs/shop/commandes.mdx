@@ -1,0 +1,30 @@
+---
+title: Commandes et permissions
+description: Commandes joueur et d'administration de FondamentalShop.
+---
+
+## Joueurs
+
+| Commande | Permission | Rôle |
+|---|---|---|
+| `/shop [catégorie]` et les commandes de `config.yml > commands` | `fondamentalshop.use` (réglable par commande) | ouvrir une boutique |
+| `/sell` (`/vendre`) | `fondamentalshop.sell` | coffre de revente, vendu à la fermeture |
+| `/sell hand` | `fondamentalshop.sell.hand` | revendre l'objet en main |
+| `/sell all` | `fondamentalshop.sell.all` | revendre tout ce qui se revend dans l'inventaire |
+| `/worth` (`/prix`) | `fondamentalshop.worth` | prix de revente de l'objet en main |
+
+Les joueurs ont `fondamentalshop.player` (toutes les commandes joueur) par défaut. Bonus de revente : `fondamentalshop.sell.bonus.<nom>`, réglé dans `config.yml > sell.bonus`.
+
+## Administration
+
+Toutes demandent `fondamentalshop.admin`.
+
+| Commande | Rôle |
+|---|---|
+| `/fshop reload` | recharger la configuration, les textes et les boutiques |
+| `/fshop open <joueur> [catégorie]` | ouvrir la boutique à un joueur (PNJ, panneaux, console) |
+| `/fshop history <joueur> [page]` | achats et reventes d'un joueur |
+| `/fshop reset <joueur> [article]` | remettre à zéro limites et délais |
+| `/fshop stock reset <article>` | remettre un stock à neuf <Premium /> |
+| `/fshop license [check]` | édition et vérification de la licence |
+| `/fshop migrate confirm` | copier la base SQLite dans MySQL |

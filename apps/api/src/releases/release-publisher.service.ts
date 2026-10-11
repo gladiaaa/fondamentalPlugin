@@ -149,9 +149,13 @@ export class ReleasePublisher {
     }
   }
 
-  /** Un plugin à un seul jar publie `UNIVERSAL` ; un plugin à deux jars publie `FREE` ou `PREMIUM`. */
+  /**
+   * Un plugin à un seul jar publie `UNIVERSAL` ; un plugin à deux jars publie `FREE` ou `PREMIUM` ;
+   * un plugin entièrement gratuit publie `FREE`.
+   */
   private checkEdition(distribution: string, edition: ReleaseEdition): void {
-    const allowed = distribution === 'SINGLE_JAR' ? ['UNIVERSAL'] : ['FREE', 'PREMIUM'];
+    const allowed =
+      distribution === 'SINGLE_JAR' ? ['UNIVERSAL'] : distribution === 'FREE_ONLY' ? ['FREE'] : ['FREE', 'PREMIUM'];
     if (!allowed.includes(edition)) {
       throw new BadRequestException(`Ce plugin se publie avec l’édition ${allowed.join(' ou ')}.`);
     }

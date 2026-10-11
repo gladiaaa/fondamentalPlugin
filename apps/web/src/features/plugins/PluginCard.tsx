@@ -12,16 +12,18 @@ export interface PluginCardProps {
   /** `null` : prix pas encore fixé (« Bientôt disponible ») ; `undefined` : prix inconnu, non affiché. */
   priceCents: number | null | undefined;
   freeAvailable: boolean;
+  /** Plugin entièrement gratuit (`FREE_ONLY`) : pas de Premium ni de prix. */
+  freeOnly?: boolean;
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 /** Carte plugin (`.pcd` de la maquette), réutilisée par l'accueil et le catalogue. */
-export function PluginCard({ slug, name, description, priceCents, freeAvailable, Icon }: PluginCardProps) {
+export function PluginCard({ slug, name, description, priceCents, freeAvailable, freeOnly, Icon }: PluginCardProps) {
   return (
     <article className="group relative flex flex-col gap-3 rounded-card-lg border border-line bg-surface p-[22px] transition-[border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-accent">
       <div className="flex items-center justify-between gap-3">
         <Icon width={52} height={52} />
-        {freeAvailable && <Badge variant="success">Gratuit disponible</Badge>}
+        {freeAvailable && <Badge variant="success">{freeOnly ? "100 % gratuit" : "Gratuit disponible"}</Badge>}
       </div>
       <h3 className="font-display text-[1.08rem] font-semibold tracking-[-.02em]">
         <Link href={`/plugins/${slug}`} className="after:absolute after:inset-0">
@@ -32,9 +34,11 @@ export function PluginCard({ slug, name, description, priceCents, freeAvailable,
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1.5">
         {priceCents !== undefined ? (
           <div className="min-w-0">
-            <small className="block font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">Premium</small>
+            <small className="block font-mono text-[.7rem] uppercase tracking-[.1em] text-muted">
+              {freeOnly ? "Prix" : "Premium"}
+            </small>
             <b className="block font-display text-[1.35rem] font-semibold tracking-[-.03em] tabular-nums whitespace-nowrap">
-              {priceCents === null ? "Bientôt disponible" : formatPriceCents(priceCents)}
+              {freeOnly ? "Gratuit" : priceCents === null ? "Bientôt disponible" : formatPriceCents(priceCents)}
             </b>
           </div>
         ) : (

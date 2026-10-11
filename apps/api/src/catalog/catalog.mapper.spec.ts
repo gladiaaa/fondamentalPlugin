@@ -25,6 +25,10 @@ function product(overrides: Partial<Product> = {}): Product {
 }
 
 describe('toProductResponse', () => {
+  it('un plugin entièrement gratuit n’est jamais achetable, même avec un prix', () => {
+    expect(toProductResponse(product({ distribution: 'FREE_ONLY' })).purchasable).toBe(false);
+  });
+
   it('ne montre que les champs publics', () => {
     expect(Object.keys(toProductResponse(product())).sort()).toEqual(
       ['description', 'distribution', 'name', 'price', 'purchasable', 'requirements', 'slug'].sort(),

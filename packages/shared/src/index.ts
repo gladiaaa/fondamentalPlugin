@@ -137,8 +137,9 @@ export interface ProductRequirements {
 /**
  * `SINGLE_JAR` : un seul jar, la clé de licence décide de l'édition.
  * `FREE_PREMIUM_JARS` : deux jars, `free` et `premium`.
+ * `FREE_ONLY` : un seul jar entièrement gratuit, ni licence ni achat.
  */
-export type ProductDistribution = "SINGLE_JAR" | "FREE_PREMIUM_JARS";
+export type ProductDistribution = "SINGLE_JAR" | "FREE_PREMIUM_JARS" | "FREE_ONLY";
 
 export interface ProductPrice {
   /** En centimes (1999 = 19,99). */
@@ -149,7 +150,7 @@ export interface ProductPrice {
 
 /** Un plugin de la boutique, tel que le site l'affiche (`GET /api/products`). */
 export interface ProductResponse {
-  /** Identifiant dans les adresses du site (`bedwars`, `tag`, `crate`, `pass`). */
+  /** Identifiant dans les adresses du site (`bedwars`, `tag`, `crate`, `pass`, `shop`, `essentials`). */
   slug: string;
   name: string;
   description: string;

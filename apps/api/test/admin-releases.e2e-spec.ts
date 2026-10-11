@@ -185,6 +185,12 @@ describe('Publication des versions par la CI (e2e)', () => {
       await upload('bedwars', 'e2e-1', makePluginJar(), { edition: 'UNIVERSAL', minecraft: '1.21.4' }, 'bw.jar').expect(201);
     });
 
+    it('un plugin entièrement gratuit publie FREE, et seulement lui', async () => {
+      await createRelease('essentials', 'e2e-1');
+      await upload('essentials', 'e2e-1', makePluginJar(), { edition: 'UNIVERSAL', minecraft: '1.21.4' }, 'ess.jar').expect(400);
+      await upload('essentials', 'e2e-1', makePluginJar(), { edition: 'FREE', minecraft: '1.21.4' }, 'ess.jar').expect(201);
+    });
+
     it('un plugin à deux jars ne publie pas UNIVERSAL', async () => {
       await createRelease();
       await upload('tag', 'e2e-1', makePluginJar(), { edition: 'UNIVERSAL', minecraft: '1.21.4' }).expect(400);

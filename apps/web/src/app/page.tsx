@@ -28,6 +28,9 @@ const LINKS: Array<{ from: string; to: string; text: string }> = [
   { from: "pass", to: "crate", text: "Un palier du pass peut donner des clés de crate." },
   { from: "bedwars", to: "pass", text: "Les parties font avancer les quêtes : victoires, kills, lits détruits." },
   { from: "crate", to: "pass", text: "Chaque ouverture de crate fait avancer les quêtes du pass." },
+  { from: "shop", to: "crate", text: "La boutique vend des clés de caisses, payées avec l’argent du serveur." },
+  { from: "shop", to: "tag", text: "La boutique vend des tags, à vie ou pour une durée." },
+  { from: "essentials", to: "shop", text: "L’économie d’Essentials paie les achats ; chaque mouvement est dans son journal." },
 ];
 
 const STEPS = [
@@ -132,8 +135,8 @@ export default async function Home() {
               Le socle de votre <span className="font-light text-accent-text">serveur.</span>
             </h1>
             <p className="max-w-[48ch] text-[1.05rem] text-muted">
-              Bedwars, tags animés, crates, pass de saison : quatre plugins qui se parlent entre eux, simples à
-              installer, documentés, et gratuits pour commencer.
+              Bedwars, tags animés, crates, pass de saison, boutique et essentiels : des plugins qui se parlent
+              entre eux, simples à installer, documentés, et gratuits pour commencer.
             </p>
             <div className="flex flex-wrap gap-2.5">
               <Button size="lg" asChild>
@@ -174,12 +177,12 @@ export default async function Home() {
         <div className="mx-auto grid max-w-[1180px] gap-8">
           <SectionTitle
             eyebrow="Les plugins"
-            title="Quatre plugins, vus en action"
-            text="Chacun existe en version gratuite, et en version Premium débloquée par une clé de licence à vie."
+            title="Les plugins, vus en action"
+            text="Chacun existe en version gratuite, et en version Premium débloquée par une clé de licence à vie. FondamentalEssentials est entièrement gratuit."
           />
           <PluginShowcase products={products} />
           <Link href="/plugins" className="justify-self-start font-medium text-accent-text hover:underline">
-            Comparer les quatre plugins →
+            Comparer les plugins →
           </Link>
         </div>
       </section>

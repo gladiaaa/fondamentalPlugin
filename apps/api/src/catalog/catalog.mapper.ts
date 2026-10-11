@@ -14,7 +14,7 @@ export function toProductResponse(product: Product): ProductResponse {
     distribution: product.distribution,
     requirements: product.requirements as unknown as ProductRequirements,
     price: hasPrice ? { amountCents: product.priceCents as number, currency: product.currency } : null,
-    // Achetable seulement s'il est actif, a un prix, et existe chez Stripe.
-    purchasable: product.active && hasPrice && product.stripePriceId !== null,
+    // Achetable seulement s'il est actif, a un prix, existe chez Stripe, et n'est pas entièrement gratuit.
+    purchasable: product.active && hasPrice && product.stripePriceId !== null && product.distribution !== 'FREE_ONLY',
   };
 }

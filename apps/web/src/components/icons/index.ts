@@ -53,3 +53,5 @@ export { default as CrateContourIcon } from "./plugins/fondamental-crate-contour
 // Icône du Pass : nouvelle, proposition à valider (docs/front/brief.md §6).
 export { default as PassPastilleIcon } from "./plugins/fondamental-pass-pastille.svg";
 export { default as PassContourIcon } from "./plugins/fondamental-pass-contour.svg";
+export { default as ShopContourIcon } from "./plugins/fondamental-shop-contour.svg";
+export { default as EssentialsContourIcon } from "./plugins/fondamental-essentials-contour.svg";

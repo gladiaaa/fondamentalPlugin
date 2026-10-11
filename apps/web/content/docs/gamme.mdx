@@ -3,7 +3,7 @@ title: La gamme ensemble
 description: Ce que les plugins Fondamental font les uns avec les autres, et les commandes prêtes pour votre boutique.
 ---
 
-Les quatre plugins fonctionnent seuls. Installés ensemble, ils se reconnaissent automatiquement : rien à compiler, aucune dépendance obligatoire entre eux.
+Chaque plugin fonctionne seul. Installés ensemble, ils se reconnaissent automatiquement : rien à compiler, aucune dépendance obligatoire entre eux (FondamentalShop demande seulement Vault et une économie, que FondamentalEssentials fournit).
 
 ## Les liaisons
 
@@ -15,6 +15,10 @@ Les quatre plugins fonctionnent seuls. Installés ensemble, ils se reconnaissent
 | FondamentalPass | FondamentalCrate | Palier, quête ou calendrier peuvent donner des **clés de crate**. <Premium /> |
 | FondamentalBedwars | FondamentalPass | Les parties font avancer les quêtes : `bedwars:play`, `bedwars:win`, `bedwars:kill`, `bedwars:final_kill`, `bedwars:bed_break`. <Premium /> |
 | FondamentalCrate | FondamentalPass | Chaque ouverture fait avancer les quêtes `crate:open` et `crate:open:<id de la crate>`. <Premium /> |
+| FondamentalShop | FondamentalCrate | La boutique vend des **clés de caisses** virtuelles (article `crate-key`). |
+| FondamentalShop | FondamentalTag | La boutique vend des **tags**, à vie ou pour une durée (article `tag`). |
+| FondamentalEssentials | FondamentalShop | L'économie d'Essentials paie les achats et les reventes ; son **journal** les enregistre, regroupés par minute. |
+| FondamentalEssentials | FondamentalTag | Le format du chat affiche le **tag** du joueur (`<team_prefix>`). |
 
 <Callout>
   Les liaisons marquées <Premium /> demandent l'édition Premium de **FondamentalPass** : c'est lui qui reçoit l'information et distribue les récompenses.
