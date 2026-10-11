@@ -1,0 +1,148 @@
+# ============================================================
+#  FondamentalShop - configuration générale
+#  Boutiques : dossier shops/ (un fichier par catégorie)
+#  Textes : messages_fr.yml / messages_en.yml (selon « language »)
+# ============================================================
+
+# Licence en ligne — détermine automatiquement l'édition (FREE ou PREMIUM).
+license:
+  key: ""                   # clé fournie à l'achat. Vide = édition FREE, aucun appel réseau.
+  check-interval-hours: 6   # fréquence de revalidation auprès du serveur de licences
+  grace-hours: 72           # tolérance hors-ligne avant repli sur FREE si le serveur ne répond plus
+
+# Langue des messages : fr ou en. Le fichier messages_<langue>.yml est créé au premier lancement.
+language: fr
+
+# Fuseau horaire : changement de jour des limites (« 3 par jour »), dates du journal.
+timezone: "Europe/Paris"
+
+server:
+  # Nom de CE serveur, noté dans le journal des achats (lobby, survie...).
+  name: "serveur"
+
+# ------------------------------------------------------------
+#  Stockage (limites, délais, stock, journal)
+# ------------------------------------------------------------
+storage:
+  # sqlite = fichier local, un seul serveur (toutes éditions)
+  # mysql  = base partagée : une limite « 1 par jour » vaut pour tout le réseau, le stock
+  #          est commun (Premium ; en édition Free, retombe automatiquement sur sqlite)
+  type: sqlite
+  table-prefix: "fshop_"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "fondamentalshop"
+    user: "fondamentalshop"
+    password: ""
+    pool-size: 5
+
+log:
+  # Journal des achats et reventes (/fshop history) effacé après ce délai (0 = jamais).
+  # Les limites et délais ne dépendent pas du journal.
+  retention-days: 90
+
+# ------------------------------------------------------------
+#  Commandes de boutique
+# ------------------------------------------------------------
+# Chaque commande ouvre un menu avec ses catégories (fichiers de shops/). Exemples :
+# /boutique pour les grades et les clés, /shop pour les ressources, /grades pour présenter
+# les avantages et renvoyer vers la boutique en ligne (articles « type: info »).
+# Une commande avec une seule catégorie l'ouvre directement. /fshop reload suffit.
+commands:
+  shop:
+    aliases: [magasin]
+    title: "<degrade>Boutique</degrade>"     # titre du menu (vide = texte de messages_*.yml)
+    rows: 5                                  # lignes du menu (3 à 6)
+    permission: "fondamentalshop.use"        # vide = tout le monde
+    description: "Ouvrir la boutique"
+    categories: [blocs, ressources, cles, tags]   # vide ou absent = toutes les catégories
+  grades:
+    title: "<degrade>Grades</degrade>"
+    permission: ""
+    description: "Les grades et leurs avantages"
+    categories: [grades]
+
+# ------------------------------------------------------------
+#  Monnaies
+# ------------------------------------------------------------
+# Par défaut, tout se paie avec l'économie du serveur via Vault (FondamentalEssentials,
+# EssentialsX, CMI...). Chaque achat et chaque revente apparaît dans le journal de l'économie
+# de FondamentalEssentials (/eco history).
+#
+# Autres monnaies (Premium) : un article les choisit avec « currency: <id> ».
+currencies:
+  # Affichage des montants Vault : vide = format de l'économie du serveur (« 1 250 $ »).
+  # Exemple : "<amount> pièces"
+  vault-format: ""
+  list:
+    emeraudes:
+      type: item              # un objet de l'inventaire
+      material: EMERALD
+      name: ""                # nom exact exigé (vide = n'importe quelle émeraude)
+      format: "<amount> émeraude(s)"
+    niveaux:
+      type: xp-levels         # niveaux d'expérience
+      format: "<amount> niveau(x)"
+    # points:
+    #   type: placeholder     # n'importe quel plugin, via PlaceholderAPI
+    #   balance: "%playerpoints_points%"
+    #   take: "points take {player} {amount}"
+    #   give: "points give {player} {amount}"   # facultatif, pour revendre dans cette monnaie
+    #   format: "<amount> point(s)"
+
+# ------------------------------------------------------------
+#  Achat
+# ------------------------------------------------------------
+buy:
+  # Écran de confirmation à partir de ce prix total (-1 = jamais). Un article peut l'imposer
+  # ou le retirer avec « confirm: true / false ».
+  confirm-above: 10000
+  # Objets qui ne tiennent pas dans l'inventaire : deny = achat refusé, drop = jetés au sol.
+  inventory-full: deny
+
+# Commandes lancées par la console pour livrer les articles.
+# {player} pseudo, {uuid}, {node} permission, {group} grade, {seconds} durée, {crate} caisse, {amount} quantité
+grants:
+  permission: "lp user {player} permission set {node} true"
+  permission-temp: "lp user {player} permission settemp {node} true {seconds}s accumulate"
+  rank: "lp user {player} parent add {group}"
+  rank-temp: "lp user {player} parent addtemp {group} {seconds}s accumulate"
+  # Clés virtuelles de FondamentalCrate.
+  crate-key: "crate give {player} {crate} {amount}"
+
+# ------------------------------------------------------------
+#  Revente (/sell, /sell hand, /sell all, clic droit dans la boutique)
+# ------------------------------------------------------------
+sell:
+  # Bonus de revente en pour cent, par permission fondamentalshop.sell.bonus.<nom>.
+  # Le joueur reçoit le plus élevé de ses bonus.
+  bonus:
+    vip: 10
+    mvp: 20
+
+# ------------------------------------------------------------
+#  Apparence
+# ------------------------------------------------------------
+menus:
+  border: BLACK_STAINED_GLASS_PANE
+  accent: PURPLE_STAINED_GLASS_PANE
+
+# Sons (identifiants Minecraft) ; vide = aucun son.
+sounds:
+  click: "ui.button.click"
+  buy: "entity.experience_orb.pickup"
+  sell: "block.amethyst_block.chime"
+  error: "entity.villager.no"
+
+# Couleurs des messages, menus et console (charte Fondamental par défaut).
+colors:
+  texte: "#9A90B3"
+  fort: "#F0ECF8"
+  accent: "#B7A0FF"
+  discret: "#6A5D94"
+  ok: "#7ED6A0"
+  erreur: "#F07A7A"
+  alerte: "#F0C36A"
+  info: "#8FB8FF"
+  degrade: ["#B7A0FF", "#6A5D94"]

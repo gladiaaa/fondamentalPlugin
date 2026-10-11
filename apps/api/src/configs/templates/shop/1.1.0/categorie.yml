@@ -1,0 +1,78 @@
+# ============================================================
+#  Une catégorie de la boutique = un fichier de ce dossier.
+#  Le nom du fichier est l'identifiant : /shop blocs
+#  /fshop reload après chaque modification.
+# ============================================================
+
+enabled: true
+display: "<accent>Blocs"            # nom dans le menu (MiniMessage)
+icon: GRASS_BLOCK
+lore:
+  - "<texte>Blocs de construction"
+slot: 20                             # case dans le menu d'accueil (facultatif)
+rows: 6                              # lignes du menu de la catégorie (3 à 6)
+permission: ""                       # permission pour voir la catégorie (vide = tout le monde)
+
+# Boutique du jour (Premium) : seuls <count> articles tirés au sort sont proposés,
+# renouvelés chaque période (day, week, month). Le même tirage vaut pour tout le réseau.
+# rotation:
+#   count: 5
+#   period: day
+
+items:
+  # ----------------------------------------------------------
+  # Champs d'un article objet (type item, le type par défaut) :
+  #   material   matière Minecraft, ou objet custom : itemsadder:rubis, oraxen:id, nexo:id
+  #   amount     objets livrés par unité achetée (défaut 1)
+  #   buy        prix d'une unité (absent = pas à vendre)
+  #   sell       prix de revente d'une unité (absent = ne se revend pas)
+  #   name, lore affichage dans le menu (MiniMessage)
+  #   icon       autre matière pour l'icône (facultatif)
+  #   slot       case dans le menu (facultatif, sinon placé automatiquement)
+  #   quantity   choix de la quantité 1/8/16/32/64/autre (défaut true pour les objets)
+  #   max-quantity  quantité maximale par achat (défaut 64)
+  #   item-name, item-lore, custom-model-data, enchantments : l'objet livré
+  #   match      revente : material (n'importe quel objet de cette matière, non renommé)
+  #              ou exact (exactement l'objet livré)
+  #   permission permission pour acheter et revendre cet article
+  #   limit      { amount: 3, period: day|week|month|total } : achats par joueur
+  #   cooldown   délai entre deux achats : 30m, 12h, 1d...
+  #   confirm    true / false : forcer ou retirer l'écran de confirmation
+  #   currency   monnaie de config.yml > currencies (Premium ; défaut vault)
+  #   stock      { amount: 100, period: day|week|month|total } : stock commun (Premium)
+  #   sale       { percent: 20, until: "2026-10-31 23:59" } : promotion (Premium)
+  # ----------------------------------------------------------
+  pierre:
+    material: STONE
+    amount: 16
+    buy: 32
+    sell: 8
+    name: "<fort>Pierre <discret>×16"
+  pierre_taillee:
+    material: STONE_BRICKS
+    amount: 16
+    buy: 48
+    sell: 12
+    name: "<fort>Pierre taillée <discret>×16"
+  chene:
+    material: OAK_LOG
+    amount: 16
+    buy: 64
+    sell: 16
+    name: "<fort>Bûches de chêne <discret>×16"
+  verre:
+    material: GLASS
+    amount: 16
+    buy: 40
+    name: "<fort>Verre <discret>×16"
+  quartz:
+    material: QUARTZ_BLOCK
+    amount: 8
+    buy: 120
+    sell: 30
+    name: "<fort>Bloc de quartz <discret>×8"
+  lanterne:
+    material: LANTERN
+    amount: 4
+    buy: 60
+    name: "<fort>Lanternes <discret>×4"
