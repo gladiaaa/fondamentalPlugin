@@ -62,6 +62,7 @@ if [ -z "${FP_SKIP_PULL:-}" ]; then
 fi
 
 PREVIOUS=$(cat current 2>/dev/null || true)
+OLD_DEPLOY_ENV=$(cat deploy.env 2>/dev/null || true)
 
 use() {
   echo "IMAGE_TAG=$1" > deploy.env
@@ -85,7 +86,7 @@ use "$TAG"
 compose up -d --wait db
 if ! compose run --rm migrate; then
   echo "$ENV : migrations de $TAG en échec, rien n'a été mis en ligne" >&2
-  [ -n "$PREVIOUS" ] && use "$PREVIOUS"
+  if [ -n "$OLD_DEPLOY_ENV" ]; then echo "$OLD_DEPLOY_ENV" > deploy.env; else rm -f deploy.env; fi
   exit 1
 fi
 
@@ -111,8 +112,8 @@ compose logs --tail 50 web api >&2 || true
 if [ -n "$PREVIOUS" ]; then
   use "$PREVIOUS"
   # Si l'API n'existait pas encore dans la version précédente (premier déploiement
-  # de l'API), on remet au moins le site.
-  compose up -d web api || compose up -d web || true
+  # de l'API), on remet au moins le site et on arrête la nouvelle API défaillante.
+  compose up -d web api || { compose up -d web; compose stop api; } || true
   if healthy "$HOST_PORT" "$PREVIOUS" && healthy "$API_PORT" "$PREVIOUS"; then
     echo "$ENV : retour à $PREVIOUS effectué" >&2
   else
