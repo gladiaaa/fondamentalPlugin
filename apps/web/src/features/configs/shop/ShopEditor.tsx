@@ -45,6 +45,8 @@ import {
 } from "./layout";
 
 const SLUG = "shop";
+/** Nom d'une commande de boutique (config.yml > commands), sans « / ». */
+const COMMAND_ID = /^[a-z0-9_-]{1,32}$/;
 const CONFIG_FILE = "config.yml";
 
 /** Un fichier ouvert dans l'éditeur : enregistré (`savedId`) ou pas encore. */
@@ -95,7 +97,9 @@ export function ShopEditor() {
   const [categories, setCategories] = useState<Doc[]>([]);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [article, setArticle] = useState<string | undefined>();
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<false | "category" | "command">(false);
+  /** Catégorie choisie dans le menu d'une commande (son bouton, ses réglages). */
+  const [menuCat, setMenuCat] = useState<string | undefined>();
   const [page, setPage] = useState(0);
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -140,10 +144,12 @@ export function ShopEditor() {
   const fields = useMemo(() => {
     const itemsField = categorySchema?.fields.find((f) => f.key === "items");
     const commandsField = configSchema?.fields.find((f) => f.key === "commands");
+    const menusField = configSchema?.fields.find((f) => f.key === "menus");
     return {
       article: (itemsField?.kind === "map" && itemsField.fields) || [],
       category: categorySchema?.fields.filter((f) => f.key !== "items") ?? [],
       command: (commandsField?.kind === "map" && commandsField.fields) || [],
+      menus: (menusField?.kind === "section" && menusField.fields) || [],
     } satisfies Record<string, ConfigField[]>;
   }, [categorySchema, configSchema]);
 
@@ -177,6 +183,7 @@ export function ShopEditor() {
   function select(next: Selection) {
     setSelection(next);
     setArticle(undefined);
+    setMenuCat(undefined);
     setPage(0);
     setErrors([]);
   }
@@ -351,6 +358,7 @@ export function ShopEditor() {
     selection?.kind === "category"
       ? (selection.via ?? commandIds.find((id) => menuOf(id).some((n) => n.toLowerCase() === selection.name.toLowerCase())))
       : undefined;
+  const byCategoryKeys = (...keys: string[]) => keys.flatMap((k) => fields.category.filter((f) => f.key === k));
   const byKeys = (...keys: string[]) => keys.flatMap((k) => fields.article.filter((f) => f.key === k));
   const label = (doc: Doc) => plainText(String(doc.values.display ?? "")) || doc.name;
   const articles = category ? asValues(category.values.items) : {};
@@ -364,7 +372,27 @@ export function ShopEditor() {
     if (kind === "m") select({ kind: "command", id: a });
     else if (kind === "c") select({ kind: "category", name: a });
     else if (kind === "a") addCategory(b, a);
-    else if (kind === "new") setCreating(true);
+    else if (kind === "new") setCreating("category");
+    else if (kind === "newcmd") setCreating("command");
+  }
+
+  /** Catégories du menu de la commande `id`, dans l'ordre ; écrites en liste explicite dès qu'on les change. */
+  const setMenuList = (id: string, names: string[]) =>
+    editConfig({ ...config.values, commands: { ...commands, [id]: { ...asValues(commands[id]), categories: names } } });
+
+  function createCommand(id: string) {
+    if (!COMMAND_ID.test(id)) return;
+    if (!commands[id]) editConfig({ ...config!.values, commands: { ...commands, [id]: { rows: 5, categories: [] } } });
+    setNewName("");
+    select({ kind: "command", id });
+  }
+
+  function removeCommand(id: string) {
+    if (!window.confirm(`Supprimer la commande /${id} ? Ses catégories restent dans vos fichiers.`)) return;
+    const rest = { ...commands };
+    delete rest[id];
+    editConfig({ ...config!.values, commands: rest });
+    setSelection(null);
   }
 
   return (
@@ -377,7 +405,8 @@ export function ShopEditor() {
               className="flex gap-1.5"
               onSubmit={(e) => {
                 e.preventDefault();
-                addCategory(newName.trim());
+                if (creating === "command") createCommand(newName.trim());
+                else addCategory(newName.trim());
                 setCreating(false);
               }}
             >
@@ -385,13 +414,13 @@ export function ShopEditor() {
                 autoFocus
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                placeholder="nom du fichier, ex. armes"
-                aria-label="Nom de la nouvelle catégorie (shops/<nom>.yml)"
-                aria-invalid={newName.trim() !== "" && !CATEGORY_ID.test(newName.trim())}
+                placeholder={creating === "command" ? "commande sans /, ex. grades" : "nom du fichier, ex. armes"}
+                aria-label={creating === "command" ? "Nom de la nouvelle commande" : "Nom de la nouvelle catégorie (shops/<nom>.yml)"}
+                aria-invalid={newName.trim() !== "" && !(creating === "command" ? COMMAND_ID : CATEGORY_ID).test(newName.trim())}
                 className="w-48"
                 maxLength={64}
               />
-              <Button type="submit" size="sm" disabled={!CATEGORY_ID.test(newName.trim())}>
+              <Button type="submit" size="sm" disabled={!(creating === "command" ? COMMAND_ID : CATEGORY_ID).test(newName.trim())}>
                 Créer
               </Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => setCreating(false)}>
@@ -428,6 +457,7 @@ export function ShopEditor() {
                   ))}
                 </optgroup>
               )}
+              <option value="newcmd">+ Nouvelle commande…</option>
               <option value="new">+ Nouvelle catégorie…</option>
             </Select>
           )}
@@ -563,10 +593,23 @@ export function ShopEditor() {
                   : "Glissez un objet dans une case vide du coffre : l’article est créé."
               }
             />
+          ) : command ? (
+            <ItemPalette
+              items={items}
+              tall
+              onPick={
+                menuCat && findCategory(menuCat)
+                  ? (material) => editCategory(findCategory(menuCat)!.name, { ...findCategory(menuCat)!.values, icon: material })
+                  : undefined
+              }
+              pickLabel={
+                menuCat
+                  ? `Cliquez un objet pour en faire l’icône de « ${menuCat} », ou glissez-le sur une catégorie.`
+                  : "Glissez un objet sur une catégorie du menu pour changer son icône."
+              }
+            />
           ) : (
-            <p className="p-2 text-muted">
-              Les objets se glissent dans le menu d’une catégorie. Entrez dans une catégorie depuis le menu de la commande.
-            </p>
+            <p className="p-2 text-muted">Choisissez un menu dans la barre du haut.</p>
           )}
         </aside>
 
@@ -618,7 +661,7 @@ export function ShopEditor() {
                 articles, les prix et les cases à votre goût.
               </p>
               {presets.length > 0 && <Button onClick={importPresets}>Partir des catégories du plugin</Button>}
-              <button type="button" className="text-[.82rem] text-accent-text hover:underline" onClick={() => setCreating(true)}>
+              <button type="button" className="text-[.82rem] text-accent-text hover:underline" onClick={() => setCreating("category")}>
                 ou créer une catégorie vide
               </button>
             </div>
@@ -640,8 +683,15 @@ export function ShopEditor() {
               categories={categories}
               panes={panes}
               items={items}
+              selected={menuCat}
+              onSelect={setMenuCat}
               onOpen={(name) => select({ kind: "category", name, via: selection.id })}
               onMove={moveCategory}
+              onIcon={(name, material) => {
+                const doc = findCategory(name);
+                if (doc) editCategory(doc.name, { ...doc.values, icon: material });
+                setMenuCat(name);
+              }}
             />
           ) : (
             <p className="text-muted">Choisissez un menu dans la barre du haut.</p>
@@ -711,52 +761,151 @@ export function ShopEditor() {
             </>
           ) : command && selection?.kind === "command" ? (
             <>
-              <Panel title={`Catégories de /${selection.id}`}>
-                <p className="text-muted">Dans l’ordre du menu. Cliquez pour y entrer ; une catégorie pas encore créée s’ajoute d’un clic.</p>
-                <ul className="grid gap-0.5">
-                  {menuOf(selection.id).map((name) => {
-                    const doc = findCategory(name);
+              {menuCat && findCategory(menuCat) ? (
+                <Panel title={`Catégorie dans /${selection.id}`} onClose={() => setMenuCat(undefined)}>
+                  {(() => {
+                    const doc = findCategory(menuCat)!;
+                    const onChange = (values: ConfigValues) => editCategory(doc.name, values);
                     return (
-                      <li key={name}>
-                        <button
-                          type="button"
-                          onClick={() => (doc ? select({ kind: "category", name: doc.name, via: selection.id }) : addCategory(name, selection.id))}
-                          className="flex w-full items-center gap-2 rounded-field px-2 py-1.5 text-left hover:bg-surface-2"
-                        >
-                          {doc ? (
-                            <McItem material={String(doc.values.icon ?? "CHEST")} items={items} size={20} />
-                          ) : (
-                            <span aria-hidden className="h-5 w-5 rounded-[4px] border border-dashed border-line" />
-                          )}
-                          <span className={cn("truncate", !doc && "text-muted")}>{doc ? label(doc) : name}</span>
-                          <span className="ml-auto text-[.75rem] text-muted">
-                            {doc ? `shops/${doc.name}.yml` : presetOf(name) ? "Ajouter" : "Créer"}
-                          </span>
-                        </button>
-                      </li>
+                      <>
+                        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5 rounded-field bg-surface-2 p-2">
+                          <McItem material={String(doc.values.icon ?? "CHEST")} items={items} size={32} />
+                          <div className="grid min-w-0">
+                            <span className="truncate font-medium">
+                              <Segments segments={parseMiniMessage(String(doc.values.display ?? doc.name))} />
+                            </span>
+                            <span className="truncate font-mono text-[.75rem] text-muted">shops/{doc.name}.yml</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" onClick={() => select({ kind: "category", name: doc.name, via: selection.id })}>
+                            Ouvrir son contenu
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setMenuList(
+                                selection.id,
+                                menuOf(selection.id).filter((n) => n.toLowerCase() !== doc.name.toLowerCase()),
+                              );
+                              setMenuCat(undefined);
+                            }}
+                          >
+                            Retirer de /{selection.id}
+                          </Button>
+                        </div>
+                        <Section title="Bouton dans le menu" hint="nom, icône, description, case" open>
+                          <SectionFields fields={byCategoryKeys("display", "icon", "lore", "slot")} values={doc.values} onChange={onChange} />
+                        </Section>
+                        <Section title="Accès" hint="activée, permission">
+                          <SectionFields fields={byCategoryKeys("enabled", "permission")} values={doc.values} onChange={onChange} />
+                        </Section>
+                      </>
                     );
-                  })}
-                </ul>
-                {presets.length > 0 && categories.length > 0 && (
-                  <Button size="sm" variant="secondary" className="justify-self-start" onClick={importPresets}>
-                    Ajouter toutes les catégories du plugin
-                  </Button>
-                )}
-              </Panel>
+                  })()}
+                </Panel>
+              ) : (
+                <Panel title={`Catégories de /${selection.id}`}>
+                  <p className="text-muted">
+                    Dans l’ordre du menu. Cliquez une catégorie dans le coffre pour régler son bouton ; double-cliquez pour entrer dedans.
+                  </p>
+                  {strings(command.categories).length === 0 && (
+                    <p className="text-[.78rem] text-muted">
+                      Aucune liste dans config.yml : ce menu montre toutes vos catégories. Retirer ou réordonner en crée une.
+                    </p>
+                  )}
+                  <ul className="grid gap-0.5">
+                    {menuOf(selection.id).map((name, i, list) => {
+                      const doc = findCategory(name);
+                      const move = (to: number) => {
+                        const next = [...list];
+                        next.splice(i, 1);
+                        next.splice(to, 0, name);
+                        setMenuList(selection.id, next);
+                      };
+                      return (
+                        <li key={name} className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => (doc ? setMenuCat(doc.name) : addCategory(name, selection.id))}
+                            className="flex min-w-0 flex-1 items-center gap-2 rounded-field px-2 py-1.5 text-left hover:bg-surface-2"
+                          >
+                            {doc ? (
+                              <McItem material={String(doc.values.icon ?? "CHEST")} items={items} size={20} />
+                            ) : (
+                              <span aria-hidden className="h-5 w-5 shrink-0 rounded-[4px] border border-dashed border-line" />
+                            )}
+                            <span className={cn("truncate", !doc && "text-muted")}>{doc ? label(doc) : name}</span>
+                            {!doc && <span className="ml-auto text-[.75rem] text-accent-text">{presetOf(name) ? "Ajouter" : "Créer"}</span>}
+                          </button>
+                          <IconAction label={`Monter ${name}`} disabled={i === 0} onClick={() => move(i - 1)}>
+                            ↑
+                          </IconAction>
+                          <IconAction label={`Descendre ${name}`} disabled={i === list.length - 1} onClick={() => move(i + 1)}>
+                            ↓
+                          </IconAction>
+                          <IconAction
+                            label={`Retirer ${name} de /${selection.id}`}
+                            onClick={() =>
+                              setMenuList(
+                                selection.id,
+                                list.filter((n) => n !== name),
+                              )
+                            }
+                          >
+                            ×
+                          </IconAction>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {(() => {
+                    const inMenu = new Set(menuOf(selection.id).map((n) => n.toLowerCase()));
+                    const choices = [
+                      ...categories.map((c) => c.name),
+                      ...(categorySchema.presets ?? []).map((p) => p.name).filter((n) => !findCategory(n)),
+                    ].filter((n) => !inMenu.has(n.toLowerCase()));
+                    return (
+                      choices.length > 0 && (
+                        <Select
+                          aria-label={`Ajouter une catégorie à /${selection.id}`}
+                          value=""
+                          onChange={(e) => e.target.value && setMenuList(selection.id, [...menuOf(selection.id), e.target.value])}
+                        >
+                          <option value="">+ Ajouter une catégorie à ce menu…</option>
+                          {choices.map((n) => (
+                            <option key={n} value={n}>
+                              {findCategory(n) ? label(findCategory(n)!) : `${n} (catégorie du plugin)`}
+                            </option>
+                          ))}
+                        </Select>
+                      )
+                    );
+                  })()}
+                  {presets.length > 0 && categories.length > 0 && (
+                    <Button size="sm" variant="secondary" className="justify-self-start" onClick={importPresets}>
+                      Ajouter toutes les catégories du plugin
+                    </Button>
+                  )}
+                </Panel>
+              )}
               <Panel title={`Commande /${selection.id}`}>
-                <ConfigFields
-                  fields={fields.command.filter((f) => f.key !== "title" && f.key !== "rows")}
+                <SectionFields
+                  fields={fields.command.filter((f) => !["title", "rows", "categories"].includes(f.key))}
                   values={command}
-                  inEntry
                   onChange={(values) => editConfig({ ...config.values, commands: { ...commands, [selection.id]: values } })}
                 />
-                <p className="text-[.78rem] text-muted">
-                  Ajouter ou renommer une commande :{" "}
-                  <Link href="/configurateur" className="text-accent-text hover:underline">
-                    le configurateur
-                  </Link>
-                  .
-                </p>
+                <Section title="Apparence de tous les menus" hint="vitres du cadre">
+                  <SectionFields
+                    fields={fields.menus}
+                    values={asValues(config.values.menus)}
+                    onChange={(values) => editConfig({ ...config.values, menus: values })}
+                  />
+                </Section>
+                <Button size="sm" variant="ghost" className="justify-self-start text-error" onClick={() => removeCommand(selection.id)}>
+                  Supprimer la commande /{selection.id}
+                </Button>
               </Panel>
             </>
           ) : null}
@@ -962,24 +1111,33 @@ function CategoryChest({
   );
 }
 
-/** Menu d'une commande avec ses catégories : cliquer en ouvre une, la glisser change sa case. */
+/**
+ * Menu d'une commande avec ses catégories : cliquer en choisit une (son bouton se règle à droite),
+ * double-cliquer y entre, la glisser change sa case, y déposer un objet change son icône.
+ */
 function CommandChest({
   command,
   categories,
   panes,
   items,
+  selected,
+  onSelect,
   onOpen,
   onMove,
+  onIcon,
 }: {
   command: ConfigValues;
   categories: Doc[];
   panes: Panes;
   items: ReturnType<typeof useMcItems>;
+  selected?: string;
+  onSelect: (name: string) => void;
   onOpen: (name: string) => void;
   onMove: (name: string, slot: number) => void;
+  onIcon: (name: string, material: string) => void;
 }) {
   const byId = new Map(categories.filter((c) => c.values.enabled !== false).map((c) => [c.name.toLowerCase(), c]));
-  const wanted = Array.isArray(command.categories) ? command.categories.filter((x): x is string => typeof x === "string") : [];
+  const wanted = strings(command.categories);
   const ids = wanted.length > 0 ? wanted : [...byId.keys()].sort();
   const found = ids.flatMap((id) => byId.get(id.toLowerCase()) ?? []);
   const layout = commandLayout(
@@ -990,22 +1148,48 @@ function CommandChest({
 
   return (
     <>
-      {wanted.length === 1 ? (
-        <p className="text-[.92rem] text-muted">
-          Une seule catégorie : la commande ouvre directement{" "}
+      {wanted.length === 1 && (
+        <p className="max-w-[52ch] text-center text-muted">
+          Une seule catégorie : en jeu, /commande ouvre directement{" "}
           <button type="button" className="font-medium text-accent-text hover:underline" onClick={() => onOpen(found[0]?.name ?? wanted[0])}>
             {wanted[0]}
-          </button>
-          , sans ce menu.
+          </button>{" "}
+          sans passer par ce menu.
         </p>
-      ) : (
-        <div className="max-w-full overflow-x-auto p-0.5 2xl:[zoom:1.2]">
-          <Chest layout={layout} items={items} onSelect={onOpen} onDrop={(slot, data) => data.key && onMove(data.key, slot)} />
-        </div>
       )}
-      <p className="text-muted">Cliquez une catégorie pour y entrer, comme le joueur. Glissez-la pour changer sa case.</p>
-      {found.length === 0 && <p className="text-[.92rem] text-muted">Aucune catégorie créée pour ce menu : ajoutez-en depuis la liste à droite.</p>}
+      <div className="max-w-full overflow-x-auto p-0.5 2xl:[zoom:1.2]">
+        <Chest
+          layout={layout}
+          items={items}
+          selected={selected}
+          onSelect={onSelect}
+          onActivate={onOpen}
+          onDrop={(slot, data) => {
+            if (data.key) return onMove(data.key, slot);
+            const target = layout.slots[slot];
+            if (data.material && target.kind === "entry" && target.key) onIcon(target.key, data.material);
+          }}
+        />
+      </div>
+      <p className="text-muted">Cliquez une catégorie pour régler son bouton, double-cliquez pour y entrer. Glissez-la pour changer sa case.</p>
+      {found.length === 0 && <p className="text-muted">Aucune catégorie dans ce menu : ajoutez-en depuis la colonne de droite.</p>}
     </>
+  );
+}
+
+/** Petit bouton d'action d'une liste (monter, descendre, retirer). */
+function IconAction({ label, disabled, onClick, children }: { label: string; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-field text-muted hover:bg-surface-2 hover:text-text disabled:opacity-30"
+    >
+      {children}
+    </button>
   );
 }
 
