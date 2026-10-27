@@ -110,6 +110,7 @@ export function Chest({
   selected,
   onSelect,
   onDrop,
+  onActivate,
   onBack,
   footer,
 }: {
@@ -118,6 +119,8 @@ export function Chest({
   selected?: string;
   onSelect?: (key: string) => void;
   onDrop?: (slot: number, data: DragData) => void;
+  /** Double-clic sur une entrée (entrer dans une catégorie depuis le menu d'une commande). */
+  onActivate?: (key: string) => void;
   /** Clic sur la flèche « Retour » du plugin : remonter au menu de la commande. */
   onBack?: () => void;
   footer?: React.ReactNode;
@@ -183,6 +186,7 @@ export function Chest({
                   aria-pressed={selected === slot.key}
                   aria-label={`${plainText(slot.name ?? slot.key!)}, case ${i}${slot.fixed ? "" : " (placement automatique)"}${slot.problem ? `, ignoré : ${slot.problem}` : ""}`}
                   onClick={() => onSelect?.(slot.key!)}
+                  onDoubleClick={() => onActivate?.(slot.key!)}
                   onFocus={(e) => setHover({ i, el: e.currentTarget })}
                   onBlur={() => setHover(null)}
                   onDragStart={(e) => {
