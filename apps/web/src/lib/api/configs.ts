@@ -2,6 +2,7 @@ import type {
   ConfigPluginResponse,
   ConfigSchemaResponse,
   ConfigValues,
+  ImportedConfigResponse,
   RenderedConfigResponse,
   SavedConfigResponse,
 } from "@fondamental/shared";
@@ -25,6 +26,10 @@ export const getConfigSchema = ({ slug, version, file }: ConfigTarget) =>
 
 export const renderConfig = (target: ConfigTarget, values: ConfigValues, csrfToken: string) =>
   apiFetch<RenderedConfigResponse>("/me/configs/render", { method: "POST", body: { ...target, values }, csrfToken });
+
+/** Le fichier YAML de l'acheteur (celui de son serveur), ramené aux valeurs du formulaire. */
+export const importConfig = (target: ConfigTarget, yaml: string, csrfToken: string) =>
+  apiFetch<ImportedConfigResponse>("/me/configs/import", { method: "POST", body: { ...target, yaml }, csrfToken });
 
 export const listSavedConfigs = () => apiFetch<SavedConfigResponse[]>("/me/configs");
 

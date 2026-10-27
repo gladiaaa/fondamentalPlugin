@@ -128,6 +128,29 @@ describe('Générateur de configuration (e2e)', () => {
     });
   });
 
+  describe('POST /api/me/configs/import', () => {
+    const IMPORT = '/api/me/configs/import';
+
+    it('exige une session', async () => {
+      await newBrowser(app).post(IMPORT, { ...PASS_CONFIG, yaml: 'server: {}' }).expect(401);
+    });
+
+    it('ramène le fichier du serveur aux valeurs du formulaire, sans la clé de licence', async () => {
+      const { b, csrf } = await loggedInUser();
+      const yaml = ['license:', '  key: "PASS-DU-FICHIER"', 'server:', '  name: survie', 'pirate: true'].join('\n');
+      const res = await b.post(IMPORT, { ...PASS_CONFIG, yaml }, { csrf }).expect(200);
+      expect(res.body.values.server).toEqual({ name: 'survie' });
+      expect(res.body.values.license).toBeUndefined();
+      expect(res.body.ignored).toEqual(['pirate : inconnu de ce fichier']);
+    });
+
+    it('refuse (400) un YAML illisible', async () => {
+      const { b, csrf } = await loggedInUser();
+      const res = await b.post(IMPORT, { ...PASS_CONFIG, yaml: 'server: [non fermé' }, { csrf }).expect(400);
+      expect(res.body.code).toBe('CONFIG_YAML_INVALID');
+    });
+  });
+
   describe('configurations enregistrées', () => {
     it('enregistre, liste, relit, modifie et supprime', async () => {
       const { b, csrf } = await buyer('crate', 'CRATE-CRUD');

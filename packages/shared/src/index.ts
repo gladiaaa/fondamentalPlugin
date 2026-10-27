@@ -587,6 +587,13 @@ export interface SavedConfigResponse {
   updatedAt: string;
 }
 
+/** `POST /api/me/configs/import` : le fichier d'un acheteur, ramené aux valeurs du formulaire. */
+export interface ImportedConfigResponse {
+  values: ConfigValues;
+  /** Ce qui n'a pas pu être repris (« chemin : raison ») : champ inconnu de ce fichier, valeur invalide. */
+  ignored: string[];
+}
+
 /** `POST /api/me/configs/render` : le fichier YAML prêt à déposer dans `plugins/<Plugin>/`. */
 export interface RenderedConfigResponse {
   file: string;

@@ -21,6 +21,7 @@ import {
   deleteSavedConfig,
   getConfigPlugin,
   getConfigSchema,
+  importConfig,
   listSavedConfigs,
   renderConfig,
   updateSavedConfig,
@@ -60,6 +61,7 @@ export function Configurator() {
   const [current, setCurrent] = useState<SavedConfigResponse | null>(null);
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [ignored, setIgnored] = useState<string[]>([]);
   const pendingValues = useRef<ConfigValues | null>(null);
 
   useEffect(() => {
@@ -207,10 +209,25 @@ export function Configurator() {
     }
   }
 
+  /** Reprend le fichier déjà en place sur le serveur de l'acheteur. */
+  async function importFile(file: File | undefined) {
+    if (!file || !schema || !csrfToken) return;
+    try {
+      const res = await importConfig({ slug: schema.slug, version: schema.version, file: schema.file }, await file.text(), csrfToken);
+      setValues(res.values);
+      setPath([]);
+      setIgnored(res.ignored);
+      toast.success(`${file.name} repris dans le formulaire.`);
+    } catch (error) {
+      toast.error(error instanceof ApiRequestError ? error.messages[0] : "Lecture du fichier impossible.");
+    }
+  }
+
   function startOver() {
     setCurrent(null);
     setName("");
     setPath([]);
+    setIgnored([]);
     if (schema) setValues(schema.defaults);
   }
 
@@ -320,6 +337,18 @@ export function Configurator() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-display text-[1.05rem] font-semibold">{schema.file}</h2>
               <div className="flex gap-2">
+                <label className="inline-flex cursor-pointer items-center rounded-pill px-3 py-1.5 text-[.82rem] font-semibold hover:bg-surface-2 focus-within:shadow-[var(--focus-ring)]">
+                  Importer mon fichier
+                  <input
+                    type="file"
+                    accept=".yml,.yaml"
+                    className="sr-only"
+                    onChange={(e) => {
+                      void importFile(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
                 <Button size="sm" variant="ghost" onClick={startOver}>
                   Repartir du fichier livré
                 </Button>
@@ -328,6 +357,15 @@ export function Configurator() {
                 </Button>
               </div>
             </div>
+            {ignored.length > 0 && (
+              <Alert variant="warning" title="Pas repris de votre fichier">
+                <ul className="list-disc pl-5">
+                  {ignored.map((m) => (
+                    <li key={m}>{m}</li>
+                  ))}
+                </ul>
+              </Alert>
+            )}
             {previewErrors.length > 0 && (
               <Alert variant="error" title="À corriger avant de télécharger">
                 <ul className="list-disc pl-5">

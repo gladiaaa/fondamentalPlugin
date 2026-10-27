@@ -1060,6 +1060,87 @@
         ]
       }
     },
+    "/api/me/configs/import": {
+      "post": {
+        "description": "Le fichier YAML de l’acheteur (celui de son serveur), ramené aux valeurs du formulaire pour l’afficher dans le configurateur. Ce qui n’a pas pu être repris est listé dans `ignored`. La clé de licence du fichier n’est jamais lue. `400 CONFIG_YAML_INVALID` si le YAML est illisible.",
+        "operationId": "MyConfigsController_import",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportedConfigApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (validation, lien expiré, mot de passe refusé…). Voir `code`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Pas de session, ou identifiants incorrects.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origine refusée, jeton CSRF absent ou faux, ou adresse non confirmée (`EMAIL_NOT_VERIFIED`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable (ou pas accessible à ce compte).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "csrf": []
+          }
+        ],
+        "summary": "Lire un fichier existant",
+        "tags": [
+          "configurations"
+        ]
+      }
+    },
     "/api/me/configs": {
       "get": {
         "description": "La plus récemment modifiée en premier.",
@@ -3104,6 +3185,57 @@
         "required": [
           "file",
           "yaml"
+        ]
+      },
+      "ImportConfigDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "crate"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.2.1"
+          },
+          "file": {
+            "type": "string",
+            "example": "crates.yml"
+          },
+          "yaml": {
+            "type": "string",
+            "maxLength": 100000,
+            "description": "Contenu du fichier YAML de l’acheteur (celui de son serveur)."
+          }
+        },
+        "required": [
+          "slug",
+          "version",
+          "file",
+          "yaml"
+        ]
+      },
+      "ImportedConfigApiResponse": {
+        "type": "object",
+        "properties": {
+          "values": {
+            "type": "object",
+            "description": "Valeurs du formulaire lues dans le fichier."
+          },
+          "ignored": {
+            "example": [
+              "crates.vote.rewards.lot.weight : au moins 1"
+            ],
+            "description": "Ce qui n’a pas pu être repris.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "values",
+          "ignored"
         ]
       },
       "SavedConfigApiResponse": {

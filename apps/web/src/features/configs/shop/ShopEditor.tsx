@@ -17,6 +17,7 @@ import {
   deleteSavedConfig,
   getConfigPlugin,
   getConfigSchema,
+  importConfig,
   listSavedConfigs,
   renderConfig,
   updateSavedConfig,
@@ -99,6 +100,7 @@ export function ShopEditor() {
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [ignored, setIgnored] = useState<string[]>([]);
 
   useEffect(() => {
     Promise.all([getLicenses(), listSavedConfigs(), getConfigPlugin(SLUG)])
@@ -271,6 +273,44 @@ export function ShopEditor() {
     } finally {
       setSaving(false);
     }
+  }
+
+  /**
+   * Fichiers du serveur de l'acheteur : config.yml remplace la configuration générale, tout autre
+   * fichier est la catégorie shops/<nom>.yml du même nom (créée ou remplacée). Rien n'est enregistré
+   * avant « Enregistrer ».
+   */
+  async function importFiles(files: FileList | null) {
+    if (!files || !csrfToken) return;
+    const notes: string[] = [];
+    let opened: Selection | null = null;
+    for (const file of Array.from(files)) {
+      const name = file.name.replace(/\.ya?ml$/i, "");
+      const isConfig = name === "config";
+      if (!isConfig && !CATEGORY_ID.test(name)) {
+        notes.push(`${file.name} : nom de fichier invalide (lettres, chiffres, - et _).`);
+        continue;
+      }
+      try {
+        const res = await importConfig({ slug: SLUG, version, file: isConfig ? CONFIG_FILE : CATEGORY_FILE }, await file.text(), csrfToken);
+        notes.push(...res.ignored.map((m) => `${file.name} › ${m}`));
+        if (isConfig) {
+          setConfig((c) => c && { ...c, values: res.values, dirty: true });
+        } else {
+          setCategories((list) =>
+            list.some((c) => c.name === name)
+              ? list.map((c) => (c.name === name ? { ...c, values: res.values, dirty: true } : c))
+              : [...list, { name, values: res.values, dirty: true }],
+          );
+          opened ??= { kind: "category", name };
+        }
+      } catch (error) {
+        notes.push(`${file.name} : ${error instanceof ApiRequestError ? error.messages[0] : "lecture impossible."}`);
+      }
+    }
+    setIgnored(notes);
+    if (opened) select(opened);
+    toast.success(`${files.length} fichier${files.length > 1 ? "s" : ""} lu${files.length > 1 ? "s" : ""}. Enregistrez pour les garder.`);
   }
 
   async function downloadCurrent() {
@@ -463,6 +503,19 @@ export function ShopEditor() {
             <span aria-hidden className={cn("h-2 w-2 rounded-full", dirty > 0 ? "bg-warning" : "bg-success")} />
             {dirty > 0 ? `${dirty} fichier${dirty > 1 ? "s" : ""} à enregistrer` : "Tout est enregistré"}
           </span>
+          <label className="inline-flex cursor-pointer items-center rounded-pill px-3 py-1.5 text-[.82rem] font-semibold shadow-[inset_0_0_0_1.5px_var(--color-line)] hover:shadow-[inset_0_0_0_1.5px_var(--color-accent)] focus-within:shadow-[var(--focus-ring)]">
+            Importer mes fichiers
+            <input
+              type="file"
+              accept=".yml,.yaml"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                void importFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
           <Button size="sm" variant="secondary" onClick={downloadCurrent} disabled={!selection} title={downloadHint(!!category)}>
             Télécharger {category ? `${category.name}.yml` : CONFIG_FILE}
           </Button>
@@ -471,6 +524,18 @@ export function ShopEditor() {
           </Button>
         </div>
       </div>
+      {ignored.length > 0 && (
+        <Alert variant="warning" title="Pas repris de vos fichiers">
+          <ul className="list-disc pl-5">
+            {ignored.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+          <button type="button" className="mt-1 text-accent-text hover:underline" onClick={() => setIgnored([])}>
+            Masquer
+          </button>
+        </Alert>
+      )}
       {errors.length > 0 && (
         <Alert variant="error" title="À corriger avant de télécharger">
           <ul className="list-disc pl-5">
@@ -483,7 +548,10 @@ export function ShopEditor() {
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-2.5 xl:h-[calc(100dvh-9.5rem)] xl:min-h-[560px] lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(380px,.85fr)_minmax(0,1fr)_minmax(0,1fr)]">
         {/* Objets */}
-        <aside aria-label="Objets Minecraft" className="order-last max-h-[60vh] min-h-0 overflow-y-auto rounded-card lg:order-none lg:max-h-none border border-line bg-surface p-2.5">
+        <aside
+          aria-label="Objets Minecraft"
+          className="order-last max-h-[60vh] min-h-0 overflow-y-auto rounded-card lg:order-none lg:max-h-none border border-line bg-surface p-2.5"
+        >
           {category ? (
             <ItemPalette
               items={items}
