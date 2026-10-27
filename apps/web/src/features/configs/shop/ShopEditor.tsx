@@ -10,6 +10,7 @@ import { Input, Select } from "@/components/ui/Field";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/cn";
 import { useSession } from "@/lib/session/SessionContext";
+import { zip } from "@/lib/zip";
 import { getLicenses } from "@/lib/api/account";
 import { ApiRequestError } from "@/lib/api/client";
 import {
@@ -74,8 +75,8 @@ function withMaterial(article: ConfigValues, material: string): ConfigValues {
   return type === "item" ? { ...article, material } : { ...article, icon: material };
 }
 
-function download(content: string, filename: string) {
-  const url = URL.createObjectURL(new Blob([content], { type: "text/yaml;charset=utf-8" }));
+function download(content: string | Uint8Array<ArrayBuffer>, filename: string, type = "text/yaml;charset=utf-8") {
+  const url = URL.createObjectURL(new Blob([content], { type }));
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
@@ -110,6 +111,7 @@ export function ShopEditor() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [ignored, setIgnored] = useState<string[]>([]);
+  const [zipping, setZipping] = useState(false);
 
   useEffect(() => {
     Promise.all([getLicenses(), listSavedConfigs(), getConfigPlugin(SLUG)])
@@ -347,6 +349,28 @@ export function ShopEditor() {
     }
   }
 
+  /** Tous les fichiers d'un coup, rangés comme le dossier du plugin : FondamentalShop/config.yml et shops/*.yml. */
+  async function downloadAll() {
+    if (!csrfToken) return;
+    setZipping(true);
+    const files = [
+      { path: "FondamentalShop/config.yml", file: CONFIG_FILE, values: config!.values },
+      ...categories.map((c) => ({ path: `FondamentalShop/shops/${c.name}.yml`, file: CATEGORY_FILE, values: c.values })),
+    ];
+    const results = await Promise.allSettled(files.map((f) => renderConfig({ slug: SLUG, version, file: f.file }, f.values, csrfToken)));
+    setZipping(false);
+    // Un seul fichier invalide : rien n'est téléchargé, pour ne pas déposer un dossier incomplet.
+    const problems = results.flatMap((r, i) =>
+      r.status === "rejected"
+        ? [`${files[i].path.replace("FondamentalShop/", "")} : ${r.reason instanceof ApiRequestError ? r.reason.messages.join(" ; ") : "non généré"}`]
+        : [],
+    );
+    if (problems.length > 0) return setErrors(problems);
+    setErrors([]);
+    const entries = results.map((r, i) => ({ name: files[i].path, content: (r as PromiseFulfilledResult<{ yaml: string }>).value.yaml }));
+    download(zip(entries), "FondamentalShop.zip", "application/zip");
+  }
+
   function switchConfig(id: string) {
     const next = savedConfigs.find((c) => c.id === id);
     if (!next || (config!.dirty && !window.confirm("Abandonner les modifications de la configuration générale ?"))) return;
@@ -569,6 +593,15 @@ export function ShopEditor() {
             onClick={() => setYamlMode((m) => !m)}
           >
             Fichier YAML
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={downloadAll}
+            loading={zipping}
+            title="Un .zip : décompressez-le dans plugins/ (dossier FondamentalShop), puis /fshop reload."
+          >
+            Tout télécharger (.zip)
           </Button>
           <Button size="sm" variant="secondary" onClick={downloadCurrent} disabled={!selection} title={downloadHint(!!category)}>
             Télécharger {category ? `${category.name}.yml` : CONFIG_FILE}
