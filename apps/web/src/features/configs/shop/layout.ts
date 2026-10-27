@@ -21,6 +21,8 @@ export interface Slot {
   fixed?: boolean;
   /** Article que le plugin ignorerait (et pourquoi) : montré dans l'éditeur seulement, à sa case. */
   problem?: string;
+  /** Catégorie listée par la commande dont le fichier shops/<id>.yml n'est pas dans l'éditeur. */
+  missing?: boolean;
   /** Bouton du plugin qui ramène au menu précédent (cliquable dans l'éditeur, comme en jeu). */
   back?: boolean;
 }
@@ -188,7 +190,15 @@ export function categoryLayout(category: ConfigValues, page: number, panes: Pane
 }
 
 /** Menu d'une commande de boutique (`config.yml > commands.<id>`) avec ses catégories. */
-export function commandLayout(command: ConfigValues, categories: { id: string; values: ConfigValues }[], panes: Panes = DEFAULT_PANES): MenuLayout {
+/**
+ * `missing` : catégorie dont on n'a pas le fichier ; elle prend sa place dans l'ordre, en « ? » (sa case
+ * et son icône sont dans son propre fichier, inconnu ici).
+ */
+export function commandLayout(
+  command: ConfigValues,
+  categories: { id: string; values: ConfigValues; missing?: boolean }[],
+  panes: Panes = DEFAULT_PANES,
+): MenuLayout {
   const rows = clampRows(command.rows, 5);
   const size = rows * 9;
   const slots = frame(rows, panes);
@@ -210,9 +220,12 @@ export function commandLayout(command: ConfigValues, categories: { id: string; v
       kind: "entry",
       key: c.id,
       fixed: isFixed,
-      material: str(c.values.icon) || "CHEST",
+      material: c.missing ? "?" : str(c.values.icon) || "CHEST",
       name: str(c.values.display) ?? c.id,
-      lore: strings(c.values.lore),
+      lore: c.missing
+        ? [`<texte>shops/${c.id}.yml n’est pas encore dans l’éditeur.`, "<texte>Importez-le pour voir son icône et sa case."]
+        : strings(c.values.lore),
+      ...(c.missing && { missing: true }),
     };
   }
   slots[size - 6] = { kind: "control", ...CONTROL.balance };

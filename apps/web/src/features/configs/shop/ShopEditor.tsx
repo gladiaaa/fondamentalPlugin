@@ -808,7 +808,32 @@ export function ShopEditor() {
             </>
           ) : command && selection?.kind === "command" ? (
             <>
-              {menuCat && findCategory(menuCat) ? (
+              {menuCat && !findCategory(menuCat) ? (
+                <Panel title={`Catégorie dans /${selection.id}`} onClose={() => setMenuCat(undefined)}>
+                  <p>
+                    Le fichier <span className="font-mono">shops/{menuCat}.yml</span> n’est pas encore dans l’éditeur : son icône, son nom et sa case
+                    y sont écrits. En jeu, la catégorie s’affiche s’il est sur le serveur.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="inline-flex cursor-pointer items-center rounded-pill bg-accent px-3 py-1.5 text-[.82rem] font-semibold text-on-accent focus-within:shadow-[var(--focus-ring)]">
+                      Importer shops/{menuCat}.yml
+                      <input
+                        type="file"
+                        accept=".yml,.yaml"
+                        multiple
+                        className="sr-only"
+                        onChange={(e) => {
+                          void importFiles(e.target.files);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <Button size="sm" variant="secondary" onClick={() => addCategory(menuCat, selection.id)}>
+                      {presetOf(menuCat) ? "Partir de celle du plugin" : "Créer vide"}
+                    </Button>
+                  </div>
+                </Panel>
+              ) : menuCat && findCategory(menuCat) ? (
                 <Panel title={`Catégorie dans /${selection.id}`} onClose={() => setMenuCat(undefined)}>
                   {(() => {
                     const doc = findCategory(menuCat)!;
@@ -1193,9 +1218,15 @@ function CommandChest({
   const wanted = strings(command.categories);
   const ids = wanted.length > 0 ? wanted : [...byId.keys()].sort();
   const found = ids.flatMap((id) => byId.get(id.toLowerCase()) ?? []);
+  // Listée sans fichier dans l'éditeur : un « ? » à sa place ; désactivée (enabled: false) : absente, comme en jeu.
+  const known = new Set(categories.map((c) => c.name.toLowerCase()));
   const layout = commandLayout(
     command,
-    found.map((c) => ({ id: c.name, values: c.values })),
+    ids.flatMap((id) => {
+      const c = byId.get(id.toLowerCase());
+      if (c) return [{ id: c.name, values: c.values }];
+      return known.has(id.toLowerCase()) ? [] : [{ id, values: {}, missing: true }];
+    }),
     panes,
   );
 
@@ -1226,7 +1257,7 @@ function CommandChest({
         />
       </div>
       <p className="text-muted">Cliquez une catégorie pour régler son bouton, double-cliquez pour y entrer. Glissez-la pour changer sa case.</p>
-      {found.length === 0 && <p className="text-muted">Aucune catégorie dans ce menu : ajoutez-en depuis la colonne de droite.</p>}
+      {ids.length === 0 && <p className="text-muted">Aucune catégorie dans ce menu : ajoutez-en depuis la colonne de droite.</p>}
     </>
   );
 }
