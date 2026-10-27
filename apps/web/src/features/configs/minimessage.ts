@@ -86,7 +86,14 @@ export function toHex(color: string): string | null {
 }
 
 const hexToRgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-const rgbToHex = (rgb: number[]) => `#${rgb.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("")}`;
+const rgbToHex = (rgb: number[]) =>
+  `#${rgb
+    .map((v) =>
+      Math.round(Math.max(0, Math.min(255, v)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 
 /** Couleur au point `t` (0 à 1) d'un dégradé à plusieurs couleurs. */
 export function gradientAt(colors: string[], t: number): string {
@@ -115,7 +122,14 @@ function visibleLength(source: string): number {
 }
 
 /** Transforme du MiniMessage (et des codes « & ») en morceaux de texte stylés. */
-export function parseMiniMessage(input: string): Segment[] {
+/** Couleurs propres à un serveur (`colors:` de config.yml) : remplacent celles de la charte. */
+export interface Palette {
+  colors?: Record<string, string>;
+  degrade?: string[];
+}
+
+export function parseMiniMessage(input: string, palette?: Palette): Segment[] {
+  const hex = (c: string) => palette?.colors?.[c.trim().toLowerCase()] ?? toHex(c);
   const segments: Segment[] = [];
   const stack: Style[] = [{ color: DEFAULT_COLOR }];
   const top = () => stack[stack.length - 1];
@@ -126,7 +140,8 @@ export function parseMiniMessage(input: string): Segment[] {
       let color = style.color;
       if (style.gradient) {
         const g = style.gradient;
-        color = g.colors[0] === "rainbow" ? rainbowAt(g.index / Math.max(g.length, 1)) : gradientAt(g.colors, g.length <= 1 ? 0 : g.index / (g.length - 1));
+        color =
+          g.colors[0] === "rainbow" ? rainbowAt(g.index / Math.max(g.length, 1)) : gradientAt(g.colors, g.length <= 1 ? 0 : g.index / (g.length - 1));
         g.index++;
       }
       const last = segments[segments.length - 1];
@@ -210,7 +225,7 @@ export function parseMiniMessage(input: string): Segment[] {
       stack.splice(1);
       return true;
     }
-    if (decorations[tag] || tag === "color" || tag === "c" || tag === "gradient" || tag === "rainbow" || tag === "degrade" || toHex(tag)) {
+    if (decorations[tag] || tag === "color" || tag === "c" || tag === "gradient" || tag === "rainbow" || tag === "degrade" || hex(tag)) {
       if (closing) {
         close();
         return true;
@@ -226,7 +241,7 @@ export function parseMiniMessage(input: string): Segment[] {
     const closer = source.indexOf(`</${tag}`, end);
     const span = visibleLength(source.slice(end + 1, closer === -1 ? undefined : closer));
     if (tag === "gradient" || tag === "degrade") {
-      const colors = tag === "degrade" ? CHARTE_DEGRADE : args.map(toHex).filter((c): c is string => c !== null);
+      const colors = tag === "degrade" ? (palette?.degrade ?? CHARTE_DEGRADE) : args.map(hex).filter((c): c is string => c !== null);
       open({ gradient: { colors: colors.length ? colors : [DEFAULT_COLOR], length: span, index: 0 } });
       return true;
     }
@@ -234,8 +249,8 @@ export function parseMiniMessage(input: string): Segment[] {
       open({ gradient: { colors: ["rainbow"], length: span, index: 0 } });
       return true;
     }
-    const hex = tag === "color" || tag === "c" ? toHex(args.join(":")) : toHex(tag);
-    open({ color: hex ?? top().color });
+    const color = tag === "color" || tag === "c" ? hex(args.join(":")) : hex(tag);
+    open({ color: color ?? top().color });
     return true;
   }
 }

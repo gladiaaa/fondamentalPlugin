@@ -24,8 +24,9 @@ import {
 } from "@/lib/api/configs";
 import { ConfigFields } from "../ConfigFields";
 import { DeliveryCard, Section, SectionFields } from "./ArticleSettings";
+import { YamlPane } from "./YamlPane";
 import { Segments } from "../MiniMessagePreview";
-import { parseMiniMessage, plainText } from "../minimessage";
+import { parseMiniMessage, plainText, type Palette } from "../minimessage";
 import { Chest, McItem, type DragData } from "../minecraft/Chest";
 import { ItemPalette } from "../minecraft/ItemPalette";
 import { useMcItems } from "../minecraft/items";
@@ -100,6 +101,8 @@ export function ShopEditor() {
   const [creating, setCreating] = useState<false | "category" | "command">(false);
   /** Catégorie choisie dans le menu d'une commande (son bouton, ses réglages). */
   const [menuCat, setMenuCat] = useState<string | undefined>();
+  /** Mode « Fichier YAML » : le fichier du menu affiché, modifiable à la main, à la place des réglages. */
+  const [yamlMode, setYamlMode] = useState(false);
   const [page, setPage] = useState(0);
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -172,6 +175,12 @@ export function ShopEditor() {
   }
 
   const menus = asValues(config.values.menus);
+  // Couleurs du serveur (colors: de config.yml) : titres, noms et infobulles comme en jeu.
+  const colorValues = asValues(config.values.colors);
+  const palette: Palette = {
+    colors: Object.fromEntries(Object.entries(colorValues).filter((e): e is [string, string] => typeof e[1] === "string")),
+    degrade: strings(colorValues.degrade).length > 0 ? strings(colorValues.degrade) : undefined,
+  };
   const panes: Panes = {
     border: typeof menus.border === "string" && menus.border ? menus.border : DEFAULT_PANES.border,
     accent: typeof menus.accent === "string" && menus.accent ? menus.accent : DEFAULT_PANES.accent,
@@ -546,6 +555,15 @@ export function ShopEditor() {
               }}
             />
           </label>
+          <Button
+            size="sm"
+            variant={yamlMode ? "primary" : "secondary"}
+            aria-pressed={yamlMode}
+            disabled={!selection}
+            onClick={() => setYamlMode((m) => !m)}
+          >
+            Fichier YAML
+          </Button>
           <Button size="sm" variant="secondary" onClick={downloadCurrent} disabled={!selection} title={downloadHint(!!category)}>
             Télécharger {category ? `${category.name}.yml` : CONFIG_FILE}
           </Button>
@@ -653,23 +671,31 @@ export function ShopEditor() {
             </ol>
           )}
 
-          {categories.length === 0 ? (
-            <div className="grid max-w-[46ch] justify-items-center gap-3 rounded-card border border-line bg-surface p-6 text-center">
-              <h2 className="font-display text-[1.15rem] font-semibold">Votre boutique n’a encore aucune catégorie</h2>
+          {categories.length === 0 && (
+            <div className="grid max-w-[52ch] justify-items-center gap-2 rounded-card border border-line bg-surface p-4 text-center">
+              <h2 className="font-display text-[1rem] font-semibold">Aucune catégorie pour l’instant</h2>
               <p className="text-muted">
-                Partez des catégories livrées avec le plugin ({(categorySchema.presets ?? []).map((p) => p.name).join(", ")}), puis changez les
-                articles, les prix et les cases à votre goût.
+                Importez vos fichiers <span className="font-mono">shops/*.yml</span>, partez des catégories du plugin (
+                {(categorySchema.presets ?? []).map((p) => p.name).join(", ")}) ou créez-en une.
               </p>
-              {presets.length > 0 && <Button onClick={importPresets}>Partir des catégories du plugin</Button>}
-              <button type="button" className="text-[.82rem] text-accent-text hover:underline" onClick={() => setCreating("category")}>
-                ou créer une catégorie vide
-              </button>
+              <div className="flex flex-wrap justify-center gap-2">
+                {presets.length > 0 && (
+                  <Button size="sm" onClick={importPresets}>
+                    Partir des catégories du plugin
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" onClick={() => setCreating("category")}>
+                  Créer une catégorie vide
+                </Button>
+              </div>
             </div>
-          ) : category ? (
+          )}
+          {category ? (
             <CategoryChest
               doc={category}
               page={page}
               panes={panes}
+              palette={palette}
               items={items}
               selected={article}
               onPage={setPage}
@@ -682,6 +708,7 @@ export function ShopEditor() {
               command={command}
               categories={categories}
               panes={panes}
+              palette={palette}
               items={items}
               selected={menuCat}
               onSelect={setMenuCat}
@@ -700,13 +727,27 @@ export function ShopEditor() {
 
         {/* Réglages : deux colonnes, comme « Item stack » et « Button » */}
         <div className="grid min-h-0 min-w-0 gap-2.5 md:grid-cols-2 lg:col-span-2 xl:contents">
-          {category && current ? (
+          {yamlMode && csrfToken && (category || (command && selection?.kind === "command")) ? (
+            <Panel
+              title={category ? `shops/${category.name}.yml` : CONFIG_FILE}
+              onClose={() => setYamlMode(false)}
+              className="md:col-span-2 xl:col-span-2"
+            >
+              <YamlPane
+                target={{ slug: SLUG, version, file: category ? CATEGORY_FILE : CONFIG_FILE }}
+                values={category ? category.values : config.values}
+                csrfToken={csrfToken}
+                onChange={(values) => (category ? editCategory(category.name, values) : editConfig(values))}
+              />
+            </Panel>
+          ) : category && current ? (
             <>
               <Panel title="Objet affiché" onClose={() => setArticle(undefined)}>
                 <ArticleHead
                   id={article!}
                   values={current}
                   items={items}
+                  palette={palette}
                   onRemove={() => {
                     const rest = { ...articles };
                     delete rest[article!];
@@ -772,7 +813,7 @@ export function ShopEditor() {
                           <McItem material={String(doc.values.icon ?? "CHEST")} items={items} size={32} />
                           <div className="grid min-w-0">
                             <span className="truncate font-medium">
-                              <Segments segments={parseMiniMessage(String(doc.values.display ?? doc.name))} />
+                              <Segments segments={parseMiniMessage(String(doc.values.display ?? doc.name), palette)} />
                             </span>
                             <span className="truncate font-mono text-[.75rem] text-muted">shops/{doc.name}.yml</span>
                           </div>
@@ -938,13 +979,13 @@ function ToolGroup({ label, children }: { label: string; children: React.ReactNo
 }
 
 /** Colonne de réglages (« Item stack », « Button » sur MIB). */
-function Panel({ title, onClose, children }: { title: string; onClose?: () => void; children: React.ReactNode }) {
+function Panel({ title, onClose, className, children }: { title: string; onClose?: () => void; className?: string; children: React.ReactNode }) {
   return (
-    <section className="flex min-h-0 min-w-0 flex-col rounded-card border border-line bg-surface">
+    <section className={cn("flex min-h-0 min-w-0 flex-col rounded-card border border-line bg-surface", className)}>
       <header className="flex items-center justify-between border-b border-line px-3 py-2">
         <h2 className="text-[.8rem] font-semibold">{title}</h2>
         {onClose && (
-          <button type="button" onClick={onClose} aria-label="Fermer l’article" className="text-muted hover:text-text">
+          <button type="button" onClick={onClose} aria-label={`Fermer ${title}`} className="text-muted hover:text-text">
             ×
           </button>
         )}
@@ -996,11 +1037,13 @@ function ArticleHead({
   id,
   values,
   items,
+  palette,
   onRemove,
 }: {
   id: string;
   values: ConfigValues;
   items: ReturnType<typeof useMcItems>;
+  palette: Palette;
   onRemove: () => void;
 }) {
   const problem = articleProblem(values);
@@ -1013,7 +1056,7 @@ function ArticleHead({
         <McItem material={articleIcon(values)} items={items} size={32} />
         <div className="grid min-w-0">
           <span className="truncate font-medium">
-            <Segments segments={parseMiniMessage(String(values.name ?? id))} />
+            <Segments segments={parseMiniMessage(String(values.name ?? id), palette)} />
           </span>
           <span className="truncate text-[.75rem] text-muted">
             <span className="font-mono">{id}</span>
@@ -1034,6 +1077,7 @@ function CategoryChest({
   doc,
   page,
   panes,
+  palette,
   items,
   selected,
   onPage,
@@ -1044,6 +1088,7 @@ function CategoryChest({
   doc: Doc;
   page: number;
   panes: Panes;
+  palette: Palette;
   items: ReturnType<typeof useMcItems>;
   selected?: string;
   onPage: (page: number) => void;
@@ -1076,7 +1121,7 @@ function CategoryChest({
   return (
     <>
       <div className="max-w-full overflow-x-auto p-0.5 2xl:[zoom:1.2]">
-        <Chest layout={layout} items={items} selected={selected} onSelect={onSelect} onDrop={drop} onBack={onBack} />
+        <Chest layout={layout} items={items} palette={palette} selected={selected} onSelect={onSelect} onDrop={drop} onBack={onBack} />
       </div>
       {layout.pages > 1 && (
         <div className="flex items-center justify-center gap-2">
@@ -1119,6 +1164,7 @@ function CommandChest({
   command,
   categories,
   panes,
+  palette,
   items,
   selected,
   onSelect,
@@ -1129,6 +1175,7 @@ function CommandChest({
   command: ConfigValues;
   categories: Doc[];
   panes: Panes;
+  palette: Palette;
   items: ReturnType<typeof useMcItems>;
   selected?: string;
   onSelect: (name: string) => void;
@@ -1161,6 +1208,7 @@ function CommandChest({
         <Chest
           layout={layout}
           items={items}
+          palette={palette}
           selected={selected}
           onSelect={onSelect}
           onActivate={onOpen}
