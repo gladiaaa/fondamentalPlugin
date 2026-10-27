@@ -91,3 +91,13 @@ test("article incomplet avec sa case : visible, sans prendre la place des autres
   const seul = categoryLayout({ rows: 3, items: { neuf: { material: "DIAMOND", slot: 12 } } }, 0);
   assert.equal(seul.slots[12].problem, "ni prix d’achat ni prix de revente");
 });
+
+test("commande : catégorie sans fichier montrée en « ? » à sa place dans l'ordre", () => {
+  const layout = commandLayout({ rows: 3 }, [
+    { id: "blocs", values: { icon: "GRASS_BLOCK" } },
+    { id: "cultures", values: {}, missing: true },
+  ]);
+  assert.equal(layout.slots[11].key, "cultures");
+  assert.equal(layout.slots[11].missing, true);
+  assert.equal(layout.slots[11].material, "?");
+});
