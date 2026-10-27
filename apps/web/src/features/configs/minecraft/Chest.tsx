@@ -4,7 +4,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type Dr
 import { createPortal } from "react-dom";
 import { Pixelify_Sans } from "next/font/google";
 import { cn } from "@/lib/cn";
-import { parseMiniMessage, plainText, type Segment } from "../minimessage";
+import { parseMiniMessage, plainText, type Palette, type Segment } from "../minimessage";
 import { Segments } from "../MiniMessagePreview";
 import type { MenuLayout, Slot } from "../shop/layout";
 import { ATLAS_URL, vanillaId, type McItems } from "./items";
@@ -52,15 +52,15 @@ export function McItem({ material, items, size = 32, className }: { material: st
 }
 
 /** Titre d'inventaire : gris foncé par défaut, comme en jeu. */
-function titleSegments(title: string): Segment[] {
-  return parseMiniMessage(title).map((s) => (s.color === "#FFFFFF" ? { ...s, color: "#404040" } : s));
+function titleSegments(title: string, palette?: Palette): Segment[] {
+  return parseMiniMessage(title, palette).map((s) => (s.color === "#FFFFFF" ? { ...s, color: "#404040" } : s));
 }
 
 /**
  * Infobulle façon Minecraft (fond sombre, liseré violet), au premier plan de la page : rendue hors du
  * coffre (portail), elle passe par-dessus les panneaux voisins au lieu d'être coupée par eux.
  */
-function Tooltip({ slot, anchor }: { slot: Slot; anchor: HTMLElement }) {
+function Tooltip({ slot, anchor, palette }: { slot: Slot; anchor: HTMLElement; palette?: Palette }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   useLayoutEffect(() => {
@@ -86,11 +86,11 @@ function Tooltip({ slot, anchor }: { slot: Slot; anchor: HTMLElement }) {
       }}
     >
       <span>
-        <Segments segments={parseMiniMessage(slot.name ?? slot.material)} />
+        <Segments segments={parseMiniMessage(slot.name ?? slot.material, palette)} />
       </span>
       {slot.lore?.map((line, i) => (
         <span key={i}>
-          <Segments segments={parseMiniMessage(line)} />
+          <Segments segments={parseMiniMessage(line, palette)} />
         </span>
       ))}
       {slot.problem && <span className="text-[#FF5555]">Ignoré par le plugin : {slot.problem}</span>}
@@ -111,6 +111,7 @@ export function Chest({
   onSelect,
   onDrop,
   onActivate,
+  palette,
   onBack,
   footer,
 }: {
@@ -121,13 +122,15 @@ export function Chest({
   onDrop?: (slot: number, data: DragData) => void;
   /** Double-clic sur une entrée (entrer dans une catégorie depuis le menu d'une commande). */
   onActivate?: (key: string) => void;
+  /** Couleurs du serveur (`colors:` de config.yml) pour le titre et les infobulles. */
+  palette?: Palette;
   /** Clic sur la flèche « Retour » du plugin : remonter au menu de la commande. */
   onBack?: () => void;
   footer?: React.ReactNode;
 }) {
   const [hover, setHover] = useState<{ i: number; el: HTMLElement } | null>(null);
   const [target, setTarget] = useState<number | null>(null);
-  const title = useMemo(() => titleSegments(layout.title), [layout.title]);
+  const title = useMemo(() => titleSegments(layout.title, palette), [layout.title, palette]);
 
   return (
     <div
@@ -147,7 +150,7 @@ export function Chest({
           const cell = (
             <>
               <McItem material={slot.material} items={items} className={cn(slot.kind === "fill" && "opacity-90")} />
-              {hover?.i === i && (slot.kind === "entry" || slot.kind === "control") && <Tooltip slot={slot} anchor={hover.el} />}
+              {hover?.i === i && (slot.kind === "entry" || slot.kind === "control") && <Tooltip slot={slot} anchor={hover.el} palette={palette} />}
             </>
           );
           return (
