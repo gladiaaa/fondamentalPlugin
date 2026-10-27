@@ -48,6 +48,8 @@ import {
 const SLUG = "shop";
 /** Nom d'une commande de boutique (config.yml > commands), sans « / ». */
 const COMMAND_ID = /^[a-z0-9_-]{1,32}$/;
+/** Clés de premier niveau propres à config.yml (une catégorie n'en a aucune). */
+const CONFIG_KEYS = /^(license|commands|menus|currencies|storage|grants):/m;
 const CONFIG_FILE = "config.yml";
 
 /** Un fichier ouvert dans l'éditeur : enregistré (`savedId`) ou pas encore. */
@@ -302,16 +304,20 @@ export function ShopEditor() {
     let opened: Selection | null = null;
     for (const file of Array.from(files)) {
       const name = file.name.replace(/\.ya?ml$/i, "");
-      const isConfig = name === "config";
+      const text = await file.text();
+      // Le contenu décide, pas le nom : un config.yml renommé (« FondamentalShop-config-skyblock.yml ») reste la configuration générale.
+      const isConfig = name === "config" || CONFIG_KEYS.test(text);
       if (!isConfig && !CATEGORY_ID.test(name)) {
         notes.push(`${file.name} : nom de fichier invalide (lettres, chiffres, - et _).`);
         continue;
       }
       try {
-        const res = await importConfig({ slug: SLUG, version, file: isConfig ? CONFIG_FILE : CATEGORY_FILE }, await file.text(), csrfToken);
+        const res = await importConfig({ slug: SLUG, version, file: isConfig ? CONFIG_FILE : CATEGORY_FILE }, text, csrfToken);
         notes.push(...res.ignored.map((m) => `${file.name} › ${m}`));
         if (isConfig) {
           setConfig((c) => c && { ...c, values: res.values, dirty: true });
+          const first = Object.keys(asValues(res.values.commands))[0];
+          if (first) opened = { kind: "command", id: first };
         } else {
           setCategories((list) =>
             list.some((c) => c.name === name)
