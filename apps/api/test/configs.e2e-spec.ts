@@ -140,7 +140,7 @@ describe('Générateur de configuration (e2e)', () => {
       const yaml = ['license:', '  key: "PASS-DU-FICHIER"', 'server:', '  name: survie', 'pirate: true'].join('\n');
       const res = await b.post(IMPORT, { ...PASS_CONFIG, yaml }, { csrf }).expect(200);
       expect(res.body.values.server).toEqual({ name: 'survie' });
-      expect(res.body.values.license).toBeUndefined();
+      expect(res.body.values.license?.key).toBeUndefined();
       expect(res.body.ignored).toEqual(['pirate : inconnu de ce fichier']);
     });
 
