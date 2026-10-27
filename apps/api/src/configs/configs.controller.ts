@@ -3,16 +3,18 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type {
   ConfigPluginResponse,
   ConfigSchemaResponse,
+  ImportedConfigResponse,
   RenderedConfigResponse,
   SavedConfigResponse,
 } from '@fondamental/shared';
 import { Auth, type AuthContext } from '../auth/auth.decorators.js';
 import { SessionGuard } from '../auth/session.guard.js';
 import { ApiErrors, ApiSession } from '../common/api-docs.js';
-import { CreateConfigDto, RenderConfigDto, UpdateConfigDto, UpgradeConfigDto } from './configs.dto.js';
+import { CreateConfigDto, ImportConfigDto, RenderConfigDto, UpdateConfigDto, UpgradeConfigDto } from './configs.dto.js';
 import {
   ConfigPluginApiResponse,
   ConfigSchemaApiResponse,
+  ImportedConfigApiResponse,
   RenderedConfigApiResponse,
   SavedConfigApiResponse,
 } from './configs.responses.js';
@@ -66,6 +68,22 @@ export class MyConfigsController {
   @ApiResponse({ status: 200, type: RenderedConfigApiResponse })
   render(@Auth() auth: AuthContext, @Body() dto: RenderConfigDto): Promise<RenderedConfigResponse> {
     return this.configs.render(auth.user.id, dto, dto.values);
+  }
+
+  @Post('import')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Lire un fichier existant',
+    description:
+      'Le fichier YAML de l’acheteur (celui de son serveur), ramené aux valeurs du formulaire pour l’afficher dans le configurateur. ' +
+      'Ce qui n’a pas pu être repris est listé dans `ignored`. La clé de licence du fichier n’est jamais lue. ' +
+      '`400 CONFIG_YAML_INVALID` si le YAML est illisible.',
+  })
+  @ApiSession()
+  @ApiErrors(400, 404)
+  @ApiResponse({ status: 200, type: ImportedConfigApiResponse })
+  import(@Body() dto: ImportConfigDto): ImportedConfigResponse {
+    return this.configs.import(dto, dto.yaml);
   }
 
   @Get()

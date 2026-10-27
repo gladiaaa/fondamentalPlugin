@@ -174,6 +174,16 @@ export function extractDefaults(fields: ConfigField[], template: string): WalkRe
   return walkValues(fields, parseTemplate(template).toJS() ?? {}, 'lenient');
 }
 
+/**
+ * Fichier envoyé par un acheteur (le sien, déjà en place sur son serveur) : lu comme un fichier livré,
+ * mais un YAML illisible est signalé au lieu d'être pris pour un fichier vide.
+ */
+export function readUserFile(fields: ConfigField[], yaml: string): WalkResult & { yamlError?: string } {
+  const doc = parseTemplate(yaml);
+  if (doc.errors.length > 0) return { values: {}, errors: [], unknown: [], yamlError: doc.errors[0].message };
+  return walkValues(fields, doc.toJS() ?? {}, 'lenient');
+}
+
 const sameValue = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 /**

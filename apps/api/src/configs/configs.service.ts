@@ -9,13 +9,14 @@ import type {
   ConfigPluginResponse,
   ConfigSchemaResponse,
   ConfigValues,
+  ImportedConfigResponse,
   RenderedConfigResponse,
   SavedConfigResponse,
 } from '@fondamental/shared';
 import type { SavedConfig } from '../generated/prisma/client.js';
 import { LicenseServerClient } from '../licenses/license-server-client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { extractDefaults, renderConfig, walkValues, type ConfigError } from './config-engine.js';
+import { extractDefaults, readUserFile, renderConfig, walkValues, type ConfigError } from './config-engine.js';
 import { CONFIG_REGISTRY, findConfigFile, readTemplate, type ConfigFileDefinition } from './config-registry.js';
 import { MAX_SAVED_CONFIGS, MESSAGES } from './configs.constants.js';
 
@@ -78,6 +79,16 @@ export class ConfigsService {
     const date = new Date().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
     const header = `Généré sur fondamentalplugin.fr le ${date} pour ${name ?? target.slug} ${target.version}. Contient votre clé de licence : ne la partagez pas.`;
     return { file: def.file, yaml: renderConfig(def.fields, readTemplate(target.slug, target.version, def.file), valid, key, header) };
+  }
+
+  /** Le fichier de l'acheteur, ramené aux valeurs du formulaire ; ce qui n'a pas pu être repris est listé. */
+  import(target: ConfigTarget, yaml: string): ImportedConfigResponse {
+    const def = this.definition(target);
+    const { values, errors, unknown, yamlError } = readUserFile(def.fields, yaml);
+    if (yamlError) {
+      throw new BadRequestException({ code: 'CONFIG_YAML_INVALID', message: `Fichier YAML illisible : ${yamlError}` });
+    }
+    return { values, ignored: [...errors.map((e) => `${e.path} : ${e.message}`), ...unknown.map((p) => `${p} : inconnu de ce fichier`)] };
   }
 
   async list(userId: string): Promise<SavedConfigResponse[]> {

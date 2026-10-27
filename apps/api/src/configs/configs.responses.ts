@@ -5,6 +5,7 @@ import type {
   ConfigPluginResponse,
   ConfigSchemaResponse,
   ConfigValues,
+  ImportedConfigResponse,
   RenderedConfigResponse,
   SavedConfigResponse,
 } from '@fondamental/shared';
@@ -63,6 +64,14 @@ export class ConfigSchemaApiResponse extends ConfigFileSummaryApiResponse implem
     description: 'Autres fichiers livrés de même forme, comme points de départ (ex. les catégories blocs, grades… de FondamentalShop).',
   })
   presets?: Array<{ name: string; values: ConfigValues }>;
+}
+
+export class ImportedConfigApiResponse implements ImportedConfigResponse {
+  @ApiProperty({ type: Object, description: 'Valeurs du formulaire lues dans le fichier.' })
+  values!: ConfigValues;
+
+  @ApiProperty({ type: [String], example: ['crates.vote.rewards.lot.weight : au moins 1'], description: 'Ce qui n’a pas pu être repris.' })
+  ignored!: string[];
 }
 
 export class SavedConfigApiResponse implements SavedConfigResponse {

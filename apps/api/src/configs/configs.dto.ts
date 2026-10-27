@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsObject, IsString, Length, Matches } from 'class-validator';
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { IsObject, IsString, Length, Matches, MaxLength } from 'class-validator';
 import { FILE, SLUG, VERSION } from './configs.constants.js';
 
 const VALUES_DESCRIPTION =
@@ -26,6 +26,13 @@ export class RenderConfigDto {
   @ApiProperty({ type: Object, description: VALUES_DESCRIPTION })
   @IsObject()
   values!: Record<string, unknown>;
+}
+
+export class ImportConfigDto extends PickType(RenderConfigDto, ['slug', 'version', 'file'] as const) {
+  @ApiProperty({ type: String, maxLength: 100_000, description: 'Contenu du fichier YAML de l’acheteur (celui de son serveur).' })
+  @IsString()
+  @MaxLength(100_000)
+  yaml!: string;
 }
 
 export class CreateConfigDto extends RenderConfigDto {
